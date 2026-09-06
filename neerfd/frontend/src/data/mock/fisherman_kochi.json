@@ -1,0 +1,363 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "responseId": "response-mock-fisherman-001",
+    "analysisId": "analysis-mock-fisherman-001",
+    "generatedAt": "2026-09-04T09:30:00+05:30",
+    "language": { "requested": "en", "response": "en" }
+  },
+  "request": {
+    "originalQuery": "Is it suitable to go fishing near Kochi tomorrow morning?",
+    "persona": "fisherman",
+    "scope": "point",
+    "intent": "trip_assessment",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [76.2673, 9.9312],
+      "label": "Kochi coast",
+      "source": "browser_location"
+    },
+    "timeWindow": {
+      "label": "Tomorrow morning",
+      "start": "2026-09-05T06:00:00+05:30",
+      "end": "2026-09-05T12:00:00+05:30",
+      "timezone": "Asia/Kolkata"
+    },
+    "vesselContext": {
+      "type": "small_fishing_boat",
+      "beamWidthMeters": null,
+      "lengthMeters": null
+    }
+  },
+  "marineSituation": {
+    "analysisId": "analysis-mock-fisherman-001",
+    "generatedAt": "2026-09-04T09:30:00+05:30",
+    "context": {
+      "persona": "fisherman",
+      "scope": "point",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [76.2673, 9.9312],
+        "label": "Kochi coast"
+      },
+      "timeWindow": {
+        "label": "Tomorrow morning",
+        "start": "2026-09-05T06:00:00+05:30",
+        "end": "2026-09-05T12:00:00+05:30",
+        "timezone": "Asia/Kolkata"
+      },
+      "vesselContext": {
+        "type": "small_fishing_boat",
+        "beamWidthMeters": null
+      }
+    },
+    "conditions": {
+      "waveHeight": {
+        "value": 1.4,
+        "unit": "m",
+        "status": "available",
+        "forecastFor": "2026-09-05T09:00:00+05:30",
+        "sourceRef": "open-meteo-marine"
+      },
+      "wavePeriod": {
+        "value": 9.2,
+        "unit": "s",
+        "status": "available",
+        "forecastFor": "2026-09-05T09:00:00+05:30",
+        "sourceRef": "open-meteo-marine"
+      },
+      "windSpeed": {
+        "value": 25,
+        "unit": "km/h",
+        "status": "available",
+        "forecastFor": "2026-09-05T09:00:00+05:30",
+        "sourceRef": "open-meteo-marine"
+      },
+      "windDirection": {
+        "value": 290,
+        "unit": "degrees",
+        "status": "available",
+        "forecastFor": "2026-09-05T09:00:00+05:30",
+        "sourceRef": "open-meteo-marine"
+      },
+      "swellHeight": {
+        "value": 0.9,
+        "unit": "m",
+        "status": "available",
+        "forecastFor": "2026-09-05T09:00:00+05:30",
+        "sourceRef": "open-meteo-marine"
+      },
+      "swellPeriod": {
+        "value": 10.1,
+        "unit": "s",
+        "status": "available",
+        "forecastFor": "2026-09-05T09:00:00+05:30",
+        "sourceRef": "open-meteo-marine"
+      },
+      "currentSpeed": {
+        "value": null,
+        "unit": "km/h",
+        "status": "unavailable",
+        "reason": "Verified current-speed source was unavailable for this analysis.",
+        "sourceRef": "mosdac"
+      },
+      "currentDirection": {
+        "value": null,
+        "unit": "degrees",
+        "status": "unavailable",
+        "reason": "Verified current-direction source was unavailable for this analysis.",
+        "sourceRef": "mosdac"
+      },
+      "seaSurfaceTemperature": {
+        "value": null,
+        "unit": "°C",
+        "status": "unavailable",
+        "reason": "Verified SST source was unavailable for this analysis.",
+        "sourceRef": "mosdac"
+      }
+    },
+    "fishingZones": {
+      "status": "available",
+      "advisoryDate": "2026-09-04",
+      "validFrom": "2026-09-04T06:00:00+05:30",
+      "validUntil": "2026-09-05T06:00:00+05:30",
+      "sourceRef": "incois-pfz",
+      "zones": [
+        {
+          "id": "kochi-pfz-001",
+          "geometry": { "type": "Point", "coordinates": [76.1897, 9.9312] },
+          "distanceKm": 8.5,
+          "direction": "West",
+          "bearingDegrees": 270,
+          "depthMeters": null,
+          "sourceRef": "incois-pfz"
+        },
+        {
+          "id": "kochi-pfz-002",
+          "geometry": { "type": "Point", "coordinates": [76.1512, 9.8890] },
+          "distanceKm": 13.2,
+          "direction": "South-West",
+          "bearingDegrees": 235,
+          "depthMeters": null,
+          "sourceRef": "incois-pfz"
+        }
+      ]
+    },
+    "hazards": [
+      {
+        "id": "high-wave-watch-kochi",
+        "type": "high_wave",
+        "severity": "watch",
+        "title": "Moderate sea conditions expected",
+        "message": "Review the official ocean-state advisory before departure.",
+        "geometry": { "type": "Polygon", "coordinates": [] },
+        "validFrom": "2026-09-05T06:00:00+05:30",
+        "validUntil": "2026-09-05T12:00:00+05:30",
+        "sourceRef": "incois-osf"
+      }
+    ],
+    "spatialAnalysis": {
+      "scope": "point",
+      "pointSummary": {
+        "label": "Kochi coast",
+        "coordinates": [76.2673, 9.9312]
+      }
+    },
+    "dataAvailability": {
+      "overallStatus": "partial",
+      "weather": "live",
+      "pfz": "cached",
+      "hazards": "live",
+      "currents": "unavailable",
+      "sst": "unavailable"
+    },
+    "sourceReferences": [
+      {
+        "id": "open-meteo-marine",
+        "name": "Open-Meteo Marine",
+        "dataset": "Marine Forecast",
+        "url": "https://marine-api.open-meteo.com",
+        "status": "live",
+        "observedAt": null,
+        "issuedAt": null,
+        "fetchedAt": "2026-09-04T09:20:00+05:30",
+        "validFrom": "2026-09-05T06:00:00+05:30",
+        "validUntil": "2026-09-05T12:00:00+05:30"
+      },
+      {
+        "id": "incois-pfz",
+        "name": "INCOIS Potential Fishing Zone Advisory",
+        "dataset": "PFZ Advisory",
+        "url": "https://incois.gov.in/MarineFisheries/PfzAdvisory",
+        "status": "cached",
+        "observedAt": null,
+        "issuedAt": "2026-09-04T06:00:00+05:30",
+        "fetchedAt": "2026-09-04T08:45:00+05:30",
+        "validFrom": "2026-09-04T06:00:00+05:30",
+        "validUntil": "2026-09-05T06:00:00+05:30"
+      },
+      {
+        "id": "incois-osf",
+        "name": "INCOIS Ocean State Forecast",
+        "dataset": "Hazard Advisory",
+        "url": "https://incois.gov.in/site/services/osf.jsp",
+        "status": "live",
+        "observedAt": null,
+        "issuedAt": "2026-09-04T06:00:00+05:30",
+        "fetchedAt": "2026-09-04T09:15:00+05:30",
+        "validFrom": "2026-09-05T06:00:00+05:30",
+        "validUntil": "2026-09-05T12:00:00+05:30"
+      }
+    ]
+  },
+  "decisionOutput": {
+    "persona": "fisherman",
+    "decisionType": "trip_assessment",
+    "status": "caution",
+    "headline": "Caution advised for small fishing vessels tomorrow morning.",
+    "summary": "Moderate waves and fresh winds are expected near Kochi.",
+    "reasons": [
+      "Forecast wave height (1.4 m) is elevated for a small fishing boat.",
+      "Forecast wind speed (25 km/h) is fresh and should be monitored."
+    ],
+    "recommendedActions": [
+      "Check the latest official INCOIS/IMD advisory before departure.",
+      "Consider delaying departure if conditions have not improved by morning."
+    ],
+    "caveats": [
+      "Sea surface temperature and current data were unavailable for this analysis.",
+      "PFZ information reflects the most recent cached advisory, not a live feed."
+    ],
+    "evidenceRefs": [
+      "marineSituation.conditions.waveHeight",
+      "marineSituation.conditions.windSpeed"
+    ],
+    "pfzRecommendation": {
+      "status": "available",
+      "headline": "Latest PFZ available approximately 8.5 km west of Kochi.",
+      "zoneId": "kochi-pfz-001",
+      "distanceKm": 8.5,
+      "direction": "West",
+      "validUntil": "2026-09-05T06:00:00+05:30"
+    }
+  },
+  "map": {
+    "status": "available",
+    "viewport": { "center": [76.2673, 9.9312], "zoom": 10, "bounds": null },
+    "layers": [
+      {
+        "id": "selected-location",
+        "category": "selected_location",
+        "label": "Your Location",
+        "geometryType": "Point",
+        "visibility": "default",
+        "dataStatus": "live",
+        "sourceRefs": [],
+        "features": [
+          {
+            "id": "user-location",
+            "geometry": { "type": "Point", "coordinates": [76.2673, 9.9312] },
+            "properties": { "label": "Kochi coast", "status": "available" }
+          }
+        ]
+      },
+      {
+        "id": "potential-fishing-zones",
+        "category": "pfz",
+        "label": "Potential Fishing Zones",
+        "geometryType": "Point",
+        "visibility": "default",
+        "dataStatus": "cached",
+        "sourceRefs": ["incois-pfz"],
+        "features": [
+          {
+            "id": "kochi-pfz-001",
+            "geometry": { "type": "Point", "coordinates": [76.1897, 9.9312] },
+            "properties": {
+              "label": "Potential Fishing Zone",
+              "status": "available",
+              "distanceKm": 8.5,
+              "direction": "West",
+              "detailsRef": "marineSituation.fishingZones.zones.kochi-pfz-001"
+            }
+          },
+          {
+            "id": "kochi-pfz-002",
+            "geometry": { "type": "Point", "coordinates": [76.1512, 9.8890] },
+            "properties": {
+              "label": "Potential Fishing Zone",
+              "status": "available",
+              "distanceKm": 13.2,
+              "direction": "South-West",
+              "detailsRef": "marineSituation.fishingZones.zones.kochi-pfz-002"
+            }
+          }
+        ]
+      },
+      {
+        "id": "hazard-zones",
+        "category": "hazard",
+        "label": "Hazard Advisories",
+        "geometryType": "Polygon",
+        "visibility": "default",
+        "dataStatus": "live",
+        "sourceRefs": ["incois-osf"],
+        "features": []
+      }
+    ],
+    "legend": [
+      { "key": "favourable", "label": "Favourable" },
+      { "key": "caution", "label": "Caution" },
+      { "key": "unfavourable", "label": "Unfavourable" },
+      { "key": "unavailable", "label": "Data unavailable" }
+    ]
+  },
+  "provenance": {
+    "overallStatus": "partial",
+    "summary": "Weather is live. PFZ uses the latest cached verified advisory. SST and currents are unavailable.",
+    "availability": {
+      "weather": "live",
+      "pfz": "cached",
+      "hazards": "live",
+      "sst": "unavailable",
+      "currents": "unavailable"
+    },
+    "sources": ["open-meteo-marine", "incois-pfz", "incois-osf"]
+  },
+  "explainability": {
+    "summary": "ORCA marked conditions as caution because forecast waves and winds are elevated for the selected vessel context.",
+    "analysisSteps": [
+      { "id": "context", "label": "Confirmed location and time", "status": "complete" },
+      { "id": "conditions", "label": "Checked forecast marine conditions", "status": "complete" },
+      { "id": "pfz", "label": "Checked latest PFZ advisory", "status": "complete" },
+      { "id": "assessment", "label": "Applied conditions assessment", "status": "complete" }
+    ],
+    "findings": [
+      {
+        "id": "wave-height-caution",
+        "title": "Wave conditions require caution",
+        "observation": "Forecast wave height is 1.4 m near Kochi tomorrow morning.",
+        "impact": "This contributes to a caution assessment for the selected small fishing boat.",
+        "dataRef": "marineSituation.conditions.waveHeight",
+        "ruleRef": "small-vessel-wave-caution-rule",
+        "sourceRefs": ["open-meteo-marine"]
+      },
+      {
+        "id": "wind-speed-caution",
+        "title": "Wind conditions require monitoring",
+        "observation": "Forecast wind speed is 25 km/h near Kochi tomorrow morning.",
+        "impact": "Fresh winds contribute to the caution assessment.",
+        "dataRef": "marineSituation.conditions.windSpeed",
+        "ruleRef": "small-vessel-wind-caution-rule",
+        "sourceRefs": ["open-meteo-marine"]
+      }
+    ],
+    "limitations": [
+      { "type": "cached_data", "message": "PFZ information uses the latest cached verified advisory." },
+      { "type": "missing_data", "message": "Sea surface temperature and current data were unavailable for this analysis." },
+      { "type": "official_advisory", "message": "Follow current official INCOIS, IMD, and port-authority advisories before departure." }
+    ],
+    "sourceRefs": ["open-meteo-marine", "incois-pfz", "incois-osf"]
+  },
+  "alertWorkflow": null
+}

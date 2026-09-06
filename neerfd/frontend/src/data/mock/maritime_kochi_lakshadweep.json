@@ -1,0 +1,239 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "responseId": "response-mock-maritime-001",
+    "analysisId": "analysis-mock-maritime-001",
+    "generatedAt": "2026-09-04T09:30:00+05:30",
+    "language": { "requested": "en", "response": "en" }
+  },
+  "request": {
+    "originalQuery": "Which parts of the route to Lakshadweep may have difficult conditions tomorrow?",
+    "persona": "maritime_operator",
+    "scope": "route",
+    "intent": "route_assessment",
+    "geometry": {
+      "type": "LineString",
+      "coordinates": [],
+      "label": "Kochi to Lakshadweep",
+      "source": "manual_selection"
+    },
+    "timeWindow": {
+      "label": "Tomorrow, departing 06:00",
+      "start": "2026-09-05T06:00:00+05:30",
+      "end": "2026-09-05T14:00:00+05:30",
+      "timezone": "Asia/Kolkata"
+    },
+    "vesselContext": {
+      "type": "mid_size_vessel",
+      "beamWidthMeters": 6.5,
+      "lengthMeters": 22
+    }
+  },
+  "marineSituation": {
+    "analysisId": "analysis-mock-maritime-001",
+    "generatedAt": "2026-09-04T09:30:00+05:30",
+    "context": {
+      "persona": "maritime_operator",
+      "scope": "route",
+      "geometry": { "type": "LineString", "coordinates": [], "label": "Kochi to Lakshadweep" },
+      "timeWindow": {
+        "label": "Tomorrow, departing 06:00",
+        "start": "2026-09-05T06:00:00+05:30",
+        "end": "2026-09-05T14:00:00+05:30",
+        "timezone": "Asia/Kolkata"
+      },
+      "vesselContext": { "type": "mid_size_vessel", "beamWidthMeters": 6.5 }
+    },
+    "conditions": {
+      "waveHeight": { "value": 1.7, "unit": "m", "status": "available", "forecastFor": "2026-09-05T10:00:00+05:30", "sourceRef": "open-meteo-marine" },
+      "windSpeed": { "value": 20, "unit": "km/h", "status": "available", "forecastFor": "2026-09-05T10:00:00+05:30", "sourceRef": "open-meteo-marine" }
+    },
+    "fishingZones": { "status": "unavailable", "reason": "Not applicable for the maritime operator persona.", "zones": [] },
+    "hazards": [
+      {
+        "id": "swell-surge-segment3",
+        "type": "swell_surge",
+        "severity": "caution",
+        "title": "Elevated swell expected in outer route segment",
+        "message": "Review conditions before transiting this segment.",
+        "geometry": { "type": "Polygon", "coordinates": [] },
+        "validFrom": "2026-09-05T10:00:00+05:30",
+        "validUntil": "2026-09-05T12:00:00+05:30",
+        "sourceRef": "incois-osf"
+      }
+    ],
+    "spatialAnalysis": {
+      "scope": "route",
+      "route": {
+        "id": "kochi-lakshadweep-001",
+        "origin": { "label": "Kochi Port", "coordinates": [76.2673, 9.9312] },
+        "destination": { "label": "Lakshadweep (Kavaratti)", "coordinates": [72.6416, 10.5667] },
+        "geometry": { "type": "LineString", "coordinates": [] }
+      },
+      "segments": [
+        {
+          "id": "segment-1",
+          "geometry": { "type": "LineString", "coordinates": [] },
+          "estimatedEntryTime": "2026-09-05T06:00:00+05:30",
+          "estimatedExitTime": "2026-09-05T08:00:00+05:30",
+          "conditions": {
+            "waveHeight": { "value": 1.1, "unit": "m", "status": "available", "sourceRef": "open-meteo-marine" },
+            "windSpeed": { "value": 15, "unit": "km/h", "status": "available", "sourceRef": "open-meteo-marine" }
+          },
+          "hazardIds": []
+        },
+        {
+          "id": "segment-2",
+          "geometry": { "type": "LineString", "coordinates": [] },
+          "estimatedEntryTime": "2026-09-05T08:00:00+05:30",
+          "estimatedExitTime": "2026-09-05T10:00:00+05:30",
+          "conditions": {
+            "waveHeight": { "value": 1.4, "unit": "m", "status": "available", "sourceRef": "open-meteo-marine" },
+            "windSpeed": { "value": 18, "unit": "km/h", "status": "available", "sourceRef": "open-meteo-marine" }
+          },
+          "hazardIds": []
+        },
+        {
+          "id": "segment-3",
+          "geometry": { "type": "LineString", "coordinates": [] },
+          "estimatedEntryTime": "2026-09-05T10:00:00+05:30",
+          "estimatedExitTime": "2026-09-05T12:00:00+05:30",
+          "conditions": {
+            "waveHeight": { "value": 1.9, "unit": "m", "status": "available", "sourceRef": "open-meteo-marine" },
+            "windSpeed": { "value": 24, "unit": "km/h", "status": "available", "sourceRef": "open-meteo-marine" }
+          },
+          "hazardIds": ["swell-surge-segment3"]
+        },
+        {
+          "id": "segment-4",
+          "geometry": { "type": "LineString", "coordinates": [] },
+          "estimatedEntryTime": "2026-09-05T12:00:00+05:30",
+          "estimatedExitTime": "2026-09-05T14:00:00+05:30",
+          "conditions": {
+            "waveHeight": { "value": 1.5, "unit": "m", "status": "available", "sourceRef": "open-meteo-marine" },
+            "windSpeed": { "value": 19, "unit": "km/h", "status": "available", "sourceRef": "open-meteo-marine" }
+          },
+          "hazardIds": []
+        }
+      ]
+    },
+    "dataAvailability": {
+      "overallStatus": "partial",
+      "weather": "live",
+      "pfz": "unavailable",
+      "hazards": "live",
+      "currents": "unavailable",
+      "sst": "unavailable"
+    },
+    "sourceReferences": [
+      {
+        "id": "open-meteo-marine",
+        "name": "Open-Meteo Marine",
+        "dataset": "Marine Forecast",
+        "url": "https://marine-api.open-meteo.com",
+        "status": "live",
+        "observedAt": null,
+        "issuedAt": null,
+        "fetchedAt": "2026-09-04T09:20:00+05:30",
+        "validFrom": "2026-09-05T06:00:00+05:30",
+        "validUntil": "2026-09-05T14:00:00+05:30"
+      }
+    ]
+  },
+  "decisionOutput": {
+    "persona": "maritime_operator",
+    "decisionType": "route_assessment",
+    "status": "caution",
+    "headline": "Route is passable with caution; one segment needs review.",
+    "summary": "Segment 3 shows elevated swell and wind and should be reviewed before transit.",
+    "reasons": [
+      "Segment 3 forecast wave height (1.9 m) and an active swell-surge caution are elevated relative to the rest of the route.",
+      "Other segments remain within normal range for the selected vessel."
+    ],
+    "recommendedActions": [
+      "Review segment 3 conditions closer to departure time.",
+      "Consider an earlier departure to reduce exposure during segment 3."
+    ],
+    "caveats": [
+      "This is a route-condition assessment, not certified navigation or voyage planning.",
+      "Current and SST data were unavailable for this analysis."
+    ],
+    "evidenceRefs": ["marineSituation.spatialAnalysis.route.segments.segment-3"],
+    "routeRecommendation": {
+      "routeId": "kochi-lakshadweep-001",
+      "recommendedDepartureTime": "2026-09-05T06:00:00+05:30",
+      "recommendation": "Prefer the planned early departure to reduce exposure to elevated conditions in segment 3.",
+      "routeStatus": "caution"
+    },
+    "segmentAssessments": [
+      { "segmentId": "segment-1", "status": "favourable", "estimatedEntryTime": "2026-09-05T06:00:00+05:30", "estimatedExitTime": "2026-09-05T08:00:00+05:30", "reasons": [], "hazardIds": [] },
+      { "segmentId": "segment-2", "status": "favourable", "estimatedEntryTime": "2026-09-05T08:00:00+05:30", "estimatedExitTime": "2026-09-05T10:00:00+05:30", "reasons": [], "hazardIds": [] },
+      { "segmentId": "segment-3", "status": "caution", "estimatedEntryTime": "2026-09-05T10:00:00+05:30", "estimatedExitTime": "2026-09-05T12:00:00+05:30", "reasons": ["Elevated swell", "Elevated wind"], "hazardIds": ["swell-surge-segment3"] },
+      { "segmentId": "segment-4", "status": "favourable", "estimatedEntryTime": "2026-09-05T12:00:00+05:30", "estimatedExitTime": "2026-09-05T14:00:00+05:30", "reasons": [], "hazardIds": [] }
+    ]
+  },
+  "map": {
+    "status": "available",
+    "viewport": { "center": [74.5, 10.2], "zoom": 7, "bounds": null },
+    "layers": [
+      { "id": "origin", "category": "origin", "label": "Origin", "geometryType": "Point", "visibility": "default", "dataStatus": "live", "sourceRefs": [], "features": [{ "id": "kochi-port", "geometry": { "type": "Point", "coordinates": [76.2673, 9.9312] }, "properties": { "label": "Kochi Port", "status": "available" } }] },
+      { "id": "destination", "category": "destination", "label": "Destination", "geometryType": "Point", "visibility": "default", "dataStatus": "live", "sourceRefs": [], "features": [{ "id": "lakshadweep", "geometry": { "type": "Point", "coordinates": [72.6416, 10.5667] }, "properties": { "label": "Lakshadweep (Kavaratti)", "status": "available" } }] },
+      { "id": "route-line", "category": "route", "label": "Route", "geometryType": "LineString", "visibility": "default", "dataStatus": "live", "sourceRefs": [], "features": [] },
+      {
+        "id": "route-segments",
+        "category": "route_segment",
+        "label": "Route Segments",
+        "geometryType": "LineString",
+        "visibility": "default",
+        "dataStatus": "live",
+        "sourceRefs": ["open-meteo-marine"],
+        "features": [
+          { "id": "segment-1", "geometry": { "type": "LineString", "coordinates": [] }, "properties": { "label": "Segment 1", "status": "favourable" } },
+          { "id": "segment-2", "geometry": { "type": "LineString", "coordinates": [] }, "properties": { "label": "Segment 2", "status": "favourable" } },
+          { "id": "segment-3", "geometry": { "type": "LineString", "coordinates": [] }, "properties": { "label": "Segment 3", "status": "caution" } },
+          { "id": "segment-4", "geometry": { "type": "LineString", "coordinates": [] }, "properties": { "label": "Segment 4", "status": "favourable" } }
+        ]
+      },
+      { "id": "hazard-zones", "category": "hazard", "label": "Hazard Advisories", "geometryType": "Polygon", "visibility": "default", "dataStatus": "live", "sourceRefs": ["incois-osf"], "features": [] }
+    ],
+    "legend": [
+      { "key": "favourable", "label": "Favourable" },
+      { "key": "caution", "label": "Caution" },
+      { "key": "unfavourable", "label": "Unfavourable" },
+      { "key": "unavailable", "label": "Data unavailable" }
+    ]
+  },
+  "provenance": {
+    "overallStatus": "partial",
+    "summary": "Weather and hazard data are live along the route. Current and SST data are unavailable.",
+    "availability": { "weather": "live", "hazards": "live", "currents": "unavailable", "sst": "unavailable" },
+    "sources": ["open-meteo-marine", "incois-osf"]
+  },
+  "explainability": {
+    "summary": "ORCA flagged segment 3 for caution due to elevated forecast swell and wind during the estimated transit window.",
+    "analysisSteps": [
+      { "id": "context", "label": "Confirmed route and departure time", "status": "complete" },
+      { "id": "segments", "label": "Divided route into segments with estimated transit windows", "status": "complete" },
+      { "id": "conditions", "label": "Checked forecast conditions per segment", "status": "complete" },
+      { "id": "assessment", "label": "Applied vessel-aware condition assessment per segment", "status": "complete" }
+    ],
+    "findings": [
+      {
+        "id": "segment3-swell-caution",
+        "title": "Segment 3 requires caution",
+        "observation": "Forecast wave height reaches 1.9 m with an active swell-surge caution during the estimated transit window (10:00-12:00).",
+        "impact": "This is the only segment flagged for caution along the route.",
+        "dataRef": "marineSituation.spatialAnalysis.route.segments.segment-3",
+        "ruleRef": "vessel-aware-segment-caution-rule",
+        "sourceRefs": ["open-meteo-marine", "incois-osf"]
+      }
+    ],
+    "limitations": [
+      { "type": "missing_data", "message": "Current and SST data were unavailable for this analysis." },
+      { "type": "navigation_disclaimer", "message": "This is a route-condition assessment, not certified navigation or voyage planning." },
+      { "type": "official_advisory", "message": "Follow current official INCOIS, IMD, and port-authority advisories before departure." }
+    ],
+    "sourceRefs": ["open-meteo-marine", "incois-osf"]
+  },
+  "alertWorkflow": null
+}

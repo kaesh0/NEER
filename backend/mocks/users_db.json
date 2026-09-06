@@ -1,0 +1,19 @@
+[
+  {
+    "id": "u-default-1",
+    "name": "Ramesh Kumar",
+    "email": "ramesh@example.com",
+    "mobile": "9876543210",
+    "password": "password123",
+    "role": "fisherman"
+  },
+  {
+    "id": "u-1788674659990",
+    "name": "Anita Devi",
+    "email": "anita@test.com",
+    "mobile": "9998887777",
+    "password": "",
+    "role": "fisherman",
+    "updatedAt": "2026-09-06T06:04:19.997Z"
+  }
+]

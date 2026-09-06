@@ -1,0 +1,9 @@
+.env
+__pycache__/
+*.pyc
+mosdac_data/
+conversations/
+data/
+*.zip
+.vscode/
+.venv/

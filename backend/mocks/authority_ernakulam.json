@@ -1,0 +1,302 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "responseId": "response-mock-authority-001",
+    "analysisId": "analysis-mock-authority-001",
+    "generatedAt": "2026-09-04T09:30:00+05:30",
+    "language": { "requested": "en", "response": "en" }
+  },
+  "request": {
+    "originalQuery": "Which coastal areas need attention tomorrow?",
+    "persona": "authority",
+    "scope": "region",
+    "intent": "regional_risk_assessment",
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [],
+      "label": "Ernakulam and Alappuzha coast",
+      "source": "manual_selection"
+    },
+    "timeWindow": {
+      "label": "Tomorrow (full day)",
+      "start": "2026-09-05T00:00:00+05:30",
+      "end": "2026-09-05T23:59:00+05:30",
+      "timezone": "Asia/Kolkata"
+    },
+    "vesselContext": null
+  },
+  "marineSituation": {
+    "analysisId": "analysis-mock-authority-001",
+    "generatedAt": "2026-09-04T09:30:00+05:30",
+    "context": {
+      "persona": "authority",
+      "scope": "region",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [],
+        "label": "Ernakulam and Alappuzha coast"
+      },
+      "timeWindow": {
+        "label": "Tomorrow (full day)",
+        "start": "2026-09-05T00:00:00+05:30",
+        "end": "2026-09-05T23:59:00+05:30",
+        "timezone": "Asia/Kolkata"
+      },
+      "vesselContext": null
+    },
+    "conditions": {
+      "waveHeight": {
+        "value": 2.1,
+        "unit": "m",
+        "status": "available",
+        "forecastFor": "2026-09-05T09:00:00+05:30",
+        "sourceRef": "open-meteo-marine"
+      },
+      "windSpeed": {
+        "value": 38,
+        "unit": "km/h",
+        "status": "available",
+        "forecastFor": "2026-09-05T09:00:00+05:30",
+        "sourceRef": "open-meteo-marine"
+      },
+      "seaSurfaceTemperature": {
+        "value": null,
+        "unit": "°C",
+        "status": "unavailable",
+        "reason": "Verified SST source was unavailable for this analysis.",
+        "sourceRef": "mosdac"
+      }
+    },
+    "fishingZones": { "status": "unavailable", "reason": "Not applicable at regional scope for this persona.", "zones": [] },
+    "hazards": [
+      {
+        "id": "high-wave-watch-ernakulam",
+        "type": "high_wave",
+        "severity": "watch",
+        "title": "Elevated wave conditions expected",
+        "message": "Small vessels advised to review official advisories before departure.",
+        "geometry": { "type": "Polygon", "coordinates": [] },
+        "validFrom": "2026-09-05T06:00:00+05:30",
+        "validUntil": "2026-09-05T18:00:00+05:30",
+        "sourceRef": "incois-osf"
+      },
+      {
+        "id": "strong-wind-watch-alappuzha",
+        "type": "strong_wind",
+        "severity": "caution",
+        "title": "Fresh to strong winds expected",
+        "message": "Wind speeds may affect small-vessel operations along this stretch.",
+        "geometry": { "type": "Polygon", "coordinates": [] },
+        "validFrom": "2026-09-05T06:00:00+05:30",
+        "validUntil": "2026-09-05T18:00:00+05:30",
+        "sourceRef": "incois-osf"
+      }
+    ],
+    "spatialAnalysis": {
+      "scope": "region",
+      "regions": [
+        {
+          "id": "ernakulam-coast",
+          "label": "Ernakulam coast",
+          "geometry": { "type": "Polygon", "coordinates": [] },
+          "conditions": {
+            "waveHeight": { "value": 2.1, "unit": "m", "status": "available", "sourceRef": "open-meteo-marine" },
+            "windSpeed": { "value": 38, "unit": "km/h", "status": "available", "sourceRef": "open-meteo-marine" }
+          },
+          "hazardIds": ["high-wave-watch-ernakulam"]
+        },
+        {
+          "id": "alappuzha-coast",
+          "label": "Alappuzha coast",
+          "geometry": { "type": "Polygon", "coordinates": [] },
+          "conditions": {
+            "waveHeight": { "value": 1.6, "unit": "m", "status": "available", "sourceRef": "open-meteo-marine" },
+            "windSpeed": { "value": 34, "unit": "km/h", "status": "available", "sourceRef": "open-meteo-marine" }
+          },
+          "hazardIds": ["strong-wind-watch-alappuzha"]
+        },
+        {
+          "id": "thrissur-coast",
+          "label": "Thrissur coast",
+          "geometry": { "type": "Polygon", "coordinates": [] },
+          "conditions": {
+            "waveHeight": { "value": 1.1, "unit": "m", "status": "available", "sourceRef": "open-meteo-marine" },
+            "windSpeed": { "value": 22, "unit": "km/h", "status": "available", "sourceRef": "open-meteo-marine" }
+          },
+          "hazardIds": []
+        }
+      ]
+    },
+    "dataAvailability": {
+      "overallStatus": "partial",
+      "weather": "live",
+      "pfz": "unavailable",
+      "hazards": "live",
+      "currents": "unavailable",
+      "sst": "unavailable"
+    },
+    "sourceReferences": [
+      {
+        "id": "open-meteo-marine",
+        "name": "Open-Meteo Marine",
+        "dataset": "Marine Forecast",
+        "url": "https://marine-api.open-meteo.com",
+        "status": "live",
+        "observedAt": null,
+        "issuedAt": null,
+        "fetchedAt": "2026-09-04T09:20:00+05:30",
+        "validFrom": "2026-09-05T00:00:00+05:30",
+        "validUntil": "2026-09-05T23:59:00+05:30"
+      },
+      {
+        "id": "incois-osf",
+        "name": "INCOIS Ocean State Forecast",
+        "dataset": "Hazard Advisory",
+        "url": "https://incois.gov.in/site/services/osf.jsp",
+        "status": "live",
+        "observedAt": null,
+        "issuedAt": "2026-09-04T06:00:00+05:30",
+        "fetchedAt": "2026-09-04T09:15:00+05:30",
+        "validFrom": "2026-09-05T06:00:00+05:30",
+        "validUntil": "2026-09-05T18:00:00+05:30"
+      }
+    ]
+  },
+  "decisionOutput": {
+    "persona": "authority",
+    "decisionType": "regional_risk_assessment",
+    "status": "caution",
+    "headline": "Ernakulam coast is the highest-priority area for tomorrow.",
+    "summary": "Elevated waves and strong winds are forecast across two of three monitored coastal areas.",
+    "reasons": [
+      "Ernakulam shows the highest forecast wave height (2.1 m) and an active high-wave watch.",
+      "Alappuzha shows elevated wind speed (38 km/h) with an active strong-wind watch.",
+      "Thrissur conditions remain within normal range for tomorrow."
+    ],
+    "recommendedActions": [
+      "Prioritize outreach to small-vessel operators in Ernakulam and Alappuzha.",
+      "Review the generated warning draft below before any dissemination decision."
+    ],
+    "caveats": [
+      "SST and current data were unavailable for this analysis.",
+      "This is a decision-support assessment, not an official warning."
+    ],
+    "evidenceRefs": [
+      "marineSituation.spatialAnalysis.regions.ernakulam-coast",
+      "marineSituation.spatialAnalysis.regions.alappuzha-coast"
+    ],
+    "areaPriorities": [
+      {
+        "areaId": "ernakulam-coast",
+        "label": "Ernakulam coast",
+        "priority": "high",
+        "status": "caution",
+        "reasons": ["Elevated wave forecast (2.1 m)", "Active high-wave watch"],
+        "hazardIds": ["high-wave-watch-ernakulam"]
+      },
+      {
+        "areaId": "alappuzha-coast",
+        "label": "Alappuzha coast",
+        "priority": "medium",
+        "status": "caution",
+        "reasons": ["Elevated wind forecast (38 km/h)", "Active strong-wind watch"],
+        "hazardIds": ["strong-wind-watch-alappuzha"]
+      },
+      {
+        "areaId": "thrissur-coast",
+        "label": "Thrissur coast",
+        "priority": "low",
+        "status": "favourable",
+        "reasons": ["Conditions within normal range"],
+        "hazardIds": []
+      }
+    ]
+  },
+  "map": {
+    "status": "available",
+    "viewport": { "center": [76.35, 9.85], "zoom": 8, "bounds": null },
+    "layers": [
+      {
+        "id": "regional-risk",
+        "category": "regional_risk",
+        "label": "Regional Risk Overview",
+        "geometryType": "Polygon",
+        "visibility": "default",
+        "dataStatus": "live",
+        "sourceRefs": ["open-meteo-marine", "incois-osf"],
+        "features": [
+          { "id": "ernakulam-coast", "geometry": { "type": "Polygon", "coordinates": [] }, "properties": { "label": "Ernakulam coast", "status": "caution", "priority": "high" } },
+          { "id": "alappuzha-coast", "geometry": { "type": "Polygon", "coordinates": [] }, "properties": { "label": "Alappuzha coast", "status": "caution", "priority": "medium" } },
+          { "id": "thrissur-coast", "geometry": { "type": "Polygon", "coordinates": [] }, "properties": { "label": "Thrissur coast", "status": "favourable", "priority": "low" } }
+        ]
+      },
+      {
+        "id": "hazard-zones",
+        "category": "hazard",
+        "label": "Hazard Advisories",
+        "geometryType": "Polygon",
+        "visibility": "default",
+        "dataStatus": "live",
+        "sourceRefs": ["incois-osf"],
+        "features": []
+      }
+    ],
+    "legend": [
+      { "key": "favourable", "label": "Favourable" },
+      { "key": "caution", "label": "Caution" },
+      { "key": "unfavourable", "label": "Unfavourable" },
+      { "key": "unavailable", "label": "Data unavailable" }
+    ]
+  },
+  "provenance": {
+    "overallStatus": "partial",
+    "summary": "Weather and hazard data are live for the selected region. SST and currents are unavailable.",
+    "availability": { "weather": "live", "hazards": "live", "sst": "unavailable", "currents": "unavailable" },
+    "sources": ["open-meteo-marine", "incois-osf"]
+  },
+  "explainability": {
+    "summary": "ORCA ranked Ernakulam highest priority due to elevated wave height combined with an active high-wave watch.",
+    "analysisSteps": [
+      { "id": "context", "label": "Confirmed region and time window", "status": "complete" },
+      { "id": "conditions", "label": "Checked forecast conditions per area", "status": "complete" },
+      { "id": "hazards", "label": "Checked active hazard advisories", "status": "complete" },
+      { "id": "ranking", "label": "Ranked areas by combined risk factors", "status": "complete" }
+    ],
+    "findings": [
+      {
+        "id": "ernakulam-wave-priority",
+        "title": "Ernakulam wave height drives high priority",
+        "observation": "Forecast wave height is 2.1 m, the highest among monitored areas.",
+        "impact": "Combined with an active high-wave watch, this drives the high-priority ranking.",
+        "dataRef": "marineSituation.spatialAnalysis.regions.ernakulam-coast",
+        "ruleRef": "regional-priority-ranking-rule",
+        "sourceRefs": ["open-meteo-marine", "incois-osf"]
+      }
+    ],
+    "limitations": [
+      { "type": "missing_data", "message": "SST and current data were unavailable for this analysis." },
+      { "type": "official_advisory", "message": "This is a decision-support assessment; it does not replace official INCOIS/IMD warnings." }
+    ],
+    "sourceRefs": ["open-meteo-marine", "incois-osf"]
+  },
+  "alertWorkflow": {
+    "workflowId": "warning-ernakulam-001",
+    "status": "draft",
+    "sourceDecisionRef": "decision-output-ernakulam-001",
+    "draft": {
+      "severity": "caution",
+      "title": "Marine conditions caution for small vessels",
+      "message": "Small fishing vessels operating near Ernakulam and Alappuzha are advised to review the latest official marine advisories before departure due to elevated wave and wind conditions.",
+      "targetAreas": ["Ernakulam coast", "Alappuzha coast"],
+      "targetAudience": ["small_fishing_vessels", "coastal_fishing_communities"],
+      "validFrom": "2026-09-05T06:00:00+05:30",
+      "validUntil": "2026-09-05T18:00:00+05:30",
+      "languages": ["en"],
+      "hazardRefs": ["high-wave-watch-ernakulam", "strong-wind-watch-alappuzha"],
+      "evidenceRefs": ["marineSituation.conditions.waveHeight", "marineSituation.conditions.windSpeed"],
+      "disclaimer": "Draft generated by ORCA for authority review. It is not an official warning until approved and sent through authorised channels."
+    },
+    "review": { "status": "not_implemented_in_mvp", "edited": false, "reviewedBy": null, "reviewedAt": null, "approvalNote": null },
+    "simulation": { "status": "not_started", "channels": [], "simulatedAt": null, "summary": null }
+  }
+}

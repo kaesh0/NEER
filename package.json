@@ -1,0 +1,12 @@
+{
+  "name": "demo",
+  "version": "1.0.0",
+  "description": "Mobile-first React + Tailwind mockup of ORCA's three workspaces plus a small Express mock backend, driven by the exact shared JSON response contract from `ORCA_Frontend_Onboarding.md`.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

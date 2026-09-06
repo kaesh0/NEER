@@ -1,0 +1,19 @@
+{
+  "name": "orca-mock-server",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Mock analysis backend for the ORCA frontend demo. Serves the frozen response-envelope JSON files from disk.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

@@ -1,0 +1,14 @@
+{
+  "nearest_pfz": {
+    "coastal_reference": "Demo coastal reference",
+    "direction_from_coast": "SW",
+    "bearing_degrees": 245,
+    "distance_from_coast_km": "18-23",
+    "depth_m": "40-45",
+    "latitude": 9.75,
+    "longitude": 75.55
+  },
+  "distance_from_user_km": 85.0,
+  "valid_until": "Demo only - not a real validity date",
+  "note": "This fixture exists only when the official INCOIS source is unavailable."
+}

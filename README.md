@@ -160,6 +160,6 @@ npm --prefix neerfd/frontend run build
 
 ---
 
-## License
+## Proprietary Notice
 
-This project is licensed under the MIT License.
+Copyright © 2026. All rights reserved. This software is proprietary and confidential — not licensed for open-source or public distribution.

@@ -1,10 +1,8 @@
+// Path → controller wiring only.
 const express = require("express");
-
-const chatController = require("../controller/chat");
-const { handleChatMessage } = chatController;
+const controller = require("../controller/chat");
 
 const router = express.Router();
-
-router.post("/", handleChatMessage);
+router.post("/", controller.postChat);
 
 module.exports = router;

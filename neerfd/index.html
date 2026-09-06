@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NEER - Marine Intelligence Platform</title>
+    <style>
+      /* Splash shown while the dev bundle transforms on cold start.
+         main.jsx removes this node as soon as React has mounted. */
+      #neer-splash {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+        background: #0b2447;
+        z-index: 9999;
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      #neer-splash .logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #fff;
+        font-size: 28px;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+      }
+      #neer-splash .logo-badge {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: #0284c7;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+      }
+      #neer-splash .spinner {
+        width: 28px;
+        height: 28px;
+        border: 3px solid rgba(255, 255, 255, 0.15);
+        border-top-color: #38bdf8;
+        border-radius: 50%;
+        animation: neer-spin 0.8s linear infinite;
+      }
+      @keyframes neer-spin { to { transform: rotate(360deg); } }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <div id="neer-splash" aria-hidden="true">
+      <div class="logo"><span class="logo-badge">🌊</span> NEER</div>
+      <div class="spinner"></div>
+    </div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

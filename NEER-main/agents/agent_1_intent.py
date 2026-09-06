@@ -35,7 +35,6 @@ _MARINE_PROBE_CACHE: dict[tuple[float, float], bool] = {}
 # ---------------------------------------------------------------------------
 COASTAL_GAZETTEER: dict[str, dict] = {
     # Aliases / nicknames
-    "kochi":        {"name": "Kochi, Kerala",                          "latitude": 9.9312,  "longitude": 76.2673, "admin1": "Kerala",                  "country_code": "IN"},
     "cochin":       {"name": "Kochi, Kerala",                          "latitude": 9.9312,  "longitude": 76.2673, "admin1": "Kerala",                  "country_code": "IN"},
     "vizag":        {"name": "Visakhapatnam, Andhra Pradesh",           "latitude": 17.6868, "longitude": 83.2185, "admin1": "Andhra Pradesh",           "country_code": "IN"},
     "alleppey":     {"name": "Alappuzha, Kerala",                       "latitude": 9.4981,  "longitude": 76.3388, "admin1": "Kerala",                  "country_code": "IN"},
@@ -67,52 +66,6 @@ COASTAL_GAZETTEER: dict[str, dict] = {
     "andaman and nicobar": {"name": "Port Blair, Andaman and Nicobar", "latitude": 11.6233, "longitude": 92.7265, "admin1": "Andaman and Nicobar",    "country_code": "IN"},
 }
 
-INLAND_GAZETTEER: dict[str, dict] = {
-    # Northern inland states & key cities
-    "haryana":          {"name": "Haryana",                        "latitude": 29.0588, "longitude": 76.0856, "admin1": "Haryana",          "country_code": "IN"},
-    "rohtak":           {"name": "Rohtak, Haryana",                "latitude": 28.8955, "longitude": 76.6066, "admin1": "Haryana",          "country_code": "IN"},
-    "panipat":          {"name": "Panipat, Haryana",               "latitude": 29.3909, "longitude": 76.9635, "admin1": "Haryana",          "country_code": "IN"},
-    "gurgaon":          {"name": "Gurugram, Haryana",              "latitude": 28.4595, "longitude": 77.0266, "admin1": "Haryana",          "country_code": "IN"},
-    "gurugram":         {"name": "Gurugram, Haryana",              "latitude": 28.4595, "longitude": 77.0266, "admin1": "Haryana",          "country_code": "IN"},
-    "faridabad":        {"name": "Faridabad, Haryana",             "latitude": 28.4089, "longitude": 77.3178, "admin1": "Haryana",          "country_code": "IN"},
-    "hisar":            {"name": "Hisar, Haryana",                 "latitude": 29.1492, "longitude": 75.7217, "admin1": "Haryana",          "country_code": "IN"},
-    "karnal":           {"name": "Karnal, Haryana",                "latitude": 29.6857, "longitude": 76.9905, "admin1": "Haryana",          "country_code": "IN"},
-    "ambala":           {"name": "Ambala, Haryana",                "latitude": 30.3782, "longitude": 76.7767, "admin1": "Haryana",          "country_code": "IN"},
-    "delhi":            {"name": "Delhi",                          "latitude": 28.7041, "longitude": 77.1025, "admin1": "Delhi",            "country_code": "IN"},
-    "new delhi":        {"name": "New Delhi, Delhi",               "latitude": 28.6139, "longitude": 77.2090, "admin1": "Delhi",            "country_code": "IN"},
-    "punjab":           {"name": "Punjab",                         "latitude": 31.1471, "longitude": 75.3412, "admin1": "Punjab",           "country_code": "IN"},
-    "amritsar":         {"name": "Amritsar, Punjab",               "latitude": 31.6340, "longitude": 74.8723, "admin1": "Punjab",           "country_code": "IN"},
-    "ludhiana":         {"name": "Ludhiana, Punjab",               "latitude": 30.9010, "longitude": 75.8573, "admin1": "Punjab",           "country_code": "IN"},
-    "jalandhar":        {"name": "Jalandhar, Punjab",              "latitude": 31.3260, "longitude": 75.5762, "admin1": "Punjab",           "country_code": "IN"},
-    "chandigarh":       {"name": "Chandigarh",                     "latitude": 30.7333, "longitude": 76.7794, "admin1": "Chandigarh",       "country_code": "IN"},
-    "rajasthan":        {"name": "Rajasthan",                      "latitude": 27.0238, "longitude": 74.2179, "admin1": "Rajasthan",        "country_code": "IN"},
-    "jaipur":           {"name": "Jaipur, Rajasthan",              "latitude": 26.9124, "longitude": 75.7873, "admin1": "Rajasthan",        "country_code": "IN"},
-    "jodhpur":          {"name": "Jodhpur, Rajasthan",             "latitude": 26.2389, "longitude": 73.0243, "admin1": "Rajasthan",        "country_code": "IN"},
-    "udaipur":          {"name": "Udaipur, Rajasthan",             "latitude": 24.5854, "longitude": 73.7125, "admin1": "Rajasthan",        "country_code": "IN"},
-    "uttar pradesh":    {"name": "Uttar Pradesh",                  "latitude": 26.8467, "longitude": 80.9462, "admin1": "Uttar Pradesh",    "country_code": "IN"},
-    "up":               {"name": "Uttar Pradesh",                  "latitude": 26.8467, "longitude": 80.9462, "admin1": "Uttar Pradesh",    "country_code": "IN"},
-    "lucknow":          {"name": "Lucknow, Uttar Pradesh",         "latitude": 26.8467, "longitude": 80.9462, "admin1": "Uttar Pradesh",    "country_code": "IN"},
-    "kanpur":           {"name": "Kanpur, Uttar Pradesh",          "latitude": 26.4499, "longitude": 80.3319, "admin1": "Uttar Pradesh",    "country_code": "IN"},
-    "noida":            {"name": "Noida, Uttar Pradesh",           "latitude": 28.5355, "longitude": 77.3910, "admin1": "Uttar Pradesh",    "country_code": "IN"},
-    "varanasi":         {"name": "Varanasi, Uttar Pradesh",        "latitude": 25.3176, "longitude": 82.9739, "admin1": "Uttar Pradesh",    "country_code": "IN"},
-    "madhya pradesh":   {"name": "Madhya Pradesh",                 "latitude": 22.9734, "longitude": 78.6569, "admin1": "Madhya Pradesh",   "country_code": "IN"},
-    "mp":               {"name": "Madhya Pradesh",                 "latitude": 22.9734, "longitude": 78.6569, "admin1": "Madhya Pradesh",   "country_code": "IN"},
-    "bhopal":           {"name": "Bhopal, Madhya Pradesh",         "latitude": 23.2599, "longitude": 77.4126, "admin1": "Madhya Pradesh",   "country_code": "IN"},
-    "indore":           {"name": "Indore, Madhya Pradesh",         "latitude": 22.7196, "longitude": 75.8577, "admin1": "Madhya Pradesh",   "country_code": "IN"},
-    "bihar":            {"name": "Bihar",                          "latitude": 25.0961, "longitude": 85.3131, "admin1": "Bihar",            "country_code": "IN"},
-    "patna":            {"name": "Patna, Bihar",                   "latitude": 25.5941, "longitude": 85.1376, "admin1": "Bihar",            "country_code": "IN"},
-    "jharkhand":        {"name": "Jharkhand",                      "latitude": 23.6102, "longitude": 85.2799, "admin1": "Jharkhand",        "country_code": "IN"},
-    "ranchi":           {"name": "Ranchi, Jharkhand",              "latitude": 23.3441, "longitude": 85.3096, "admin1": "Jharkhand",        "country_code": "IN"},
-    "chhattisgarh":     {"name": "Chhattisgarh",                   "latitude": 21.2787, "longitude": 81.8661, "admin1": "Chhattisgarh",     "country_code": "IN"},
-    "raipur":           {"name": "Raipur, Chhattisgarh",           "latitude": 21.2514, "longitude": 81.6296, "admin1": "Chhattisgarh",     "country_code": "IN"},
-    "telangana":        {"name": "Telangana",                      "latitude": 18.1124, "longitude": 79.0193, "admin1": "Telangana",        "country_code": "IN"},
-    "hyderabad":        {"name": "Hyderabad, Telangana",           "latitude": 17.3850, "longitude": 78.4867, "admin1": "Telangana",        "country_code": "IN"},
-    "bangalore":        {"name": "Bengaluru, Karnataka",           "latitude": 12.9716, "longitude": 77.5946, "admin1": "Karnataka",        "country_code": "IN"},
-    "bengaluru":        {"name": "Bengaluru, Karnataka",           "latitude": 12.9716, "longitude": 77.5946, "admin1": "Karnataka",        "country_code": "IN"},
-    "pune":             {"name": "Pune, Maharashtra",              "latitude": 18.5204, "longitude": 73.8567, "admin1": "Maharashtra",      "country_code": "IN"},
-    "nagpur":           {"name": "Nagpur, Maharashtra",            "latitude": 21.1458, "longitude": 79.0882, "admin1": "Maharashtra",      "country_code": "IN"},
-}
-
 # ---------------------------------------------------------------------------
 # LLM intent extraction (Sarvam AI sarvam-105b)
 # ---------------------------------------------------------------------------
@@ -125,7 +78,6 @@ Extract intent from the user query (may be English, Hindi, or Hinglish) and retu
   "location_name": "<full place name as mentioned; preserve multi-word names like 'Andhra Pradesh', 'Port Blair'; empty string if no location>",
   "persona": "fisherman" | "authority",
   "query_type": "safety" | "fishing" | "marine_conditions",
-  "narrow_topic": "wind_speed" | "wave_height" | "swell" | "pfz" | "geofence" | "score" | "sea_surface_temperature" | "chlorophyll" | null,
   "time_window": "today" | "tomorrow" | "next available forecast hour",
   "vessel_type": "small fishing boat" | "medium trawler" | "large cargo vessel"
 }
@@ -136,171 +88,28 @@ Rules:
 - query_type=safety: asking if it is safe/dangerous/risky to go out to sea.
 - query_type=fishing: asking about best fishing spots, PFZ zones, or catch potential.
 - query_type=marine_conditions: general sea/weather/conditions questions.
-- narrow_topic: set ONLY if the user is asking specifically and narrowly about ONE topic ("wind_speed", "wave_height", "swell", "pfz", "geofence", "score", "sea_surface_temperature", "chlorophyll"). Set to null for broad or open-ended questions like "is it safe to fish", "how are conditions", or general assessments.
 - vessel_type defaults to "small fishing boat" unless cargo ship or trawler is explicitly mentioned.
 - Preserve the FULL location name (e.g. "Andhra Pradesh coast" -> "Andhra Pradesh").
 
 Few-shot examples:
-{"query": "what's the wind speed right now near Kochi", "output": {"location_name": "Kochi", "persona": "fisherman", "query_type": "marine_conditions", "narrow_topic": "wind_speed", "time_window": "today", "vessel_type": "small fishing boat"}}
-{"query": "Is it safe to fish near Visakhapatnam tomorrow?", "output": {"location_name": "Visakhapatnam", "persona": "fisherman", "query_type": "safety", "narrow_topic": null, "time_window": "tomorrow", "vessel_type": "small fishing boat"}}
-{"query": "what is the SST near Kochi", "output": {"location_name": "Kochi", "persona": "fisherman", "query_type": "marine_conditions", "narrow_topic": "sea_surface_temperature", "time_window": "today", "vessel_type": "small fishing boat"}}
-{"query": "what is the chlorophyll level near Kochi", "output": {"location_name": "Kochi", "persona": "fisherman", "query_type": "marine_conditions", "narrow_topic": "chlorophyll", "time_window": "today", "vessel_type": "small fishing boat"}}
-{"query": "what is the wave height in Kochi", "output": {"location_name": "Kochi", "persona": "fisherman", "query_type": "marine_conditions", "narrow_topic": "wave_height", "time_window": "today", "vessel_type": "small fishing boat"}}
-{"query": "where is the nearest PFZ zone", "output": {"location_name": "", "persona": "fisherman", "query_type": "fishing", "narrow_topic": "pfz", "time_window": "today", "vessel_type": "small fishing boat"}}
-{"query": "Regional risk assessment for Andhra Pradesh coast", "output": {"location_name": "Andhra Pradesh", "persona": "authority", "query_type": "marine_conditions", "narrow_topic": null, "time_window": "next available forecast hour", "vessel_type": "small fishing boat"}}
-{"query": "Kochi ke paas fishing safe hai kya aaj?", "output": {"location_name": "Kochi", "persona": "fisherman", "query_type": "safety", "narrow_topic": null, "time_window": "today", "vessel_type": "small fishing boat"}}
+{"query": "Kochi ke paas fishing safe hai kya aaj?", "output": {"location_name": "Kochi", "persona": "fisherman", "query_type": "safety", "time_window": "today", "vessel_type": "small fishing boat"}}
+{"query": "Is it safe to fish near Visakhapatnam tomorrow?", "output": {"location_name": "Visakhapatnam", "persona": "fisherman", "query_type": "safety", "time_window": "tomorrow", "vessel_type": "small fishing boat"}}
+{"query": "Regional risk assessment for Andhra Pradesh coast", "output": {"location_name": "Andhra Pradesh", "persona": "authority", "query_type": "marine_conditions", "time_window": "next available forecast hour", "vessel_type": "small fishing boat"}}
+{"query": "Which coastal areas need attention tomorrow?", "output": {"location_name": "", "persona": "authority", "query_type": "marine_conditions", "time_window": "tomorrow", "vessel_type": "small fishing boat"}}
+{"query": "Generate warning for fishermen in Visakhapatnam region", "output": {"location_name": "Visakhapatnam", "persona": "authority", "query_type": "safety", "time_window": "next available forecast hour", "vessel_type": "small fishing boat"}}
+{"query": "Coast guard report for Kerala coast", "output": {"location_name": "Kerala", "persona": "authority", "query_type": "marine_conditions", "time_window": "next available forecast hour", "vessel_type": "small fishing boat"}}
+{"query": "Mumbai mein kal cargo ship ke liye weather kaisa rahega?", "output": {"location_name": "Mumbai", "persona": "fisherman", "query_type": "marine_conditions", "time_window": "tomorrow", "vessel_type": "large cargo vessel"}}
+{"query": "Goa ke paas best fishing zone kaunsa hai aaj?", "output": {"location_name": "Goa", "persona": "fisherman", "query_type": "fishing", "time_window": "today", "vessel_type": "small fishing boat"}}
+{"query": "kya samundar mein jaana theek rahega?", "output": {"location_name": "", "persona": "fisherman", "query_type": "safety", "time_window": "next available forecast hour", "vessel_type": "small fishing boat"}}
+{"query": "Ernakulam ke paas kal fishermen ke liye warning jaari karni chahiye kya?", "output": {"location_name": "Ernakulam", "persona": "authority", "query_type": "safety", "time_window": "tomorrow", "vessel_type": "small fishing boat"}}
+{"query": "Lakshadweep ke paas trawler fishing ke liye conditions kal kaisi hongi?", "output": {"location_name": "Lakshadweep", "persona": "fisherman", "query_type": "fishing", "time_window": "tomorrow", "vessel_type": "medium trawler"}}
+{"query": "Identify high-risk zones for fishermen along Odisha coast", "output": {"location_name": "Odisha", "persona": "authority", "query_type": "safety", "time_window": "next available forecast hour", "vessel_type": "small fishing boat"}}
 """
 
 _VALID_PERSONAS      = {"fisherman", "authority"}
 _VALID_QUERY_TYPES   = {"safety", "fishing", "marine_conditions"}
 _VALID_TIME_WINDOWS  = {"today", "tomorrow", "next available forecast hour"}
 _VALID_VESSELS       = {"small fishing boat", "medium trawler", "large cargo vessel"}
-NARROW_TOPICS        = {"wind_speed", "wave_height", "swell", "pfz", "geofence", "score", "sea_surface_temperature", "chlorophyll"}
-
-INLAND_STATES = {
-    "haryana", "punjab", "rajasthan", "delhi", "uttar pradesh", "bihar",
-    "madhya pradesh", "chhattisgarh", "jharkhand", "himachal pradesh",
-    "uttarakhand", "telangana", "assam", "meghalaya", "manipur",
-    "mizoram", "nagaland", "tripura", "arunachal pradesh", "sikkim",
-    "ladakh", "jammu and kashmir", "jammu & kashmir"
-}
-
-
-def detect_narrow_topic(text: str) -> str | None:
-    """Detect if the query is asking narrowly about one single topic."""
-    if not text:
-        return None
-    t = text.lower()
-
-    # Broad open-ended question patterns
-    broad_indicators = [
-        r"\bis it safe to fish\b",
-        r"\bis it safe\b",
-        r"\bcan i go\b",
-        r"\bcan i fish\b",
-        r"\bshould i go\b",
-        r"\bhow are conditions\b",
-        r"\bhow is the weather\b",
-        r"\bweather forecast\b",
-        r"\bsea conditions\b",
-        r"\btrip assessment\b",
-        r"\bmarine assessment\b",
-        r"\bfull report\b",
-        r"\bregional risk\b",
-        r"\bjaana theek\b",
-        r"\bja sakte\b",
-        r"\bja sakta\b",
-        r"\bmausam kaisa\b",
-        r"\bkaisa rahega\b",
-        r"\boverall\b",
-    ]
-    for pattern in broad_indicators:
-        if re.search(pattern, t):
-            return None
-
-    # Topic detectors
-    has_wind = bool(re.search(r"\b(wind\s*speeds?|windspeed|winds?|hawa|pawan)\b", t))
-    has_wave = bool(re.search(r"\b(wave\s*heights?|waves?|lehar|lehrein|tarang)\b", t))
-    has_swell = bool(re.search(r"\b(swell\s*periods?|swell\s*heights?|swell\s*surge|kallakkadal|swell)\b", t))
-    has_pfz = bool(re.search(r"\b(pfz|potential\s*fishing\s*zones?|fishing\s*zones?|machhli\s*zones?)\b", t))
-    has_geofence = bool(re.search(r"\b(geofence|restricted\s*zones?|protected\s*areas?|mpa|boundary|restricted\s*areas?)\b", t))
-    has_score = bool(re.search(r"\b(safety\s*scores?|fishing\s*scores?|opportunity\s*scores?|scores?)\b", t))
-    has_sst = bool(re.search(
-        r"\b(sst|sea\s*surface\s*temps?(?:eratures?)?|surface\s*temps?(?:eratures?)?|ocean\s*temps?(?:eratures?)?|water\s*temps?(?:eratures?)?|samudr[ia]?\s*(?:satah\s*ka\s*)?t[aa]pm[aa]n|paani\s*ka\s*t[aa]pm[aa]n|satah\s*ka\s*t[aa]pm[aa]n)\b",
-        t
-    ))
-    has_chloro = bool(re.search(r"(?:ch[l]+or|kloro)", t))
-
-    # Disambiguate swell vs wave if user asked specifically about swell
-    if has_swell and not re.search(r"\bwave\s*heights?\b", t):
-        has_wave = False
-
-    matched = []
-    if has_wind:
-        matched.append("wind_speed")
-    if has_wave:
-        matched.append("wave_height")
-    if has_swell:
-        matched.append("swell")
-    if has_pfz:
-        matched.append("pfz")
-    if has_geofence:
-        matched.append("geofence")
-    if has_score:
-        matched.append("score")
-    if has_sst:
-        matched.append("sea_surface_temperature")
-    if has_chloro:
-        matched.append("chlorophyll")
-
-    if len(matched) == 1:
-        return matched[0]
-    return None
-
-
-def _is_peninsular_inland(lat: float, lon: float) -> bool:
-    """Deterministic bounding check for peninsular Indian landmass far from both coasts."""
-    if not (8.0 <= lat <= 24.5 and 68.0 <= lon <= 89.0):
-        return False
-    if 8.0 <= lat < 12.5 and 77.2 <= lon <= 79.5:
-        return True
-    if 12.5 <= lat < 15.5 and 75.4 <= lon <= 79.8:
-        return True
-    if 15.5 <= lat < 18.5 and 74.2 <= lon <= 81.2:
-        return True
-    if 18.5 <= lat < 21.5 and 73.5 <= lon <= 84.0:
-        return True
-    if 21.5 <= lat <= 24.5 and 73.5 <= lon <= 87.0:
-        return True
-    return False
-
-
-def check_is_coastal(location: dict | None) -> tuple[bool, str | None]:
-    """Check if the resolved location is meaningfully close to an Indian coastline."""
-    if not location:
-        return True, None
-
-    lat = location.get("latitude")
-    lon = location.get("longitude")
-    name = (location.get("name") or "").lower()
-    admin1 = (location.get("admin1") or "").lower().strip()
-    place_label = location.get("name") or "The requested location"
-
-    # 1. State / administrative metadata check (0ms overhead)
-    if admin1 in INLAND_STATES or any(f", {st}" in name or f" {st}" in name for st in INLAND_STATES):
-        return False, (
-            f"{place_label} does not appear to be a coastal area. "
-            "NEER provides marine, ocean, and coastal safety intelligence for maritime and fishing operations. "
-            "Please try a coastal location or port instead, such as Kochi, Mumbai, or Chennai."
-        )
-
-    # 2. Geographic latitude check for India
-    # Coastlines in India do not extend north of 24.5° N (Rann of Kutch ends ~24°N, Sundarbans ends ~22.5°N)
-    if lat is not None and lon is not None:
-        if 65.0 <= lon <= 98.0 and lat > 24.5:
-            return False, (
-                f"{place_label} does not appear to be a coastal area. "
-                "NEER provides marine, ocean, and coastal safety intelligence for maritime and fishing operations. "
-                "Please try a coastal location or port instead, such as Kochi, Mumbai, or Chennai."
-            )
-
-        # 3. Peninsular inland check (fast bounding box between east & west coasts)
-        if _is_peninsular_inland(lat, lon):
-            return False, (
-                f"{place_label} does not appear to be a coastal area. "
-                "NEER provides marine, ocean, and coastal safety intelligence for maritime and fishing operations. "
-                "Please try a coastal location or port instead, such as Kochi, Mumbai, or Chennai."
-            )
-
-        # 4. Marine grid data verification via Open-Meteo marine API (when online)
-        if not _has_marine_data(lat, lon):
-            return False, (
-                f"{place_label} does not appear to be a coastal area. "
-                "NEER provides marine, ocean, and coastal safety intelligence for maritime and fishing operations. "
-                "Please try a coastal location or port instead, such as Kochi, Mumbai, or Chennai."
-            )
-
-    return True, None
 
 
 def _llm_extract_intent(query: str, agent_query: str) -> dict | None:
@@ -333,12 +142,17 @@ def _llm_extract_intent(query: str, agent_query: str) -> dict | None:
         isinstance(extracted.get("location_name"), str)
         and extracted.get("persona") in _VALID_PERSONAS
         and extracted.get("query_type") in _VALID_QUERY_TYPES
-        and (extracted.get("narrow_topic") is None or extracted.get("narrow_topic") in NARROW_TOPICS)
         and extracted.get("time_window") in _VALID_TIME_WINDOWS
         and extracted.get("vessel_type") in _VALID_VESSELS
     ):
         return extracted
     return None
+
+
+def _contains_word(text: str, *words: str) -> bool:
+    """Word-boundary keyword match. Substring checks misfire on words like
+    'kal' inside 'kolkata' or 'ship' inside 'workshop' — both real bugs here."""
+    return any(re.search(rf"\b{re.escape(w)}\b", text) for w in words)
 
 
 def _regex_extract_intent(searchable_text: str) -> dict:
@@ -355,28 +169,27 @@ def _regex_extract_intent(searchable_text: str) -> dict:
         "warning jaari", "alert jaari", "advisory jaari", "suchna jaari",
         "jaari karna chahiye", "jaari karni chahiye", "jaari karo",
     )
-    if any(w in searchable_text for w in ("safe", "safety", "risk", "danger", "jaana", "ja sakte", "ja sakta", "go fishing", "safe hai")):
+    if _contains_word(searchable_text, "safe", "safety", "risk", "danger", "jaana", "ja sakte", "ja sakta", "go fishing"):
         query_type = "safety"
-    elif any(w in searchable_text for w in ("fish", "fishing", "pfz", "machhli")):
+    elif _contains_word(searchable_text, "fish", "fishing", "pfz", "machhli"):
         query_type = "fishing"
     else:
         query_type = "marine_conditions"
 
-    if "today" in searchable_text or "aaj" in searchable_text:
+    if _contains_word(searchable_text, "today", "aaj"):
         time_window = "today"
-    elif "tomorrow" in searchable_text or "kal" in searchable_text or "kl" in searchable_text:
+    elif _contains_word(searchable_text, "tomorrow", "kal", "kl"):
         time_window = "tomorrow"
     else:
         time_window = "next available forecast hour"
 
     vessel = (
-        "large cargo vessel" if any(x in searchable_text for x in ("cargo", "ship"))
-        else "medium trawler" if "trawler" in searchable_text
+        "large cargo vessel" if _contains_word(searchable_text, "cargo", "ship")
+        else "medium trawler" if _contains_word(searchable_text, "trawler")
         else DEFAULT_VESSEL
     )
     persona = "authority" if any(m in searchable_text for m in _AUTHORITY_MARKERS) else "fisherman"
-    narrow_topic = detect_narrow_topic(searchable_text)
-    return {"persona": persona, "query_type": query_type, "narrow_topic": narrow_topic, "time_window": time_window, "vessel_type": vessel}
+    return {"persona": persona, "query_type": query_type, "time_window": time_window, "vessel_type": vessel}
 
 
 # ---------------------------------------------------------------------------
@@ -412,28 +225,6 @@ def _geocode_with_candidates(candidates: list[str]) -> tuple[dict | None, str | 
             hit["source"] = "Indian Coastal Directory"
             hit["geocoded_from"] = candidate
             return hit, None
-
-        if candidate_key in INLAND_GAZETTEER:
-            hit = dict(INLAND_GAZETTEER[candidate_key])
-            hit["source"] = "Indian Inland Directory"
-            hit["geocoded_from"] = candidate
-            return hit, None
-
-        for st in INLAND_STATES:
-            if candidate_key == st or candidate_key.endswith(f" {st}") or candidate_key.endswith(f", {st}"):
-                st_info = INLAND_GAZETTEER.get(st, {
-                    "name": candidate.title(),
-                    "latitude": 28.5,
-                    "longitude": 77.0,
-                    "admin1": st.title(),
-                    "country_code": "IN",
-                })
-                hit = dict(st_info)
-                hit["name"] = candidate.title()
-                hit["admin1"] = st.title()
-                hit["source"] = "Indian Inland Directory"
-                hit["geocoded_from"] = candidate
-                return hit, None
 
         try:
             payload = get_json(url, {"name": candidate, "count": 20, "language": "en", "format": "json"})
@@ -556,7 +347,26 @@ def _regex_location_candidates(agent_query: str, original_query: str) -> list[st
 # Main agent entry point
 # ---------------------------------------------------------------------------
 
-def agent_1_intent(query: str) -> dict:
+# Bounded fan-out: every candidate can cost a geocoding call plus a marine
+# probe (12 s timeout each), so the candidate list must never be unbounded.
+_MAX_GEOCODE_CANDIDATES = 5
+
+
+def _location_confidence(location: dict | None) -> float:
+    """Confidence actually reflects how the location was resolved, not a fixed 0.95."""
+    if not location:
+        return 0.0
+    if location.get("name") == "Coordinates supplied by user":
+        return 1.0
+    source = location.get("source")
+    if source == "Indian Coastal Directory":
+        return 0.95
+    if source == "Open-Meteo Geocoding API":
+        return 0.8
+    return 0.6
+
+
+def agent_1_intent(query: str, history: list | None = None, use_llm: bool = True) -> dict:
     agent_query, language = prepare_for_agent_1(query)
     searchable_text = f"{agent_query.lower()}\n{query.lower()}"
 
@@ -575,13 +385,13 @@ def agent_1_intent(query: str) -> dict:
         clarification = None
         llm_location_name = ""
 
-    # ── 2. LLM intent extraction (falls back gracefully) ────────────────────
-    llm = _llm_extract_intent(query, agent_query)
+    # ── 2. Intent extraction — LLM first (falls back gracefully). Fast mode
+    # (dashboards, fixed English queries) skips the LLM round trip entirely.
+    llm = _llm_extract_intent(query, agent_query) if use_llm else None
 
     if llm:
         persona    = llm["persona"]
         query_type = llm["query_type"]
-        narrow_topic = llm.get("narrow_topic")
         time_window = llm["time_window"]
         vessel     = llm["vessel_type"]
         llm_location_name = (llm.get("location_name") or "").strip()
@@ -590,13 +400,8 @@ def agent_1_intent(query: str) -> dict:
         extracted  = _regex_extract_intent(searchable_text)
         persona    = extracted["persona"]
         query_type = extracted["query_type"]
-        narrow_topic = extracted.get("narrow_topic")
         time_window = extracted["time_window"]
         vessel     = extracted["vessel_type"]
-
-    # Fallback / verification for narrow single-topic classification
-    if not narrow_topic or narrow_topic not in NARROW_TOPICS:
-        narrow_topic = detect_narrow_topic(searchable_text)
 
     # ── 3. Geocoding (deterministic) ────────────────────────────────────────
     if location is None:
@@ -605,10 +410,8 @@ def agent_1_intent(query: str) -> dict:
             candidates = [llm_location_name] + _regex_location_candidates(agent_query, query)
         else:
             candidates = _regex_location_candidates(agent_query, query)
+        candidates = candidates[:_MAX_GEOCODE_CANDIDATES]
         location, clarification = _geocode_with_candidates(candidates)
-
-    # ── 4. Coastal location check (early pipeline gate) ──────────────────────
-    is_coastal, non_coastal_msg = check_is_coastal(location)
 
     return {
         "agent": "intent",
@@ -617,14 +420,11 @@ def agent_1_intent(query: str) -> dict:
         "language": language,
         "persona": persona,
         "query_type": query_type,
-        "narrow_topic": narrow_topic,
         "location": location,
-        "is_coastal": is_coastal,
-        "non_coastal_message": non_coastal_msg,
-        "location_confidence": 0.95 if location else 0.0,
+        "location_confidence": _location_confidence(location),
         "time_window": time_window,
         "vessel_type": vessel,
-        "required_agents": ["weather", "ocean_advisory", "geofence", "route", "risk", "response"] if is_coastal else ["response"],
+        "required_agents": ["weather", "ocean_advisory", "geofence", "route", "risk", "response"],
         "clarifying_question": None if location else clarification,
         "llm_used": llm is not None,
     }

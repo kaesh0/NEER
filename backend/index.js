@@ -5,6 +5,7 @@ const cors = require("cors");
 const analysisRoute = require("./route/analysis");
 const chatRoute = require("./route/chat");
 const authRoute = require("./route/auth");
+const geoRoute = require("./route/geo");
 const requestLogger = require("./middleware/requestLogger");
 
 const app = express();
@@ -22,6 +23,7 @@ app.use(express.json());
 app.use("/api/analysis", analysisRoute);
 app.use("/api/chat", chatRoute);
 app.use("/api/auth", authRoute);
+app.use("/api/geo", geoRoute);
 
 // Health check — the frontend or a load balancer can probe this.
 app.get("/health", (req, res) => {

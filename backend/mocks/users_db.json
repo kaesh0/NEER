@@ -1,11 +1,17 @@
 [
   {
-    "id": "u-default-1",
-    "name": "Ramesh Kumar",
-    "email": "ramesh@example.com",
+    "id": "u-1788717242093",
+    "name": "Aryan Tester",
+    "email": "aryan.test@example.com",
     "mobile": "9876543210",
-    "password": "password123",
-    "role": "fisherman"
+    "password": "",
+    "role": "fisherman",
+    "updatedAt": "2026-09-06T18:04:07.276Z",
+    "location": {
+      "name": "Chennai, Tamil Nadu",
+      "lat": 13.08784,
+      "lng": 80.27847
+    }
   },
   {
     "id": "u-1788674659990",
@@ -15,5 +21,60 @@
     "password": "",
     "role": "fisherman",
     "updatedAt": "2026-09-06T06:04:19.997Z"
+  },
+  {
+    "id": "u-1788693185552",
+    "name": "Test User",
+    "email": "test@neer.in",
+    "mobile": "",
+    "password": "",
+    "role": "authority",
+    "updatedAt": "2026-09-06T11:13:05.552Z"
+  },
+  {
+    "id": "u-1788694164882",
+    "name": "`123456890-",
+    "email": "",
+    "mobile": "`123456890-",
+    "password": "sdfghj",
+    "role": "fisherman",
+    "updatedAt": "2026-09-06T11:29:24.882Z"
+  },
+  {
+    "id": "u-1788703484309",
+    "name": "Ramesh kumar",
+    "email": "ramesH@gmail.com",
+    "mobile": "852185185",
+    "password": "",
+    "role": "fisherman",
+    "updatedAt": "2026-09-06T14:04:44.309Z"
+  },
+  {
+    "id": "u-1788716553409",
+    "name": "Test Kumar",
+    "email": "test.loc@example.com",
+    "mobile": "9999991234",
+    "password": "secret123",
+    "role": "fisherman",
+    "location": {
+      "name": "Visakhapatnam, Andhra Pradesh",
+      "lat": 17.68,
+      "lng": 83.21
+    },
+    "updatedAt": "2026-09-06T17:42:33.471Z"
+  },
+  {
+    "id": "u-1788718184796",
+    "name": "ramesh kumar ",
+    "email": "sdfghj@gmail.com",
+    "mobile": "2345678",
+    "password": "",
+    "role": "fisherman",
+    "location": {
+      "name": "Kochi, Kerala",
+      "lat": 9.93988,
+      "lng": 76.26022
+    },
+    "updatedAt": "2026-09-06T18:09:44.796Z"
   }
 ]

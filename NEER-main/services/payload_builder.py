@@ -11,6 +11,7 @@ fetch is reported as "unavailable" rather than invented.
 from __future__ import annotations
 
 import re
+import uuid
 from datetime import datetime, timedelta, timezone
 
 
@@ -51,8 +52,14 @@ def _time_window(time_window: str) -> dict:
     now = datetime.now(IST)
     if time_window == "tomorrow":
         base, label = now + timedelta(days=1), "Tomorrow (daytime)"
+        start = base.replace(hour=6, minute=0, second=0, microsecond=0)
+        end = base.replace(hour=18, minute=0, second=0, microsecond=0)
     elif time_window == "today":
-        base, label = now, "Today (daytime)"
+        # A fixed 06:00–18:00 window is fully in the past for evening queries;
+        # same-day assessments always cover from now until the end of the day.
+        label = "Today (rest of day)"
+        start = now if now.hour >= 6 else now.replace(hour=6, minute=0, second=0, microsecond=0)
+        end = now.replace(hour=23, minute=59, second=0, microsecond=0)
     else:
         return {
             "label": "Next available forecast window",
@@ -60,8 +67,6 @@ def _time_window(time_window: str) -> dict:
             "end": (now + timedelta(hours=24)).isoformat(timespec="seconds"),
             "timezone": "Asia/Kolkata",
         }
-    start = base.replace(hour=6, minute=0, second=0, microsecond=0)
-    end = base.replace(hour=18, minute=0, second=0, microsecond=0)
     return {"label": label, "start": start.isoformat(timespec="seconds"), "end": end.isoformat(timespec="seconds"), "timezone": "Asia/Kolkata"}
 
 
@@ -172,8 +177,8 @@ def _hazards(risk: dict, geofence: dict, window: dict) -> list:
             "id": "marine-conditions-watch" if w_status == "CAUTION" else "unsafe-conditions",
             "type": "high_wave",
             "severity": severity,
-            "title": "Unfavourable marine conditions" if w_status == "UNSAFE" else "Moderate sea conditions expected",
-            "message": " ".join(weather_reasons) or ("Unfavourable marine conditions" if w_status == "UNSAFE" else "Moderate sea conditions expected"),
+            "title": "Unsafe marine conditions" if w_status == "UNSAFE" else "Moderate sea conditions expected",
+            "message": " ".join(weather_reasons) or ("Unsafe marine conditions" if w_status == "UNSAFE" else "Moderate sea conditions expected"),
             "geometry": {"type": "Polygon", "coordinates": []},
             "validFrom": window["start"],
             "validUntil": window["end"],
@@ -182,7 +187,7 @@ def _hazards(risk: dict, geofence: dict, window: dict) -> list:
     return hazards
 
 
-def _availability(weather: dict, ocean: dict) -> dict:
+def _availability(weather: dict, ocean: dict, hazards: list | None = None) -> dict:
     mosdac = ocean.get("mosdac", {})
     ok = weather.get("status") == "ok"
     # "ok" status alone is not enough: inland coordinates return a 200 with
@@ -194,13 +199,15 @@ def _availability(weather: dict, ocean: dict) -> dict:
     currents_status = "live" if ok and weather.get("current_speed_kmh") is not None else "unavailable"
     sst_live = (mosdac.get("status") == "parsed" and mosdac.get("sea_surface_temperature_c") is not None) or (ok and weather.get("sea_surface_temperature_c") is not None)
     sst_status = "live" if sst_live else "unavailable"
+    # Report what actually happened: no hazards were generated → nothing is live.
+    hazards_status = "live" if hazards else "unavailable"
     statuses = [weather_status, pfz_status, sst_status, currents_status]
     overall = "unavailable" if all(s == "unavailable" for s in statuses) else ("full" if all(s == "live" for s in statuses) else "partial")
     return {
         "overallStatus": overall,
         "weather": weather_status,
         "pfz": pfz_status,
-        "hazards": "live",
+        "hazards": hazards_status,
         "currents": currents_status,
         "sst": sst_status,
     }
@@ -287,7 +294,8 @@ def _source_refs(weather: dict, ocean: dict, window: dict) -> list:
 def _meta(intent: dict) -> dict:
     lang = intent.get("language", {}) or {}
     code = (lang.get("reply_language_code") or "en-IN").split("-")[0]
-    uid = datetime.now(IST).strftime("%Y%m%d%H%M%S")
+    # uuid suffix: two calls within the same second must not share an id.
+    uid = f"{datetime.now(IST).strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:6]}"
     return {
         "schemaVersion": "1.0",
         "responseId": f"response-{uid}",
@@ -342,8 +350,7 @@ def _fisherman_payload(meta: dict, intent: dict, weather: dict, ocean: dict, ris
     conditions = _conditions(weather, ocean)
     zones_block, first_zone = _pfz(ocean)
     hazards = _hazards(risk, geofence, window)
-    hazard_ids = [hazard["id"] for hazard in hazards]
-    availability = _availability(weather, ocean)
+    availability = _availability(weather, ocean, hazards)
     decision_status = STATUS_TO_DECISION.get(risk.get("status"), "unavailable")
     # A trip inside a restricted marine zone can NEVER be favourable for fishing!
     if geofence and geofence.get("inside_restricted_zone"):
@@ -371,16 +378,18 @@ def _fisherman_payload(meta: dict, intent: dict, weather: dict, ocean: dict, ris
             "validUntil": zones_block.get("validUntil"),
         }
     elif first_zone and risk.get("status") == "UNSAFE":
-        pfz_recommendation = {"status": "unavailable", "reason": "No PFZ recommendation while conditions are unfavourable."}
+        pfz_recommendation = {"status": "unavailable", "reason": "No PFZ recommendation while conditions are unsafe."}
     elif first_zone:
         pfz_recommendation = {"status": "unavailable", "reason": "No PFZ recommendation while the safety assessment is unavailable."}
     else:
         pfz_recommendation = {"status": "unavailable", "reason": "No PFZ advisory available for this location."}
 
     # Route and PFZ recommendations only make sense when the risk engine could
-    # actually make a call; UNKNOWN/UNSAFE trips must not get routing advice.
+    # actually make a call AND the PFZ destination is live — UNKNOWN/UNSAFE
+    # trips must not get routing advice, and demo-fixture coordinates must
+    # never become navigation recommendations.
     route_recommendation = None
-    if route and route.get("status") == "ok" and risk.get("status") in ("SAFE", "CAUTION"):
+    if route and route.get("status") == "ok" and risk.get("status") in ("SAFE", "CAUTION") and availability["pfz"] == "live":
         route_recommendation = {
             "status": "available",
             "routeId": route.get("recommended_route_id"),
@@ -390,7 +399,7 @@ def _fisherman_payload(meta: dict, intent: dict, weather: dict, ocean: dict, ris
 
     actions = []
     if decision_status == "favourable":
-        actions.append("Conditions are favourable within conservative thresholds; still carry safety gear and inform shore contact.")
+        actions.append("Conditions are within conservative safe thresholds; still carry safety gear and inform shore contact.")
     elif decision_status == "unavailable":
         actions.append("Assessment unavailable — retry once live marine data reaches this location, and follow official advisories meanwhile.")
     else:
@@ -415,7 +424,7 @@ def _fisherman_payload(meta: dict, intent: dict, weather: dict, ocean: dict, ris
         zone = geofence.get("zone_name", "restricted marine zone")
         w_status = risk.get("weather_status", risk.get("status"))
         if w_status == "SAFE":
-            headline = f"Weather conditions are favourable, but you are inside {zone}. Exit before fishing."
+            headline = f"Weather is safe, but you are inside {zone}. Exit before fishing."
         elif w_status == "CAUTION":
             headline = f"Caution advised: Moderate sea conditions AND you are inside {zone}. Exit zone before fishing."
         elif w_status == "UNSAFE":
@@ -555,7 +564,7 @@ def _authority_payload(meta: dict, intent: dict, weather: dict, ocean: dict, ris
     zones_block, _first_zone = _pfz(ocean)
     hazards = _hazards(risk, geofence, window)
     hazard_ids = [hazard["id"] for hazard in hazards]
-    availability = _availability(weather, ocean)
+    availability = _availability(weather, ocean, hazards)
     decision_status = STATUS_TO_DECISION.get(risk.get("status"), "unavailable")
     decision_type = "regional_risk_assessment"
     base_name = location.get("name", "Monitored coast")
@@ -583,7 +592,7 @@ def _authority_payload(meta: dict, intent: dict, weather: dict, ocean: dict, ris
         "summary": f"Regional assessment status: {decision_status}. " + " ".join(risk.get("reasons") or []),
         "reasons": list(risk.get("reasons") or []),
         "recommendedActions": [
-            "Prioritize outreach to small-vessel operators in the flagged area." if decision_status != "favourable" else "No special outreach required; conditions are favourable within conservative thresholds.",
+            "Prioritize outreach to small-vessel operators in the flagged area." if decision_status != "favourable" else "No special outreach required; conditions are within safe thresholds.",
             "Review the generated warning draft below before any dissemination decision.",
         ],
         "caveats": [

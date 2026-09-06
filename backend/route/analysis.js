@@ -1,10 +1,8 @@
+// Path → controller wiring only.
 const express = require("express");
-
-const analysisController = require("../controller/analysis");
-const { handleGetAnalysis } = analysisController;
+const controller = require("../controller/analysis");
 
 const router = express.Router();
-
-router.get("/", handleGetAnalysis);
+router.get("/", controller.getAnalysis);
 
 module.exports = router;

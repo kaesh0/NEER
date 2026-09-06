@@ -1,19 +1,18 @@
 {
-  "name": "orca-mock-server",
-  "private": true,
-  "version": "0.1.0",
-  "description": "Mock analysis backend for the ORCA frontend demo. Serves the frozen response-envelope JSON files from disk.",
+  "name": "neer-backend",
+  "version": "1.0.0",
+  "description": "NEER demo middleware API (Express) — auth, persona analysis, and chat proxy to the Python marine-intelligence service",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "node --test"
+    "test": "node --test server.test.js",
+    "test:auth": "node test_auth.js"
   },
-  "dependencies": {
-    "cors": "^2.8.6",
-    "express": "^5.2.1"
-  },
-  "devDependencies": {},
   "keywords": [],
-  "private": true,
-  "license": "UNLICENSED"
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  }
 }

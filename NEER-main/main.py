@@ -1,31 +1,19 @@
 """NEER / ORCA terminal MVP orchestrator.
 
-Agent pipeline (execution order):
-  1 Intent -> 2 Weather, 3 Ocean, 4 Geofence, 5 Route (2-5 in parallel)
-  -> 6 Risk -> 7 Response (ORCA persona JSON)
-
-The per-turn sequence is defined once in pipeline.run_pipeline(); this CLI
-drives it interactively and saves each turn under conversations/<session_id>/,
-the same way api.py drives it over HTTP.
+The turn itself lives in pipeline.run_pipeline() — this file is only the
+chat loop: it reads queries, prints the conversational answer, and shows
+full agent payloads only when NEER_VERBOSE=1. Everything is persisted to
+conversations/<session_id>/ either way.
 """
 import json
+import os
 import sys
 
-from pipeline import _new_session_dir, _save_turn, run_pipeline
+from pipeline import _narrative_of, _new_session_dir, _save_turn, run_pipeline
 from services.utils import load_env, print_agent_output
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
-
-# Agent output replay order — matches the order main() used to print each stage.
-AGENT_HEADERS = [
-    ("intent", "Agent 1: Intent"),
-    ("weather", "Agent 2: Weather"),
-    ("ocean", "Agent 3: Ocean/Fishing"),
-    ("geofence", "Agent 4: Geofence"),
-    ("route", "Agent 5: Route Safety"),
-    ("risk", "Agent 6: Risk"),
-]
 
 
 def _configure_terminal_encoding() -> None:
@@ -40,11 +28,15 @@ def _configure_terminal_encoding() -> None:
 def main() -> None:
     _configure_terminal_encoding()
     load_env()
+    # NEER_VERBOSE=1 restores the full per-agent JSON dumps for debugging.
+    verbose = os.environ.get("NEER_VERBOSE") == "1"
     session_dir = _new_session_dir()
     print(f"NEER MVP - Marine intelligence terminal prototype (type 'exit' to quit)")
     print(f"Session log: {session_dir}")
 
     seq = 0
+    # Bounded per-session memory so follow-up questions keep context.
+    session_history: list[dict] = []
     while True:
         try:
             query = input("\nUser: ").strip()
@@ -59,16 +51,36 @@ def main() -> None:
             continue
 
         seq += 1
-        turn_trace = run_pipeline(query)
+        try:
+            if not verbose:
+                print("NEER is working on it…")
+            turn_trace = run_pipeline(query, session_history)
+            intent = turn_trace["agents"].get("intent") or {}
+            final_output = turn_trace.get("final_output")
 
-        for key, header in AGENT_HEADERS:
-            if key in turn_trace["agents"]:
-                print_agent_output(header, turn_trace["agents"][key])
+            if verbose:
+                for label, payload in turn_trace["agents"].items():
+                    print_agent_output(f"Agent: {label}", payload)
+                print(json.dumps(final_output, ensure_ascii=False, indent=2))
 
-        print("\n================== Agent 7: Final Response (ORCA JSON) ==================")
-        print(json.dumps(turn_trace["final_output"], ensure_ascii=False, indent=2))
-        saved = _save_turn(session_dir, seq, turn_trace)
-        print(f"\nSaved: {saved}")
+            saved = _save_turn(session_dir, seq, turn_trace)
+
+            # Terminal is a chat: show only the conversational answer.
+            answer = _narrative_of(final_output, intent)
+            if not answer and isinstance(final_output, dict):
+                answer = f"(assessment unavailable: {final_output.get('reason', 'unknown error')})"
+            print(f"\nNEER: {answer}")
+
+            if not verbose and isinstance(final_output, dict):
+                decision = final_output.get("decisionOutput") or {}
+                risk = turn_trace["agents"].get("risk") or {}
+                extras = [decision.get("status") or risk.get("status") or "unknown"]
+                if risk.get("safety_score") is not None:
+                    extras.append(f"safety {risk['safety_score']}/100")
+                extras.append(f"saved {saved.name}")
+                print(f"   [{' · '.join(str(e) for e in extras)}]")
+        except Exception as exc:  # belt-and-braces: the session survives anything
+            print(f"\n[error] Turn failed, session continuing: {type(exc).__name__}: {exc}")
 
 
 if __name__ == "__main__":

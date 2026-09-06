@@ -1,8 +1,14 @@
+# Core runtime
 sarvamai==0.1.25
-shapely>=2.0,<3.0
 aiohttp>=3.9,<4.0
+
+# Geofence check (Shapely) — optional if the geofence agent is disabled
+shapely>=2.0,<3.0
+
+# MOSDAC satellite parsing — optional if MOSDAC features are not configured
 h5py>=3.8,<4.0
 numpy>=1.24,<3.0
 scipy>=1.10,<2.0
-fastapi>=0.111,<1.0
-uvicorn>=0.29,<1.0
+
+# Test suite
+pytest>=8.0

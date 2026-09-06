@@ -41,10 +41,24 @@ def _heuristic_language(query: str) -> str:
 
 
 def prepare_for_agent_1(query: str) -> tuple[str, dict]:
-    """Detect typed language and translate non-English text into English for Agent 1."""
+    """Detect typed language and translate non-English text into English for Agent 1.
+
+    Latency guard: a pure-ASCII query whose heuristic says English skips the
+    paid identify_language call entirely — Hinglish (also ASCII) still contains
+    Hindi marker tokens, so the heuristic routes it to the API path.
+    """
     import time
-    client = _client()
     detected_fallback = _heuristic_language(query)
+    is_ascii = all(ord(ch) < 128 for ch in query)
+    if is_ascii and detected_fallback == ENGLISH:
+        return query, {
+            "status": "ok",
+            "input_language_code": ENGLISH,
+            "reply_language_code": ENGLISH,
+            "note": "Detected via local heuristic (no API call).",
+        }
+
+    client = _client()
     if not client:
         return query, {"status": "disabled", "input_language_code": detected_fallback, "reply_language_code": detected_fallback, "note": "Set SARVAM_API_KEY to enable typed-language translation."}
 
@@ -71,11 +85,21 @@ def prepare_for_agent_1(query: str) -> tuple[str, dict]:
     return query, {"status": "unavailable", "input_language_code": detected_fallback, "reply_language_code": detected_fallback, "note": f"Sarvam input translation unavailable: {last_exc}"}
 
 
+# Translation cache: identical (text, target, mode) triples recur within a
+# session (headlines/summaries repeat across turns); never pay twice for them.
+_TRANSLATION_CACHE: dict[tuple[str, str, str], str] = {}
+
+
 def translate_final_response(text: str, language: dict) -> str:
     """Return Agent 5's text in the user's originally detected language."""
     target_language = language.get("reply_language_code", ENGLISH)
-    if target_language == ENGLISH:
+    if not text or target_language == ENGLISH:
         return text
+    mode = os.getenv("SARVAM_OUTPUT_TRANSLATION_MODE", "formal")
+    cache_key = (text, target_language, mode)
+    cached = _TRANSLATION_CACHE.get(cache_key)
+    if cached is not None:
+        return cached
     client = _client()
     if not client:
         return text
@@ -85,9 +109,11 @@ def translate_final_response(text: str, language: dict) -> str:
             source_language_code=ENGLISH,
             target_language_code=target_language,
             model=os.getenv("SARVAM_TRANSLATION_MODEL", "mayura:v1"),
-            mode=os.getenv("SARVAM_OUTPUT_TRANSLATION_MODE", "formal"),
+            mode=mode,
         )
-        return _get_value(translation, "translated_text", text) or text
+        result = _get_value(translation, "translated_text", text) or text
+        _TRANSLATION_CACHE[cache_key] = result
+        return result
     except Exception:
         return text
 

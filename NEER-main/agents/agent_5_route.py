@@ -1,21 +1,26 @@
 """Agent 5: Route Safety Scoring (Async).
 
 Builds candidate routes from the user's own location toward the nearest INCOIS
-PFZ point and scores every waypoint with live Open-Meteo marine wave data.
-Routes are never hardcoded to a demo region: without a resolvable destination
-the agent reports "skipped" instead of scoring irrelevant demo coordinates.
+PFZ point and scores every waypoint with live Open-Meteo marine wave data at
+the requested forecast hour. Routes are only built from LIVE INCOIS advisories:
+the demo fixture (fixed Kerala coordinates) must never become a navigation
+destination, and without a resolvable destination the agent reports "skipped".
 """
 from __future__ import annotations
 import asyncio
 import math
+import os
 from concurrent.futures import ThreadPoolExecutor
 
 import aiohttp
+
+from services.utils import forecast_index, requested_forecast_time
 
 # Waypoint fractions along each candidate line (0 = user, 1 = destination).
 _START_FRACTIONS = (0.0, 0.33, 0.66, 1.0)
 _ROUTE_B_OFFSET_DEGREES = 12.0  # alternate route diverges from the direct line
 _PENALTY_WAVE = 99.9
+_WAYPOINT_TIMEOUT_SECONDS = 10
 
 
 def _rotate_destination(lat1: float, lon1: float, lat2: float, lon2: float, delta_degrees: float) -> tuple[float, float]:
@@ -31,7 +36,13 @@ def _candidate_routes(intent: dict, ocean: dict | None) -> list[dict]:
     lat1, lon1 = location.get("latitude"), location.get("longitude")
     if lat1 is None or lon1 is None:
         return []
-    point = ((ocean or {}).get("pfz_advisory", {}) or {}).get("nearest_pfz") or {}
+    advisory = (ocean or {}).get("pfz_advisory", {}) or {}
+    # Only LIVE advisories may drive routing. The demo fixture sits at fixed
+    # Kerala coordinates; routing a Vizag user toward it would be dangerous
+    # nonsense, and is the exact failure the "never invent data" rule forbids.
+    if advisory.get("data_kind") != "LIVE OFFICIAL INCOIS ADVISORY":
+        return []
+    point = advisory.get("nearest_pfz") or {}
     lat2, lon2 = point.get("latitude"), point.get("longitude")
     if lat2 is None or lon2 is None:
         return []
@@ -44,26 +55,33 @@ def _candidate_routes(intent: dict, ocean: dict | None) -> list[dict]:
     ]
 
 
-async def _fetch_waypoint_wave(session, lat, lon):
+async def _fetch_waypoint_wave(session, lat, lon, requested_time):
+    base_url = os.getenv("OPEN_METEO_MARINE_URL", "https://marine-api.open-meteo.com/v1/marine")
     url = (
-        f"https://marine-api.open-meteo.com/v1/marine?latitude={lat}&longitude={lon}"
+        f"{base_url}?latitude={lat}&longitude={lon}"
         f"&hourly=wave_height&timezone=Asia/Kolkata"
     )
     try:
         async with session.get(url) as response:
             data = await response.json()
-            return data.get("hourly", {}).get("wave_height", [None])[0]
+            hourly = data.get("hourly") or {}
+            times = hourly.get("time") or []
+            waves = hourly.get("wave_height") or []
+            if not times or not waves:
+                return _PENALTY_WAVE
+            index = forecast_index(times, requested_time)
+            return waves[index] if 0 <= index < len(waves) else _PENALTY_WAVE
     except Exception:
         return _PENALTY_WAVE  # Penalize failed requests
 
 
-async def _score_routes_async(routes: list[dict]) -> dict:
-    timeout = aiohttp.ClientTimeout(total=4)
+async def _score_routes_async(routes: list[dict], requested_time: str) -> dict:
+    timeout = aiohttp.ClientTimeout(total=_WAYPOINT_TIMEOUT_SECONDS)
     async with aiohttp.ClientSession(timeout=timeout) as session:
         tasks = []
         for route in routes:
             for lat, lon in route["waypoints"]:
-                tasks.append(_fetch_waypoint_wave(session, lat, lon))
+                tasks.append(_fetch_waypoint_wave(session, lat, lon, requested_time))
         results = await asyncio.gather(*tasks)
 
         scored_routes = []
@@ -102,13 +120,15 @@ def agent_5_route(intent: dict, ocean: dict | None = None) -> dict:
         return {
             "agent": "route",
             "status": "skipped",
-            "reason": "Routing needs a user location and a nearest-PFZ destination; neither was resolvable.",
+            "reason": "Routing needs a user location and a nearest-PFZ destination from a live advisory; neither was resolvable.",
         }
 
-    best = _run_coroutine(_score_routes_async(routes))
+    requested_time = requested_forecast_time(intent.get("time_window", ""))
+    best = _run_coroutine(_score_routes_async(routes, requested_time))
     return {
         "agent": "route",
         "status": "ok",
+        "scored_for_hour": requested_time,
         "recommended_route_id": best["id"],
         "max_expected_wave": best["max_wave_height"],
         "waypoints": [[round(lon, 5), round(lat, 5)] for lat, lon in best["waypoints"]],

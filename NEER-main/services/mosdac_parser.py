@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import math
 from pathlib import Path
 from typing import Any
@@ -88,6 +89,12 @@ def _extract_chlorophyll(path: Path, latitude: float, longitude: float) -> dict:
         }
 
 
+# Parsed-result cache: the granules are ~30 MB and change at most once per
+# day, so decoding full lat/lon grids on every turn is pure waste. Keyed by
+# file identity + mtime, so a new download invalidates automatically.
+_MOSDAC_CACHE: dict[tuple, dict] = {}
+
+
 def extract_mosdac_values(location: dict, directory: str = "mosdac_data") -> dict:
     """Return nearest MOSDAC SST/chlorophyll values from already-downloaded files."""
     data_dir = Path(directory)
@@ -95,6 +102,15 @@ def extract_mosdac_values(location: dict, directory: str = "mosdac_data") -> dic
     longitude = float(location["longitude"])
     sst_file = _latest_file(data_dir, ("*SST_DLY*.h5", "*SST*.h5"))
     chlorophyll_file = _latest_file(data_dir, ("*L4AC*.nc", "*OCML4AC*.nc", "*ch*.nc"))
+    cache_key = (
+        str(sst_file), sst_file.stat().st_mtime if sst_file else None,
+        str(chlorophyll_file), chlorophyll_file.stat().st_mtime if chlorophyll_file else None,
+        round(latitude, 2), round(longitude, 2),
+    )
+    cached = _MOSDAC_CACHE.get(cache_key)
+    if cached is not None:
+        return copy.deepcopy(cached)
+
     result = {
         "source": "Downloaded MOSDAC files",
         "download_dir": str(data_dir),
@@ -112,4 +128,5 @@ def extract_mosdac_values(location: dict, directory: str = "mosdac_data") -> dic
         result["chlorophyll_mg_m3"] = result["chlorophyll"]["value_mg_m3"]
     if sst_file or chlorophyll_file:
         result["status"] = "parsed"
-    return result
+    _MOSDAC_CACHE[cache_key] = result
+    return copy.deepcopy(result)

@@ -61,6 +61,7 @@ const userStore = {
       mobile: userData.mobile || '',
       password: userData.password || '',
       role: userData.role || userData.persona || 'fisherman',
+      location: userData.location || null,
       updatedAt: new Date().toISOString()
     };
 
@@ -83,6 +84,20 @@ const userStore = {
 
     if (!user) return null;
     user.role = persona;
+    user.updatedAt = new Date().toISOString();
+    saveUsers(usersCache);
+    return user;
+  },
+
+  updateLocation(identifierOrId, location) {
+    const user = usersCache.find(
+      (u) => u.id === identifierOrId ||
+             (u.email && u.email.toLowerCase() === identifierOrId.toLowerCase()) ||
+             (u.mobile && u.mobile === identifierOrId)
+    );
+
+    if (!user) return null;
+    user.location = location;
     user.updatedAt = new Date().toISOString();
     saveUsers(usersCache);
     return user;

@@ -7,8 +7,22 @@ function sanitizeUser(user) {
   return safe;
 }
 
+// Location from the Register/Login picker: { name, lat, lng }. Kept only when
+// it looks complete — a half-formed location is worse than none.
+function cleanLocation(location) {
+  if (!location || !location.name || !Number.isFinite(Number(location.lat)) || !Number.isFinite(Number(location.lng))) {
+    return undefined;
+  }
+  return {
+    name: String(location.name).trim(),
+    lat: Number(location.lat),
+    lng: Number(location.lng),
+  };
+}
+
 exports.login = (req, res) => {
   const { emailOrMobile, password, persona } = req.body;
+  const location = cleanLocation(req.body.location);
 
   if (!emailOrMobile) {
     return res.status(400).json({ error: 'EMAIL_OR_MOBILE_REQUIRED', message: 'Email or mobile number is required.' });
@@ -33,6 +47,10 @@ exports.login = (req, res) => {
   if (existing) {
     // If user selected a persona during login, update it
     user = userStore.updatePersona(existing.id, targetPersona);
+    // A location chosen on the Login page updates the saved home location.
+    if (location) {
+      user = userStore.updateLocation(existing.id, location);
+    }
   } else {
     // Register on the fly if new
     user = userStore.saveUser({
@@ -41,6 +59,7 @@ exports.login = (req, res) => {
       mobile: !emailOrMobile.includes('@') ? emailOrMobile : '',
       password: password || '',
       role: targetPersona,
+      location,
     });
   }
 
@@ -53,6 +72,7 @@ exports.login = (req, res) => {
 
 exports.register = (req, res) => {
   const { name, email, mobile, password, role, persona } = req.body;
+  const location = cleanLocation(req.body.location);
 
   const chosenRole = role || persona || 'fisherman';
   const normalizedRole = chosenRole === 'maritime_operator' ? 'marine' : chosenRole;
@@ -67,6 +87,7 @@ exports.register = (req, res) => {
     mobile: mobile || '',
     password: password || '',
     role: normalizedRole,
+    location,
   });
 
   return res.status(201).json({

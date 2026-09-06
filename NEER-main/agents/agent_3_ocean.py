@@ -7,6 +7,7 @@ import json
 import math
 import os
 import re
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.error import HTTPError, URLError
@@ -76,8 +77,25 @@ def _parse_rows(page: str) -> list[dict]:
     return rows
 
 
+# Session-level PFZ cache: INCOIS publishes advisories roughly once per day,
+# so re-scraping the same sector on every turn only pays latency, not freshness.
+_PFZ_CACHE: dict[str, tuple[float, tuple[list[dict], str | None, str]]] = {}
+_PFZ_CACHE_TTL_SECONDS = 30 * 60
+
+
 def _fetch_incois_pfz(sector_id: str) -> tuple[list[dict], str | None, str]:
-    """Fetch one current official PFZ sector page with its session-bound URL."""
+    """Fetch one current official PFZ sector page with its session-bound URL (TTL-cached)."""
+    cached = _PFZ_CACHE.get(sector_id)
+    now = time.monotonic()
+    if cached and now - cached[0] < _PFZ_CACHE_TTL_SECONDS:
+        return cached[1]
+    result = _fetch_incois_pfz_uncached(sector_id)
+    _PFZ_CACHE[sector_id] = (now, result)
+    return result
+
+
+def _fetch_incois_pfz_uncached(sector_id: str) -> tuple[list[dict], str | None, str]:
+    """Live scrape: session cookie handshake + sector detail page + table parse."""
     jar = CookieJar()
     opener = build_opener(HTTPCookieProcessor(jar))
     home_url = os.getenv("INCOIS_PFZ_URL") or INCOIS_HOME
@@ -107,15 +125,25 @@ def _resolve_sector(location: dict) -> tuple[str | None, str | None]:
 
 
 def _demo_pfz(location: dict) -> dict:
-    """Visible fallback only; never present fixture data as live advisory data."""
-    fixture = json.loads(DEMO_FIXTURE.read_text(encoding="utf-8"))
-    return {
-        "data_kind": "DEMO FIXTURE - NOT LIVE DATA",
-        "nearest_pfz": fixture["nearest_pfz"],
-        "distance_from_user_km": fixture["distance_from_user_km"],
-        "valid_until": fixture["valid_until"],
-        "note": fixture["note"],
-    }
+    """Visible fallback only; never present fixture data as live advisory data.
+
+    The fixture read is defensive: this runs inside an except handler, so its
+    own failure must degrade to "no advisory", never raise out of the handler.
+    """
+    try:
+        fixture = json.loads(DEMO_FIXTURE.read_text(encoding="utf-8"))
+        return {
+            "data_kind": "DEMO FIXTURE - NOT LIVE DATA",
+            "nearest_pfz": fixture["nearest_pfz"],
+            "distance_from_user_km": fixture["distance_from_user_km"],
+            "valid_until": fixture["valid_until"],
+            "note": fixture["note"],
+        }
+    except (OSError, ValueError, KeyError) as exc:
+        return {
+            "data_kind": "NO LIVE DATA",
+            "note": f"INCOIS was unreachable and the demo fixture is unavailable: {exc}",
+        }
 
 
 def agent_3_ocean(intent: dict) -> dict:
@@ -143,7 +171,7 @@ def agent_3_ocean(intent: dict) -> dict:
                 "distance_from_user_km": round(_distance_km(location, nearest), 1),
                 "source_url": os.getenv("INCOIS_PFZ_URL") or INCOIS_HOME,
             }
-        except (HTTPError, URLError, TimeoutError, ValueError, OSError) as exc:
+        except (HTTPError, URLError, TimeoutError, ValueError, OSError, IndexError, KeyError, TypeError) as exc:
             status = "demo_fallback"
             pfz_advisory = _demo_pfz(location)
             pfz_advisory["live_fetch_error"] = str(exc)
@@ -166,7 +194,7 @@ def agent_3_ocean(intent: dict) -> dict:
                 mosdac["note"] = "Parsed nearest available downloaded MOSDAC satellite pixels for the requested location."
             else:
                 mosdac["note"] = "No downloaded MOSDAC files found yet. Run 'python services/mosdac_download.py' first."
-        except (OSError, ValueError, KeyError, ImportError) as exc:
+        except (OSError, ValueError, KeyError, TypeError, IndexError, ImportError) as exc:
             mosdac["status"] = "parse_error"
             mosdac["note"] = f"MOSDAC files are present/configured, but parsing failed: {exc}"
     return {

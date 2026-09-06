@@ -43,6 +43,29 @@ const AI_SERVICE_UNAVAILABLE = {
   message: "The Python marine-intelligence service is not reachable.",
 };
 
+// ── Stale-while-revalidate cache ────────────────────────────────────────────
+// The Python pipeline's first query for a location can take 15-30 s (Sarvam
+// intent call + Open-Meteo fan-out). Serving every page load through that is
+// why the app felt broken on cold start. So: results are cached per
+// (persona, location); a fresh entry (< ANALYSIS_FRESH_MS) is served directly,
+// a stale entry is served INSTANTLY while a background refresh runs, and only
+// a cache miss actually waits for the Python service.
+const ANALYSIS_FRESH_MS = 10 * 60 * 1000; // 10 minutes
+const analysisCache = new Map(); // key → { body, ts, refreshing }
+
+function cacheKey(persona, { lat, lng, location }) {
+  // Include the AI service URL so tests pointing at a mock/dead port never
+  // share entries with the live service.
+  return [getAiServiceUrl(), persona, lat || "", lng || "", location || ""].join("|");
+}
+
+function getCachedAnalysis(key) {
+  const hit = analysisCache.get(key);
+  if (!hit) return null;
+  hit.fresh = Date.now() - hit.ts <= ANALYSIS_FRESH_MS;
+  return hit;
+}
+
 /**
  * POST a JSON body to the Python service with a 25-second timeout.
  *
@@ -108,23 +131,27 @@ async function readMockFile(fileName) {
  * file from disk and return it with `servedFrom: "fallback_mock"`. The endpoint
  * never fails — it degrades to the cached mock.
  */
-async function getAnalysisByPersona(persona, locationParams = {}) {
+async function _fetchAnalysis(persona, locationParams = {}) {
   const { lat, lng, location } = locationParams || {};
+  // Prefer the human-readable place name — Python's intent agent geocodes it
+  // cleanly ("Visakhapatnam, Andhra Pradesh"). Raw coordinates in the text
+  // short-circuit to "Coordinates supplied by user", an ugly UI label, so
+  // coordinates are only used when no name was supplied.
   let text = DEFAULT_PYTHON_QUERIES[persona];
 
-  if (lat && lng) {
+  if (location) {
+    if (persona === "fisherman") {
+      text = `Is it safe to fish near ${location} tomorrow morning?`;
+    } else {
+      text = `Which coastal areas near ${location} need attention this week?`;
+    }
+  } else if (lat && lng) {
     const latNum = parseFloat(lat).toFixed(4);
     const lngNum = parseFloat(lng).toFixed(4);
     if (persona === "fisherman") {
       text = `Is it safe to fish at ${latNum}, ${lngNum} tomorrow?`;
     } else {
       text = `Regional coastal assessment for coordinates ${latNum}, ${lngNum}`;
-    }
-  } else if (location) {
-    if (persona === "fisherman") {
-      text = `Is it safe to fish near ${location} tomorrow morning?`;
-    } else {
-      text = `Which coastal areas near ${location} need attention this week?`;
     }
   }
 
@@ -134,9 +161,12 @@ async function getAnalysisByPersona(persona, locationParams = {}) {
   }
 
   try {
+    // fast:true skips the LLM round trips — the persona dashboards need the
+    // structured ORCA JSON in seconds, not a conversational narrative.
     const pythonResponse = await queryPythonService("/api/query", {
       text,
       session_id: undefined,
+      fast: true,
     });
     const finalEnvelope = pythonResponse.final_output || pythonResponse;
     return {
@@ -188,6 +218,43 @@ async function getAnalysisByPersona(persona, locationParams = {}) {
     }
     throw err;
   }
+}
+
+/**
+ * Public entry point with stale-while-revalidate semantics (see cache notes
+ * above). Cache hit  → resolves immediately. Cache miss → awaits the live
+ * fetch (which itself degrades to the mock fallback when Python is down).
+ */
+async function getAnalysisByPersona(persona, locationParams = {}) {
+  const key = cacheKey(persona, locationParams);
+  const cached = getCachedAnalysis(key);
+
+  if (cached) {
+    if (!cached.fresh && !cached.refreshing) {
+      // Serve stale now, refresh in the background so the NEXT load is fresh.
+      // Only a live result replaces the cache — a fallback must not.
+      cached.refreshing = _fetchAnalysis(persona, locationParams)
+        .then((body) => {
+          if (body.servedFrom === "ai_service") {
+            analysisCache.set(key, { body, ts: Date.now(), fresh: true, refreshing: null });
+          } else {
+            cached.refreshing = null;
+          }
+        })
+        .catch(() => {
+          // Keep serving the stale body if the refresh fails.
+          cached.refreshing = null;
+        });
+    }
+    return { ...cached.body, cached: true };
+  }
+
+  const body = await _fetchAnalysis(persona, locationParams);
+  // Never cache the mock fallback — Python may be back by the next request.
+  if (body.servedFrom === "ai_service") {
+    analysisCache.set(key, { body, ts: Date.now(), fresh: true, refreshing: null });
+  }
+  return body;
 }
 
 module.exports = { getAnalysisByPersona, queryPythonService, AI_SERVICE_UNAVAILABLE, PERSONA_MOCKS, readMockFile };

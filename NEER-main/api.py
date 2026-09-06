@@ -1,17 +1,16 @@
 """NEER / ORCA FastAPI HTTP wrapper.
 
-A thin HTTP layer over the existing terminal pipeline: POST /api/query runs
-exactly the same single-turn agent sequence as main.py's CLI loop (defined
-once in pipeline.run_pipeline()) and persists the turn with the same
-session-folder / per-turn-JSON pattern, then returns the ORCA payload.
+A thin HTTP layer over the shared pipeline: POST /api/query runs exactly the
+same single-turn agent sequence as main.py's CLI loop (pipeline.run_pipeline),
+persists the turn with the same session-folder pattern, and returns the ORCA
+payload. Conversation memory is rebuilt from the session's saved turns, so
+multi-turn context survives across HTTP calls the same way it does in the CLI.
 
-No agent, service, or payload_builder logic lives here or is modified.
-
-Run (from this project root):  uvicorn api:app --port 8000
+Run (from this project root):  python -m uvicorn api:app --port 8000
 """
 from __future__ import annotations
 
-import os
+import json
 from pathlib import Path
 from typing import Optional
 
@@ -20,7 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from pipeline import CONVERSATIONS_DIR, _new_session_dir, _save_turn, run_pipeline
+from pipeline import CONVERSATIONS_DIR, _new_session_dir, _save_turn, _narrative_of, run_pipeline
 from services.utils import load_env
 
 # Agents read their credentials/URLs from the environment at call time —
@@ -30,10 +29,11 @@ load_env()
 app = FastAPI(title="NEER / ORCA Marine Intelligence API")
 
 # The Node backend (http://localhost:3001) calls this service; the browser
-# never talks to this port directly, but CORS is enabled for it as requested.
+# talks only to the Node backend. Both loopback spellings are allowed so the
+# demo works either way.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3001"],
+    allow_origins=["http://localhost:3001", "http://127.0.0.1:3001"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -42,10 +42,11 @@ app.add_middleware(
 class QueryRequest(BaseModel):
     text: str
     session_id: Optional[str] = None
+    fast: bool = False
 
 
 def _resolve_session(session_id: Optional[str]):
-    """Map a session_id to (conversations folder, next turn sequence number).
+    """Map a session_id to (conversations folder, session id, next turn number).
 
     Missing session_id -> a fresh session folder using the same
     session_%Y%m%d_%H%M%S naming as the terminal. A provided session_id is
@@ -62,6 +63,32 @@ def _resolve_session(session_id: Optional[str]):
     return session_dir, session_dir.name, next_seq
 
 
+def _rebuild_history(session_dir: Path, limit: int = 5) -> list[dict]:
+    """Load the last saved turns into the pipeline's history shape (narrative
+    text + resolved location), so follow-up questions sent over HTTP keep both
+    their conversational context and location carry-over."""
+    history: list[dict] = []
+    turn_files = sorted(session_dir.glob("[0-9][0-9][0-9]_*.json"))
+    for path in turn_files[-limit:]:
+        try:
+            trace = json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            continue
+        query = (trace.get("query") or "").strip()
+        final_output = trace.get("final_output")
+        if not query or not isinstance(final_output, dict):
+            continue
+        intent = trace.get("agents", {}).get("intent") or {}
+        answer = _narrative_of(final_output, intent if isinstance(intent, dict) else {})
+        if answer:
+            entry = {"user": query, "assistant": answer[:400]}
+            location = intent.get("location") if isinstance(intent, dict) else None
+            if isinstance(location, dict) and location.get("latitude") is not None:
+                entry["location"] = location
+            history.append(entry)
+    return history
+
+
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok"}
@@ -74,16 +101,15 @@ def handle_api_query(request: QueryRequest):
         return JSONResponse(status_code=400, content={"detail": "text must not be empty"})
 
     session_dir, session_id, seq = _resolve_session(request.session_id)
+    history = _rebuild_history(session_dir)
 
     # Run the exact same agent sequence the terminal runs for one turn, then
-    # persist it with the shared _save_turn helper (unchanged from main.py).
-    turn_trace = run_pipeline(text)
-    _save_turn(session_dir, seq, turn_trace)
+    # persist it with the shared _save_turn helper.
+    turn_trace = run_pipeline(text, history, fast=request.fast)
+    saved = _save_turn(session_dir, seq, turn_trace)
 
-    return {"session_id": session_id, "final_output": turn_trace["final_output"]}
-
-
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", "8000")))
+    return {
+        "session_id": session_id,
+        "final_output": turn_trace.get("final_output"),
+        "saved": saved.name,
+    }

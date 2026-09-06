@@ -21,6 +21,10 @@ const { getAnalysisByPersona, queryPythonService, AI_SERVICE_UNAVAILABLE } = req
 // entirely — not even a 501 case here.
 const CHAT_PERSONAS = ["fisherman", "authority"];
 
+function escapeRegExp(text) {
+  return String(text).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 /**
  * Ask the live Python service for a chat response.
  *
@@ -36,10 +40,18 @@ const CHAT_PERSONAS = ["fisherman", "authority"];
  * `servedFrom: "fallback_mock"` and a generated session_id, since Python didn't
  * see the request).
  */
-async function getChatResponse({ message, persona, sessionId }) {
+async function getChatResponse({ message, persona, sessionId, location }) {
+  // The user's saved location (from Register/Login/location picker) is appended
+  // to the text so agent_1 can resolve a location even when the message itself
+  // doesn't mention one ("Where are the fishing zones?"). Without this the
+  // Python geocoder falls back to whatever the regex extracts — or nothing.
+  const effectiveMessage =
+    location && !new RegExp(`\\b${escapeRegExp(location)}\\b`, "i").test(message)
+      ? `${message} (my location: ${location})`
+      : message;
   try {
     const pythonResponse = await queryPythonService("/api/query", {
-      text: message,
+      text: effectiveMessage,
       session_id: sessionId || undefined,
     });
     return {

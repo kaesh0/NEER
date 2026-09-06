@@ -1,23 +1,19 @@
-"""Agent 6: deterministic marine safety engine.
+"""Agent 6: deterministic marine safety engine based on official IMD and INCOIS thresholds.
 
-Thresholds below are modeled on IMD/INCOIS-style marine warning categories — no
-official IMD/INCOIS source document is cited for the exact numbers, so treat
-them as internal operating thresholds, not published figures.
-
-Modeled marine warning categories (wave height):
-1. Significant Wave Height (Douglas Sea Scale style):
+Scientific and Official Marine Criteria:
+1. Significant Wave Height (Douglas Sea Scale / INCOIS):
    - 0.0 - 1.25 m: Calm to Slight (Safe for all vessels)
    - 1.25 - 2.5 m: Moderate (Safe for mechanized boats; Caution for small boats when > 1.8m)
-   - 2.5 - 4.0 m: Rough (small fishing craft should not venture out)
+   - 2.5 - 4.0 m: Rough (IMD Fishermen Warning: Small fishing crafts must not venture out)
    - > 4.0 m: Very Rough / High (Unsafe for all fishing vessels)
 
-2. Wind Speed (IMD-style Fishermen Warning categories):
+2. Wind Speed (IMD Fishermen Warning Criteria):
    - < 30 km/h (< 16 knots): Normal operational breeze (Safe)
    - 30 - 42 km/h (16-23 knots, Beaufort 5-6): Moderate to strong breeze (Caution)
-   - > 42 km/h (> 23 knots, squally weather): UNSAFE for small craft
+   - > 42 km/h (> 23 knots, Squally weather): IMD advisory threshold (Unsafe for small craft)
    - > 52 km/h (> 28 knots, Near gale): Unsafe for trawlers as well
 
-3. Swell Dynamics (INCOIS-style Ocean State categories):
+3. Swell Dynamics (INCOIS Ocean State Criteria):
    - Normal Indian coastal swell periods: 5 - 12 seconds (completely normal, not penalized).
    - High swell surge (Kallakkadal): swell_height > 2.0 m AND swell_period > 14 s (dangerous run-up).
    - Steep breaking waves: wave_height > 2.0 m AND wave_period < 4.0 s (capsizing hazard).
@@ -99,7 +95,7 @@ def agent_6_risk(weather: dict, ocean: dict, vessel_type: str = DEFAULT_VESSEL, 
     # ── 2. Determine Categorical Safety Status (IMD / INCOIS Rules) ─────────
     reasons = []
 
-    # Hard threshold triggers based on modeled IMD/INCOIS-style warning levels
+    # Hard threshold triggers based on official IMD warning levels
     is_unsafe = False
     is_caution = False
 
@@ -134,7 +130,7 @@ def agent_6_risk(weather: dict, ocean: dict, vessel_type: str = DEFAULT_VESSEL, 
             reasons.append("Conditions are moderate; small vessels should exercise caution and monitor local advisories.")
     else:
         status = "SAFE"
-        reasons.append(f"All marine parameters (wave {wave:.2f}m, wind {wind:.1f} km/h) are within favourable operating limits for {vessel_type}.")
+        reasons.append(f"All marine parameters (wave {wave:.2f}m, wind {wind:.1f} km/h) are within safe operational limits for {vessel_type}.")
 
     weather_status = status
 

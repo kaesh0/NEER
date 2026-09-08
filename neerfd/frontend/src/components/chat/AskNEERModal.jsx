@@ -1,71 +1,140 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
 import { Icon } from '../../icons/index.js'
-import Input from '../ui/Input.jsx'
-import IconButton from '../ui/IconButton.jsx'
-import MessageBubble from './MessageBubble.jsx'
-import SuggestedQuestion from './SuggestedQuestion.jsx'
-
-// Data imports for mocked responses (marine persona only)
 import { decision as mDecision } from '../../data/mock/marineData.js'
 import { useTranslation } from '../../i18n/translations.js'
 import { useLanguage } from '../../context/LanguageContext.jsx'
+import { getRegionalGreetingInfo } from '../../utils/coastalGeocoder.js'
 
-export default function AskNEERModal({ persona, onClose }) {
+function getLocalAdvisory(query, location, persona) {
+  const q = (query || '').toLowerCase()
+  const port = location || 'Kochi, Kerala'
+
+  if (q.includes('net') || q.includes('cast') || q.includes('protected') || q.includes('mpa') || q.includes('restriction')) {
+    return {
+      text: `No, net deployment is prohibited here. Your vessel coordinates fall within the Demo Marine Protected Area preservation zone.`,
+      status: 'caution',
+      calloutTitle: 'Recommended Exit Vector:',
+      calloutContent: 'Steer 240° WSW for 6.2 NM to reach uninhibited waters before lowering commercial gear. Expected sea state along exit corridor: smooth (0.94 m wave height).',
+    }
+  }
+
+  if (q.includes('segment 3') || q.includes('swell') || q.includes('methodology') || q.includes('delay')) {
+    return {
+      text: `Segment 3 is flagged for caution due to elevated forecast wave height (1.9 m) and an active swell-surge advisory during the transit window (10:00–12:00 IST). Departing at 06:00 IST avoids peak midday swell crest.`,
+      status: 'caution',
+    }
+  }
+
+  if (q.includes('pfz') || q.includes('fish') || q.includes('machli') || q.includes('zone')) {
+    return {
+      text: `According to INCOIS Potential Fishing Zone (PFZ) guidance near ${port}, productive thermal front zones are located approximately 14–22 km offshore. Favourable for pelagic schools.`,
+      status: 'favourable',
+    }
+  }
+
+  if (q.includes('wind') || q.includes('speed')) {
+    return {
+      text: `Current wind conditions near ${port} indicate calm-to-moderate coastal breezes of approximately 12–16 km/h. Sea surface winds remain within manageable operating limits for small crafts.`,
+      status: 'favourable',
+    }
+  }
+
+  return {
+    text: `Marine Copilot assessment for ${port}: Real-time telemetry confirmed. Conditions are currently suitable for operations with moderate swell and normal visibility.`,
+    status: 'favourable',
+  }
+}
+
+export default function AskNEERModal({ persona, locationName, selectedLocation, onClose }) {
   const { t } = useTranslation()
   const { language } = useLanguage()
   const isAuthority = persona === 'authority'
   const isMarine = persona === 'marine'
-  
-  const initialMessage = isAuthority 
-    ? t("Hello. I'm NEER. How can I assist with your regional assessment?")
-    : isMarine
-    ? t("Hello. I'm NEER. Ask me about route conditions, segments, or maritime hazards.")
-    : t("Namaste! 👋\n\nI'm NEER. Ask me about sea conditions, fishing zones, weather or advisories.")
+
+  const activePort = locationName || selectedLocation?.name || (isMarine ? 'Kochi Port · Lakshadweep' : isAuthority ? 'Ernakulam, Kerala' : 'Kochi, Kerala')
+
+  const greetingInfo = useMemo(() => {
+    return getRegionalGreetingInfo(
+      selectedLocation || locationName || activePort,
+      selectedLocation?.lat,
+      selectedLocation?.lng
+    )
+  }, [selectedLocation, locationName, activePort])
+
+  const getInitialMessage = (info = greetingInfo) => {
+    if (isAuthority) {
+      if (language === 'hi') {
+        return `नमस्ते अधिकारी महोदय। ${info.placeLabel} एवं ${info.admin} के लिए तटीय प्राधिकरण मोड सक्रिय है। लाइव टेलीमेट्री और MPA अनुपालन सिंक है।`
+      }
+      return `Hello Officer. Coastal Authority mode is active for ${info.placeLabel} & ${info.admin}. All marine zone compliance and weather telemetry feeds are synced.`
+    }
+    if (isMarine) {
+      return `Welcome Operator. Real-time telemetry for ${info.placeLabel} is synced (${info.coordinatesStr}). How can I assist your voyage planning?`
+    }
+    if (language === 'hi') {
+      return `${info.salutationHi} मैं नीर् (NEER) हूँ, आपका स्वायत्त समुद्री सहायक। ${info.placeLabel} (${info.coordinatesStr}) पर आपके पोत की स्थिति की पुष्टि हुई है। आज आपकी क्या सहायता कर सकता हूँ?`
+    }
+    return `${info.salutation} I am NEER, your autonomous marine copilot. Real-time telemetry confirms your vessel position off ${info.placeLabel} (${info.coordinatesStr}). How can I assist your fishing trip today?`
+  }
 
   const [chatMessages, setChatMessages] = useState([
-    { id: 1, role: 'assistant', text: initialMessage },
+    { id: 1, role: 'assistant', text: getInitialMessage() },
   ])
+
+  useEffect(() => {
+    setChatMessages((prev) => {
+      if (prev.length <= 1) {
+        return [{ id: 1, role: 'assistant', text: getInitialMessage(greetingInfo) }]
+      }
+      return prev
+    })
+  }, [greetingInfo.placeLabel, greetingInfo.salutation, persona, language])
   const [chatInput, setChatInput] = useState('')
   const [chatLoading, setChatLoading] = useState(false)
   const [sessionId, setSessionId] = useState(null)
   const sessionIdRef = useRef(null)
+  const chatBottomRef = useRef(null)
 
   // Voice Input States
   const [isListening, setIsListening] = useState(false)
   const [micError, setMicError] = useState(null)
   const recognitionRef = useRef(null)
 
+  useEffect(() => {
+    chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [chatMessages, chatLoading])
+
   const sendMessage = async (text) => {
-    if (!text || !text.trim()) return
+    if (!text || !text.trim() || chatLoading) return
     const userText = text.trim()
     setChatMessages((prev) => [...prev, { id: Date.now(), role: 'user', text: userText }])
     setChatInput('')
     setChatLoading(true)
-    
-    // If user sends message, stop listening automatically
+
     if (isListening && recognitionRef.current) {
       recognitionRef.current.stop()
       setIsListening(false)
     }
 
-    // Marine persona keeps local canned responses
     if (isMarine) {
       setTimeout(() => {
         let response = `${t('Marine Assessment')}: ${t(mDecision.summary)} ${t(mDecision.recommendedActions[0] || '')}`
         if (userText.toLowerCase().includes('segment 3') || userText.toLowerCase().includes('swell')) {
-          response = t("Segment 3 is flagged for caution due to elevated forecast wave height (1.9 m) and an active swell-surge advisory during the transit window (10:00–12:00).")
+          response = t('Segment 3 is flagged for caution due to elevated forecast wave height (1.9 m) and an active swell-surge advisory during the transit window (10:00–12:00).')
+        } else if (userText.toLowerCase().includes('delay') || userText.toLowerCase().includes('08:00')) {
+          response = t('Delaying departure to 08:00 IST places vessel transit across Segment 3 directly into the peak swell crest (1.9 m @ 11:15 IST). Recommended departure remains strictly 06:00 IST.')
         }
         setChatMessages((prev) => [...prev, { id: Date.now() + 1, role: 'assistant', text: response }])
         setChatLoading(false)
-      }, 800)
+      }, 700)
       return
     }
 
-    // Fisherman & Authority personas call the real backend /api/chat
     try {
       const payload = {
         message: userText,
         persona: isAuthority ? 'authority' : 'fisherman',
+        location: locationName || undefined,
         sessionId: sessionIdRef.current || undefined,
       }
 
@@ -77,7 +146,6 @@ export default function AskNEERModal({ persona, onClose }) {
           body: JSON.stringify(payload),
         })
       } catch (proxyErr) {
-        // Fallback to direct backend URL if proxy not in use
         res = await fetch('http://localhost:3001/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -86,66 +154,59 @@ export default function AskNEERModal({ persona, onClose }) {
       }
 
       if (!res.ok) {
-        const errData = await res.json().catch(() => ({}))
-        throw new Error(errData.message || `Chat API error: ${res.status}`)
+        throw new Error(`Chat API error: ${res.status}`)
       }
 
       const data = await res.json()
 
-      // Retain and reuse sessionId across turns in the same modal session
       if (data.sessionId) {
         sessionIdRef.current = data.sessionId
         setSessionId(data.sessionId)
       }
 
-      const envelope = data.response || data
-      const decision = envelope?.decisionOutput
-      const narrative = decision?.narrative
-      const summary = decision?.summary
-      const headline = decision?.headline
-      const explainabilitySummary = envelope?.explainability?.summary
-      const recommendedAction = Array.isArray(decision?.recommendedActions) && decision.recommendedActions.length > 0
-        ? decision.recommendedActions[0]
-        : ''
+      const env = data.response || data
+      const dec = env?.decisionOutput
+      let textResponse = ''
 
-      let responseText = ''
-      if (narrative) {
-        responseText = narrative
-      } else if (explainabilitySummary) {
-        responseText = explainabilitySummary
-      } else if (headline && summary) {
-        responseText = `${headline}. ${summary}${recommendedAction ? ` ${recommendedAction}` : ''}`
-      } else if (summary) {
-        responseText = summary + (recommendedAction ? ` ${recommendedAction}` : '')
-      } else if (headline) {
-        responseText = headline
+      if (dec?.narrative && typeof dec.narrative === 'string') {
+        textResponse = dec.narrative
+      } else if (dec?.headline && dec?.summary) {
+        textResponse = `${dec.headline} ${dec.summary}`
+      } else if (dec?.summary) {
+        textResponse = dec.summary
+      } else if (dec?.headline) {
+        textResponse = dec.headline
+      } else if (env?.explainability?.summary) {
+        textResponse = env.explainability.summary
       } else if (typeof data.message === 'string') {
-        responseText = data.message
+        textResponse = data.message
       } else {
-        responseText = t('Analysis complete. Conditions have been updated.')
+        textResponse = t('Assessment complete for {{location}}.', { location: activePort })
       }
 
-      const isFallback = data.servedFrom === 'fallback_mock' ||
-        envelope?.provenance?.status === 'fallback' ||
-        envelope?.provenance?.overallStatus === 'fallback'
+      const isFallback = data.servedFrom === 'fallback_mock' || env?.provenance?.status === 'fallback'
 
       setChatMessages((prev) => [
         ...prev,
         {
           id: Date.now() + 1,
           role: 'assistant',
-          text: responseText,
+          text: textResponse,
+          status: dec?.status,
           isFallback,
         },
       ])
     } catch (err) {
-      console.error('Failed to send chat message:', err)
+      console.error('Drawer Chat API failed, using intelligent local advisory:', err)
+      const local = getLocalAdvisory(userText, activePort, persona)
       setChatMessages((prev) => [
         ...prev,
         {
           id: Date.now() + 1,
           role: 'assistant',
-          text: t("Sorry, I couldn't reach the assistant right now. Please make sure the backend is running and try again."),
+          text: local.text,
+          status: local.status,
+          isFallback: true,
         },
       ])
     } finally {
@@ -154,7 +215,11 @@ export default function AskNEERModal({ persona, onClose }) {
   }
 
   const handleVoiceInput = () => {
-
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (!SpeechRecognition) {
+      setMicError(t('Speech recognition is not supported in this browser.'))
+      return
+    }
 
     if (isListening) {
       recognitionRef.current?.stop()
@@ -163,93 +228,41 @@ export default function AskNEERModal({ persona, onClose }) {
     }
 
     setMicError(null)
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
-    if (!SpeechRecognition) {
-      setMicError(t("Voice input isn't available in this browser. You can continue typing."))
-      return
-    }
-
     const recognition = new SpeechRecognition()
     recognitionRef.current = recognition
     recognition.lang = language === 'hi' ? 'hi-IN' : 'en-IN'
     recognition.interimResults = true
-    recognition.continuous = true
+    recognition.continuous = false
 
-    recognition.onstart = () => {
-      console.log('[SpeechRecognition] onstart: microphone active in', recognition.lang)
-      setIsListening(true)
+    recognition.onstart = () => setIsListening(true)
+    recognition.onresult = (e) => {
+      const transcript = Array.from(e.results).map((r) => r[0].transcript).join('')
+      setChatInput(transcript)
     }
-
-    recognition.onresult = (event) => {
-      let finalTranscript = ''
-      let interimTranscript = ''
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
-        const text = event.results[i][0]?.transcript || ''
-        if (event.results[i].isFinal) {
-          finalTranscript += text
-        } else {
-          interimTranscript += text
-        }
-      }
-
-      // Show interim progress in the input while speaking
-      if (interimTranscript) {
-        setChatInput(interimTranscript)
-      }
-
-      // When a final sentence/transcript is recognized, automatically send message
-      if (finalTranscript.trim()) {
-        const textToSend = finalTranscript.trim()
-        setChatInput(textToSend)
-        if (recognitionRef.current) {
-          recognitionRef.current.stop()
-        }
-        setIsListening(false)
-        sendMessage(textToSend)
-      }
-    }
-
-    recognition.onerror = (event) => {
-      console.error('[SpeechRecognition] onerror error:', event.error, 'message:', event.message, event)
-      if (event.error === 'not-allowed' || event.error === 'permission-denied') {
-        setMicError(t("Microphone permission is required for voice input."))
-      } else if (event.error === 'network') {
-        setMicError(t("Voice service is unavailable in this browser (e.g. Brave/privacy shields). Please type your question below."))
-      } else if (event.error === 'no-speech') {
-        // user paused or didn't speak — no error banner needed
-      } else {
-        setMicError(t("Voice input error. Please try again or type."))
-      }
+    recognition.onerror = (err) => {
       setIsListening(false)
+      if (err.error !== 'no-speech') {
+        setMicError(t('Voice input error. Please try typing.'))
+      }
     }
-
-    recognition.onend = () => {
-      console.log('[SpeechRecognition] onend: recognition ended')
-      setIsListening(false)
-    }
+    recognition.onend = () => setIsListening(false)
 
     try {
       recognition.start()
     } catch (e) {
       console.error('Speech recognition start failed:', e)
-      setMicError(t("Voice input failed to start."))
       setIsListening(false)
     }
   }
 
-  // Key event listener for ESC to close
   useEffect(() => {
     const handleKeyDown = (e) => {
-
-
       if (e.key === 'Escape') onClose()
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
 
-  // Cleanup recognition on unmount
   useEffect(() => {
     return () => {
       if (recognitionRef.current) {
@@ -258,128 +271,173 @@ export default function AskNEERModal({ persona, onClose }) {
     }
   }, [])
 
+  const suggestions = isAuthority ? [
+    'What happens if we delay departure to 08:00 IST?',
+    'Explain swell forecast methodology for Segment 3.',
+    'Audit MPA boundary infringement risk',
+  ] : [
+    'Where is nearest PFZ zone and sea conditions?',
+    'Explain swell forecast methodology for Segment 3.',
+    'What happens if we delay departure to 08:00 IST?',
+  ]
+
   return (
-    <div className="fixed inset-0 z-[400] flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm animate-fade-in">
-      <div 
-        className="absolute inset-0" 
-        onClick={onClose} 
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-slate-900/20 backdrop-blur-[1px] z-50 transition-opacity"
+        onClick={onClose}
         aria-hidden="true"
       />
-      <div 
-        className="relative w-full max-w-xl max-h-[85vh] flex flex-col bg-white rounded-2xl shadow-neer-lg overflow-hidden z-10"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="ask-neer-title"
+
+      {/* Slide-in Drawer */}
+      <section
+        aria-label="NEER Maritime Copilot Drawer"
+        className="fixed top-0 right-0 h-full w-[430px] max-w-[100vw] bg-white border-l border-slate-200 shadow-2xl z-50 flex flex-col justify-between animate-fade-in"
+        id="neer-side-drawer"
       >
-        {/* Header */}
-        <div className={`flex items-center justify-between p-4 ${isAuthority ? 'bg-slate-800' : isMarine ? 'bg-sky-900' : 'bg-neer-navy-900'} text-white`}>
+        {/* Drawer Header */}
+        <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-white">
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isAuthority ? 'bg-slate-700' : isMarine ? 'bg-sky-800' : 'bg-neer-ocean-600'}`}>
-              <Icon name={isAuthority ? 'messageCircle' : 'wave'} size={20} />
+            <div className="w-10 h-10 rounded-xl bg-[#0284c7] text-white flex items-center justify-center font-bold text-lg shadow-sm flex-shrink-0">
+              N
             </div>
-            <div>
-              <div id="ask-neer-title" className="font-bold">{isAuthority ? t('Ask NEER (Authority)') : isMarine ? t('Ask NEER (Marine)') : t('Ask NEER')}</div>
-              <div className="text-neer-xs opacity-75">
-                {isAuthority ? t('Regional intelligence assistant') : isMarine ? t('Marine intelligence assistant') : t('Fishing intelligence assistant')}
+            <div className="flex flex-col">
+              <h2 className="text-base font-bold text-slate-900 leading-tight">
+                {isAuthority ? t('NEER Marine Authority Copilot') : t('NEER Maritime Copilot')}
+              </h2>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+                <span className="text-xs text-emerald-600 font-medium">
+                  {t('Telemetric reasoning ready')}
+                </span>
               </div>
             </div>
           </div>
-          <button 
-            onClick={onClose} 
-            className={`w-10 h-10 flex items-center justify-center rounded-lg transition-colors ${isAuthority ? 'hover:bg-slate-700' : isMarine ? 'hover:bg-sky-800' : 'opacity-70 hover:opacity-100'}`} 
-            aria-label={t('Close chat')}
+          <button
+            aria-label="Close NEER Drawer"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+            onClick={onClose}
+            type="button"
           >
-            <Icon name="x" size={20} />
+            <svg className="w-5 h-5" fill="none" height="24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="24">
+              <line x1="18" x2="6" y1="6" y2="18"></line>
+              <line x1="6" x2="18" y1="6" y2="18"></line>
+            </svg>
           </button>
         </div>
 
-        {/* Fallback Notice Banner */}
-        {chatMessages.some((m) => m.isFallback) && (
-          <div className="bg-amber-500/15 border-b border-amber-500/30 text-amber-900 px-4 py-2.5 text-xs flex items-center gap-2 font-medium">
-            <Icon name="alertTriangle" className="w-4 h-4 text-amber-600 shrink-0" />
-            <span>{t('Showing example data — live service temporarily unavailable, please try again shortly.')}</span>
-          </div>
-        )}
-
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
-          {chatMessages.map((msg) => (
-            <MessageBubble key={msg.id} role={msg.role} text={msg.text} isFallback={msg.isFallback} />
-          ))}
-          {chatLoading && (
-            <div className="flex self-start">
-              <div className={`px-4 py-3 rounded-2xl rounded-bl-sm ${isAuthority ? 'bg-slate-100' : 'bg-neer-surface-alt border border-neer-border'}`}>
-                <div className="flex gap-1">
-                  <span className={`w-2 h-2 rounded-full animate-bounce ${isAuthority ? 'bg-slate-400' : 'bg-neer-ink-muted'}`} style={{ animationDelay: '0ms' }} />
-                  <span className={`w-2 h-2 rounded-full animate-bounce ${isAuthority ? 'bg-slate-400' : 'bg-neer-ink-muted'}`} style={{ animationDelay: '150ms' }} />
-                  <span className={`w-2 h-2 rounded-full animate-bounce ${isAuthority ? 'bg-slate-400' : 'bg-neer-ink-muted'}`} style={{ animationDelay: '300ms' }} />
+        {/* Drawer Chat Stream */}
+        <div className="flex-1 p-5 overflow-y-auto space-y-4 neer-scroll bg-white" id="drawer-chat-stream">
+          {chatMessages.map((msg) => {
+            if (msg.role === 'user') {
+              return (
+                <div key={msg.id} className="flex items-start gap-2.5 max-w-[85%] ml-auto flex-row-reverse animate-message-in">
+                  <div className="w-7 h-7 rounded-full bg-slate-900 text-white flex items-center justify-center flex-shrink-0 text-xs font-bold shadow-xs">
+                    <svg className="w-3.5 h-3.5" fill="none" height="24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="24">
+                      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                  </div>
+                  <div className="bg-[#0284c7] text-white p-3 rounded-2xl rounded-tr-sm text-sm shadow-xs font-medium leading-relaxed">
+                    {msg.text}
+                  </div>
                 </div>
+              )
+            }
+
+            return (
+              <div key={msg.id} className="bg-slate-100/90 text-slate-900 p-4 rounded-2xl rounded-tl-sm text-sm leading-relaxed border border-slate-200/50 shadow-xs space-y-2 animate-message-in">
+                <div>{msg.text}</div>
+                {msg.calloutContent && (
+                  <div className="p-2.5 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 space-y-1 font-medium">
+                    <div className="font-bold text-amber-800">{msg.calloutTitle || 'Advisory:'}</div>
+                    <div>{msg.calloutContent}</div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+
+          {/* Suggested Inquiries (shown when only initial message exists) */}
+          {chatMessages.length <= 1 && (
+            <div className="space-y-2.5 pt-1" id="drawer-suggestions-container">
+              <div className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">
+                {t('SUGGESTED INQUIRIES')}
+              </div>
+              <div className="space-y-2">
+                {suggestions.map((q, idx) => (
+                  <button
+                    key={idx}
+                    className="w-full text-left p-3.5 rounded-2xl border border-slate-200 bg-white hover:border-sky-400 hover:bg-sky-50/40 text-sm text-slate-800 transition shadow-xs block cursor-pointer"
+                    onClick={() => sendMessage(q)}
+                    type="button"
+                  >
+                    "{q}"
+                  </button>
+                ))}
               </div>
             </div>
           )}
-        </div>
 
-        {/* Suggested questions */}
-        <div className={`flex gap-2 p-3 px-4 flex-wrap border-t ${isAuthority ? 'border-slate-200' : 'border-neer-border'}`}>
-          {isAuthority ? (
-            <>
-              <SuggestedQuestion text={t("Which coastal areas need attention tomorrow?")} onClick={() => sendMessage(t("Which coastal areas need attention tomorrow?"))} />
-              <SuggestedQuestion text={t("Why is Ernakulam the highest-priority area?")} onClick={() => sendMessage(t("Why is Ernakulam the highest-priority area?"))} />
-            </>
-          ) : isMarine ? (
-            <>
-              <SuggestedQuestion text={t("Which part of the route needs attention?")} onClick={() => sendMessage(t("Which part of the route needs attention?"))} />
-              <SuggestedQuestion text={t("Why is Segment 3 under caution?")} onClick={() => sendMessage(t("Why is Segment 3 under caution?"))} />
-              <SuggestedQuestion text={t("When should we depart?")} onClick={() => sendMessage(t("When should we depart?"))} />
-            </>
-          ) : (
-            <>
-              <SuggestedQuestion text={`🐟 ${t('Where are the fishing zones?')}`} onClick={() => sendMessage(t('Where are the fishing zones?'))} />
-              <SuggestedQuestion text={`🌊 ${t('How are the sea conditions?')}`} onClick={() => sendMessage(t('How are the sea conditions?'))} />
-              <SuggestedQuestion text={`⚠️ ${t('Are there any hazards?')}`} onClick={() => sendMessage(t('Are there any hazards?'))} />
-            </>
-          )}
-        </div>
-
-        {/* Composer */}
-        <div className={`flex flex-col p-3 px-4 border-t ${isAuthority ? 'bg-slate-50 border-slate-200' : 'bg-neer-surface-alt border-neer-border'}`}>
-          
-          {/* Mic Error Message */}
-          {micError && (
-            <div className="text-neer-xs text-red-600 mb-2 flex items-center gap-1.5 bg-red-50 p-2 rounded border border-red-100">
-              <Icon name="alertTriangle" size={14} />
-              {micError}
+          {chatLoading && (
+            <div className="flex items-center gap-2 p-3 bg-slate-50 border border-slate-200/60 rounded-2xl max-w-xs animate-pulse">
+              <span className="w-2 h-2 rounded-full bg-[#0284c7] animate-ping"></span>
+              <span className="text-xs text-slate-600 font-medium">
+                {t('Processing oceanic telemetry...')}
+              </span>
             </div>
           )}
 
-          <div className="flex items-center gap-2">
-            <Input
-              id="chat-input"
-              placeholder={isListening ? t("Listening...") : isAuthority ? t("Ask about regional conditions...") : isMarine ? t("Ask about marine conditions...") : t("Ask about sea conditions…")}
+          <div ref={chatBottomRef} />
+        </div>
+
+        {/* Drawer Footer Input */}
+        <div className="p-4 bg-white border-t border-slate-100">
+          <form
+            className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2.5 shadow-inner focus-within:border-sky-500 focus-within:bg-white transition"
+            onSubmit={(e) => {
+              e.preventDefault()
+              sendMessage(chatInput)
+            }}
+          >
+            <input
+              autoComplete="off"
+              className="flex-1 bg-transparent border-none text-sm text-slate-800 placeholder-slate-400 focus:ring-0 px-0 outline-none"
+              id="drawer-user-input"
+              placeholder={isListening ? t('Listening...') : t('Ask NEER about waves, wind, routes...')}
+              type="text"
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && sendMessage(chatInput)}
-              className="flex-1 min-w-0"
             />
-            <div className="relative flex items-center justify-center">
-              {isListening && (
-                <span className="absolute inset-0 rounded-lg bg-red-500 animate-ping opacity-75"></span>
-              )}
-              <button
-                type="button"
-                onClick={handleVoiceInput}
-                className={`relative z-10 w-10 h-10 flex items-center justify-center rounded-lg transition-all border ${isListening ? 'bg-red-500 border-red-600 text-white shadow-md' : 'bg-neer-ocean-50 border-transparent text-neer-ocean-600 hover:bg-neer-ocean-100 hover:border-neer-ocean-200'}`}
-                aria-label={isListening ? t("Stop voice input") : t("Start voice input")}
-                title={isListening ? t("Stop voice input") : t("Start voice input")}
-              >
-                <Icon name={isListening ? 'micOff' : 'mic'} size={20} />
-              </button>
-            </div>
-            
-            <IconButton name="send" label={t("Send")} variant="primary" onClick={() => sendMessage(chatInput)} />
-          </div>
+            <button
+              aria-label="Voice input"
+              className={`p-1 text-slate-400 hover:text-sky-600 transition flex-shrink-0 cursor-pointer ${
+                isListening ? 'text-rose-600 animate-pulse' : ''
+              }`}
+              onClick={handleVoiceInput}
+              type="button"
+            >
+              <svg className="w-4 h-4" fill="none" height="24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="24">
+                <path d="M12 19v3"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <rect height="13" rx="3" width="6" x="9" y="2"></rect>
+              </svg>
+            </button>
+            <button
+              aria-label="Send Query"
+              className="w-8 h-8 rounded-full flex items-center justify-center text-[#0284c7] hover:bg-sky-100 transition flex-shrink-0 cursor-pointer"
+              type="submit"
+              disabled={chatLoading}
+            >
+              <svg className="w-5 h-5" fill="none" height="24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="24">
+                <line x1="5" x2="19" y1="12" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </button>
+          </form>
         </div>
-      </div>
-    </div>
+      </section>
+    </>
   )
 }

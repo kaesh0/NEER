@@ -2,8 +2,8 @@
 
 Builds candidate routes from the user's own location toward the nearest INCOIS
 PFZ point and scores every waypoint with live Open-Meteo marine wave data.
-Routes are never hardcoded to a demo region: without a resolvable destination
-the agent reports "skipped" instead of scoring irrelevant demo coordinates.
+Routes are never hardcoded to a fixed sample region: without a resolvable destination
+the agent reports "skipped" instead of scoring irrelevant sample coordinates.
 """
 from __future__ import annotations
 import asyncio

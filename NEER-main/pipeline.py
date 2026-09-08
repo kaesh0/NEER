@@ -59,7 +59,12 @@ def _save_turn(session_dir: Path, seq: int, turn_trace: dict) -> Path:
     return turn_file
 
 
-def run_pipeline(query: str) -> dict:
+def run_pipeline(
+    query: str,
+    context_location: str | None = None,
+    context_persona: str | None = None,
+    session_id: str | None = None,
+) -> dict:
     """Run the complete agent sequence for a single user query (one turn).
 
     This is exactly the turn logic previously inline in main()'s while loop.
@@ -67,10 +72,24 @@ def run_pipeline(query: str) -> dict:
     agents: {intent, weather, ocean, geofence, route, risk}, final_output} —
     so callers can print it stage by stage or persist it with _save_turn().
     """
+    # If no context_location is provided, check if previous turn in this session resolved a location
+    if not context_location and session_id:
+        session_dir = CONVERSATIONS_DIR / Path(session_id).name
+        if session_dir.exists():
+            turns = sorted(session_dir.glob("[0-9][0-9][0-9]_*.json"))
+            if turns:
+                try:
+                    last_turn = json.loads(turns[-1].read_text(encoding="utf-8"))
+                    prev_loc = (last_turn.get("agents", {}).get("intent", {}).get("location") or {}).get("name")
+                    if prev_loc:
+                        context_location = prev_loc
+                except Exception:
+                    pass
+
     turn_trace = {"timestamp": datetime.datetime.now().isoformat(), "query": query, "agents": {}}
 
     # Agent 1: Intent
-    intent = agent_1_intent(query)
+    intent = agent_1_intent(query, fallback_location=context_location, fallback_persona=context_persona)
     turn_trace["agents"]["intent"] = intent
 
     if intent.get("clarifying_question") or not intent.get("is_coastal", True):

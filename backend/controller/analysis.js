@@ -26,15 +26,9 @@ async function handleGetAnalysis(req, res) {
       });
     }
 
-    if (PLANNED_PERSONAS.includes(persona)) {
-      return res.status(501).json({
-        error: "not_implemented",
-        message: "PERSONA NOT YET IMPLEMENTED",
-        persona,
-      });
-    }
+    const normPersona = persona === "marine" ? "maritime_operator" : persona;
 
-    if (!IMPLEMENTED_PERSONAS.includes(persona)) {
+    if (!VALID_PERSONAS.includes(normPersona)) {
       return res.status(400).json({
         error: "invalid_persona",
         message: "UNKNOWN PERSONA",
@@ -42,7 +36,16 @@ async function handleGetAnalysis(req, res) {
       });
     }
 
-    const analysis = await getAnalysisByPersona(persona, { lat, lng, location });
+    // When no specific coordinates or location are requested, preserve planned 501 response
+    if (PLANNED_PERSONAS.includes(normPersona) && !lat && !lng && !location) {
+      return res.status(501).json({
+        error: "not_implemented",
+        message: "PERSONA NOT YET IMPLEMENTED",
+        persona: "maritime_operator",
+      });
+    }
+
+    const analysis = await getAnalysisByPersona(normPersona, { lat, lng, location });
     return res.status(200).json(analysis);
   } catch (err) {
     console.log(err);

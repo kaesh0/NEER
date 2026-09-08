@@ -3,6 +3,8 @@ import { Icon } from '../../icons/index.js'
 import { useLanguage } from '../../context/LanguageContext.jsx'
 import { useTranslation } from '../../i18n/translations.js'
 import { useAuth } from '../../context/AuthContext.jsx'
+import LocationSelector from '../ui/LocationSelector.jsx'
+import { LogoIcon } from '../ui/Logo.jsx'
 
 function LanguageSelector() {
   const { t } = useTranslation()
@@ -90,14 +92,23 @@ function WorkspaceSwitcher({ persona, onPersonaChange, title, kicker }) {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 group hover:bg-neer-navy-50 rounded-lg p-1.5 -ml-1.5 transition-colors text-left"
+        className="flex items-center gap-3 p-1.5 -ml-1.5 rounded-xl hover:bg-slate-100/70 transition group text-left"
+        type="button"
       >
-        <Icon name="wave" size={24} className="text-neer-ocean-600 flex-shrink-0" aria-hidden="true" />
-        <div className="flex flex-col justify-center">
-          <div className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-neer-ocean-600">{kicker}</div>
-          <div className="flex items-center gap-1.5 mt-[-2px]">
-            <span className="text-lg md:text-xl font-bold text-neer-navy-900 tracking-tight">{activeLabel}</span>
-            <Icon name="chevronDown" size={16} className={`text-neer-ink-muted transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 shadow-sm group-hover:border-sky-300 transition flex-shrink-0">
+          <svg className="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+            <path d="M2 12q2.5 2 5 0t5 0 5 0 5 0" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M2 19q2.5 2 5 0t5 0 5 0 5 0" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M2 5q2.5 2 5 0t5 0 5 0 5 0" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+        <div className="flex flex-col text-left">
+          <span className="text-[10px] font-bold tracking-wider uppercase text-sky-600 leading-none mb-1">
+            MARINE INTELLIGENCE PLATFORM
+          </span>
+          <div className="flex items-center gap-1.5 font-bold text-slate-900 text-base leading-tight group-hover:text-sky-600 transition">
+            <span>{activeLabel}</span>
+            <Icon name="chevronDown" size={14} className={`text-slate-400 group-hover:text-sky-600 group-hover:translate-y-0.5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
           </div>
         </div>
       </button>
@@ -236,85 +247,101 @@ export default function AppHeader({
   navItems = [],
   onNavigate,
   locationName = '',
+  currentLocation,
+  onLocationChange,
   className = '',
 }) {
   const { t } = useTranslation()
 
   return (
-    <header className={`sticky top-0 z-[100] bg-white border-b border-neer-border ${className}`} role="banner">
-      <div className="neer-gov-strip" aria-hidden="true" />
-      <div className="flex items-center justify-between h-[4.5rem] px-[clamp(0.75rem, 2.5vw, 1.75rem)] md:px-8 lg:px-12 w-full mx-auto">
-        <div className="flex items-center gap-3">
-          {onMenu && (
-            <button
-              className="md:hidden flex items-center justify-center w-9 h-9 rounded-[0.625rem] text-neer-navy-800 transition-colors duration-neer-fast hover:bg-neer-navy-50"
-              onClick={onMenu}
-              aria-label="Open menu"
-              type="button"
-            >
-              <Icon name="menu" size={18} />
-            </button>
-          )}
-          
-          {persona ? (
-            <WorkspaceSwitcher persona={persona} onPersonaChange={onPersonaChange} title={title} kicker={t(kicker)} />
-          ) : (
-            <div className="flex flex-col justify-center">
-              <div className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-neer-ocean-600">{t(kicker)}</div>
-              <div className="flex items-center gap-1.5 mt-[-2px]">
-                <Icon name="wave" size={22} className="text-neer-ocean-600 flex-shrink-0" aria-hidden="true" />
-                <span className="text-xl font-bold text-neer-navy-900 tracking-tight">{title}</span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Desktop Navigation */}
-        {onTabChange && (
-          <nav className="hidden md:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
-            {navItems.map((item) => (
+    <header className={`sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/80 transition-all duration-200 shadow-sm ${className}`} role="banner">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 gap-4">
+          <div className="flex items-center gap-3">
+            {onMenu && (
               <button
-                key={item.id}
-                onClick={(e) => {
-                  if (item.onClick) {
-                    item.onClick(e)
-                  } else if (onTabChange) {
-                    onTabChange(item.id)
-                  }
-                }}
-                className={`relative py-2 text-sm font-semibold transition-colors ${
-                  activeTab === item.id ? 'text-neer-ocean-600' : 'text-neer-ink-secondary hover:text-neer-ink'
-                }`}
+                className="md:hidden flex items-center justify-center w-9 h-9 rounded-[0.625rem] text-slate-800 transition-colors hover:bg-slate-100"
+                onClick={onMenu}
+                aria-label="Open menu"
+                type="button"
               >
-                {t(item.label)}
-                {item.badge != null && (
-                  <span className="absolute -top-1 -right-3 min-w-[1.125rem] h-4 px-1 text-[0.6rem] font-bold flex items-center justify-center text-white bg-neer-unfavourable rounded-full">
-                    {item.badge}
-                  </span>
-                )}
-                {activeTab === item.id && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-neer-ocean-600 rounded-t-full" />
-                )}
+                <Icon name="menu" size={18} />
               </button>
-            ))}
-          </nav>
-        )}
+            )}
+            
+            {persona ? (
+              <WorkspaceSwitcher persona={persona} onPersonaChange={onPersonaChange} title={title} kicker={t(kicker)} />
+            ) : (
+              <div className="flex items-center gap-3 p-1.5 -ml-1.5 text-left">
+                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 shadow-sm">
+                  <svg className="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                    <path d="M2 12q2.5 2 5 0t5 0 5 0 5 0" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M2 19q2.5 2 5 0t5 0 5 0 5 0" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M2 5q2.5 2 5 0t5 0 5 0 5 0" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <div className="flex flex-col text-left">
+                  <span className="text-[10px] font-bold tracking-wider uppercase text-sky-600 leading-none mb-1">
+                    MARINE INTELLIGENCE PLATFORM
+                  </span>
+                  <span className="text-base font-bold text-slate-900 tracking-tight">{title}</span>
+                </div>
+              </div>
+            )}
+          </div>
 
-        <div className="flex items-center gap-3">
-          <LanguageSelector />
-          {/* Location indicator */}
-          <button
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-neer-xs font-medium text-neer-ink-secondary bg-neer-surface-alt rounded-lg border border-neer-border hover:bg-neer-navy-50 transition-colors"
-            aria-label="Not your location? Update location"
-          >
-            <Icon name="location" size={14} className="text-neer-ocean-600" />
-            <span className="max-w-[9rem] truncate">{locationName || 'Loading...'}</span>
-          </button>
+          {/* Central Navigation Tabs (Clickable, Reactive) */}
+          {onTabChange && (
+            <nav aria-label="Main Navigation" className="relative hidden md:flex items-center gap-1">
+              {navItems.map((item) => {
+                const isActive = activeTab === item.id
+                return (
+                  <button
+                    key={item.id}
+                    onClick={(e) => {
+                      if (item.onClick) {
+                        item.onClick(e)
+                      } else if (onTabChange) {
+                        onTabChange(item.id)
+                      }
+                    }}
+                    className={`nav-tab-btn px-4 py-2 rounded-xl text-sm transition-all duration-200 ${
+                      isActive
+                        ? 'bg-sky-50 text-sky-600 font-semibold border-b-2 border-sky-600 shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900 bg-transparent border-b-2 border-transparent font-medium'
+                    } flex items-center gap-1.5`}
+                    type="button"
+                  >
+                    <span>{t(item.label)}</span>
+                    {item.badge != null && (
+                      <span className="w-4 h-4 bg-red-500 text-white rounded-full text-[10px] font-bold flex items-center justify-center shadow-sm">
+                        {item.badge}
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
+            </nav>
+          )}
 
-          {/* User profile avatar dropdown */}
-          <ProfileMenu onNavigate={onNavigate} />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <LanguageSelector />
+            
+            {/* Interactive Location Selector Pill matching code.html */}
+            <LocationSelector
+              currentLocation={currentLocation}
+              onLocationChange={onLocationChange}
+              persona={persona}
+              locationName={locationName}
+            />
+
+            {/* User profile avatar dropdown */}
+            <ProfileMenu onNavigate={onNavigate} />
+          </div>
         </div>
       </div>
+      {/* Oceanic Progress / Status Line Indicator */}
+      <div className="h-0.5 w-full bg-gradient-to-r from-teal-400 via-sky-500 to-blue-600 opacity-80" />
     </header>
   )
 }

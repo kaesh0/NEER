@@ -60,11 +60,18 @@
         "sourceRef": "open-meteo-marine"
       },
       "seaSurfaceTemperature": {
-        "value": null,
+        "value": 28.6,
         "unit": "°C",
-        "status": "unavailable",
-        "reason": "Verified SST source was unavailable for this analysis.",
-        "sourceRef": "mosdac"
+        "status": "available",
+        "forecastFor": "2026-09-05T09:00:00+05:30",
+        "sourceRef": "open-meteo-marine"
+      },
+      "currentSpeed": {
+        "value": 1.2,
+        "unit": "km/h",
+        "status": "available",
+        "forecastFor": "2026-09-05T09:00:00+05:30",
+        "sourceRef": "open-meteo-marine"
       }
     },
     "fishingZones": { "status": "unavailable", "reason": "Not applicable at regional scope for this persona.", "zones": [] },
@@ -128,12 +135,12 @@
       ]
     },
     "dataAvailability": {
-      "overallStatus": "partial",
+      "overallStatus": "full",
       "weather": "live",
       "pfz": "unavailable",
       "hazards": "live",
-      "currents": "unavailable",
-      "sst": "unavailable"
+      "currents": "live",
+      "sst": "live"
     },
     "sourceReferences": [
       {
@@ -249,9 +256,9 @@
     ]
   },
   "provenance": {
-    "overallStatus": "partial",
-    "summary": "Weather and hazard data are live for the selected region. SST and currents are unavailable.",
-    "availability": { "weather": "live", "hazards": "live", "sst": "unavailable", "currents": "unavailable" },
+    "overallStatus": "full",
+    "summary": "Weather, hazard, current, and SST data are live for the selected region.",
+    "availability": { "weather": "live", "hazards": "live", "sst": "live", "currents": "live" },
     "sources": ["open-meteo-marine", "incois-osf"]
   },
   "explainability": {

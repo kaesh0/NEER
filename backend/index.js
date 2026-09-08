@@ -1,6 +1,6 @@
-// ORCA mock analysis backend entry point.
-const express = require("express");
-const cors = require("cors");
+// NEER Gateway & Authentication server entry point.
+const express = require('express');
+const cors = require('cors');
 
 const analysisRoute = require("./route/analysis");
 const chatRoute = require("./route/chat");
@@ -9,8 +9,8 @@ const requestLogger = require("./middleware/requestLogger");
 
 const app = express();
 
-// The Vite dev server runs on this port during development; allow both
-// spellings of the loopback host so the demo works either way.
+// CORS — in dev the Vite frontend runs on 5173. Allow common
+// spellings of the loopback host for local and container networking.
 const FRONTEND_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"];
 
 app.use(cors({ origin: FRONTEND_ORIGINS }));

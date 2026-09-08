@@ -596,11 +596,18 @@ export const translations = {
 export function useTranslation() {
   const { language } = useLanguage()
   
-  const t = (key) => {
-    if (translations[language] && translations[language][key]) {
-      return translations[language][key]
+  const t = (key, params) => {
+    let str = (translations[language] && translations[language][key])
+      ? translations[language][key]
+      : key
+
+    if (params && typeof params === 'object') {
+      for (const [paramKey, paramVal] of Object.entries(params)) {
+        str = str.replace(new RegExp(`\\{\\{${paramKey}\\}\\}`, 'g'), String(paramVal))
+        str = str.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), String(paramVal))
+      }
     }
-    return key // Fallback to English
+    return str
   }
   
   return { t }

@@ -1,14 +1,15 @@
 ## Copyright & Intellectual Property
 
-© 2026 [ISSUE TRACKER]. All Rights Reserved.
+© 2026 NEER Project. All Rights Reserved.
 
-This repository and all of its contents, including but not limited to source code, documentation, designs, assets, and other materials, are the intellectual property of [Your Name/Organization].
+This repository and all of its contents, including but not limited to source code, documentation, designs, assets, and other materials, are the intellectual property of NEER.
 
 No license is granted to copy, modify, distribute, sublicense, publish, sell, or commercially use any part of this repository without prior written permission from the copyright holder.
 
 The repository may be publicly viewed on GitHub, but public availability does not grant permission to reuse or redistribute its contents.
 
-For permission or licensing inquiries, please contact: [aryanvr961@gmail.com]
+For permission or licensing inquiries, please contact: aryanvr961@gmail.com  
+Issue Tracker: https://github.com/kaesh0/NEER/issues
 
 ---
 

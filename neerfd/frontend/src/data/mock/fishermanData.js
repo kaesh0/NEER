@@ -7,9 +7,11 @@
  */
 import fishermanJson from './fisherman_kochi.json' with { type: 'json' }
 
+const resolveEnv = (env) => (env && env.request ? env : fishermanJson)
+
 // ── Location ──────────────────────────────────────────────────────────────
 export function getLocation(env) {
-  const g = env?.request?.geometry
+  const g = resolveEnv(env)?.request?.geometry
   return {
     name: g?.label || 'Unknown',
     lat: g?.coordinates?.[1] ?? 0,
@@ -20,7 +22,7 @@ export function getLocation(env) {
 
 // ── Time Window ───────────────────────────────────────────────────────────
 export function getTimeWindow(env) {
-  const tw = env?.request?.timeWindow
+  const tw = resolveEnv(env)?.request?.timeWindow
   return {
     label: tw?.label || '',
     start: tw?.start || '',
@@ -31,7 +33,7 @@ export function getTimeWindow(env) {
 
 // ── Vessel Context ────────────────────────────────────────────────────────
 export function getVessel(env) {
-  const vc = env?.request?.vesselContext
+  const vc = resolveEnv(env)?.request?.vesselContext
   const type = vc?.type || 'unknown'
   return {
     type,
@@ -48,7 +50,7 @@ function cond(val, unit, fallback = 'Unavailable') {
 }
 
 export function getConditions(env) {
-  const c = env?.marineSituation?.conditions || {}
+  const c = resolveEnv(env)?.marineSituation?.conditions || {}
   return {
     waveHeight: cond(c.waveHeight, 'm'),
     wavePeriod: cond(c.wavePeriod, 's'),
@@ -64,7 +66,7 @@ export function getConditions(env) {
 
 // ── Fishing Zones (PFZ) ──────────────────────────────────────────────────
 export function getFishingZones(env) {
-  const zones = env?.marineSituation?.fishingZones?.zones || []
+  const zones = resolveEnv(env)?.marineSituation?.fishingZones?.zones || []
   return zones.map((z) => ({
     id: z.id,
     name: z.id.toUpperCase().replace(/-/g, ' '),
@@ -79,7 +81,7 @@ export function getFishingZones(env) {
 }
 
 export function getFishingZoneMeta(env) {
-  const fz = env?.marineSituation?.fishingZones || {}
+  const fz = resolveEnv(env)?.marineSituation?.fishingZones || {}
   return {
     status: fz.status || 'unavailable',
     advisoryDate: fz.advisoryDate || '',
@@ -91,7 +93,7 @@ export function getFishingZoneMeta(env) {
 
 // ── Hazards ───────────────────────────────────────────────────────────────
 export function getHazards(env) {
-  const hazards = env?.marineSituation?.hazards || []
+  const hazards = resolveEnv(env)?.marineSituation?.hazards || []
   return hazards.map((h) => ({
     id: h.id,
     type: h.type,
@@ -106,7 +108,7 @@ export function getHazards(env) {
 
 // ── Decision Output ───────────────────────────────────────────────────────
 export function getDecision(env) {
-  const d = env?.decisionOutput || {}
+  const d = resolveEnv(env)?.decisionOutput || {}
   return {
     status: d.status || 'unavailable',
     headline: d.headline || '',
@@ -119,7 +121,7 @@ export function getDecision(env) {
 
 // ── PFZ Recommendation ────────────────────────────────────────────────────
 export function getPfzRecommendation(env) {
-  const pfz = env?.decisionOutput?.pfzRecommendation
+  const pfz = resolveEnv(env)?.decisionOutput?.pfzRecommendation
   if (!pfz) return null
   return {
     status: pfz.status,
@@ -133,7 +135,7 @@ export function getPfzRecommendation(env) {
 
 // ── Map Data ──────────────────────────────────────────────────────────────
 export function getMapData(env) {
-  const m = env?.map || {}
+  const m = resolveEnv(env)?.map || {}
   const vp = m.viewport || {}
   return {
     status: m.status || 'unavailable',
@@ -146,7 +148,7 @@ export function getMapData(env) {
 
 // ── Data Availability / Provenance ────────────────────────────────────────
 export function getDataAvailability(env) {
-  const da = env?.marineSituation?.dataAvailability || {}
+  const da = resolveEnv(env)?.marineSituation?.dataAvailability || {}
   return {
     overall: da.overallStatus || 'unavailable',
     weather: da.weather || 'unavailable',
@@ -158,8 +160,9 @@ export function getDataAvailability(env) {
 }
 
 export function getProvenance(env) {
-  const p = env?.provenance || {}
-  const sr = env?.marineSituation?.sourceReferences || []
+  const res = resolveEnv(env)
+  const p = res?.provenance || {}
+  const sr = res?.marineSituation?.sourceReferences || []
   return {
     summary: p.summary || '',
     availability: p.availability || {},
@@ -170,7 +173,7 @@ export function getProvenance(env) {
 
 // ── Explainability ────────────────────────────────────────────────────────
 export function getExplainability(env) {
-  const e = env?.explainability || {}
+  const e = resolveEnv(env)?.explainability || {}
   return {
     summary: e.summary || '',
     steps: e.analysisSteps || [],
@@ -181,7 +184,7 @@ export function getExplainability(env) {
 
 // ── Meta ──────────────────────────────────────────────────────────────────
 export function getMeta(env) {
-  const m = env?.meta || {}
+  const m = resolveEnv(env)?.meta || {}
   return {
     generatedAt: m.generatedAt || '',
     responseId: m.responseId || '',

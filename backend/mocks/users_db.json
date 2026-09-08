@@ -8,12 +8,57 @@
     "role": "fisherman"
   },
   {
-    "id": "u-1788674659990",
+    "id": "u-1788771684502",
     "name": "Anita Devi",
     "email": "anita@test.com",
     "mobile": "9998887777",
     "password": "",
     "role": "fisherman",
-    "updatedAt": "2026-09-06T06:04:19.997Z"
+    "updatedAt": "2026-09-07T09:01:24.509Z"
+  },
+  {
+    "id": "u-1788885983387",
+    "name": "Test Captain",
+    "email": "",
+    "mobile": "",
+    "password": "SecurePassword123!",
+    "role": "fisherman",
+    "updatedAt": "2026-09-08T16:46:23.387Z"
+  },
+  {
+    "id": "u-1788885983391",
+    "name": "test_runner_1788885983382",
+    "email": "test_runner_1788885983382@neer.gov.in",
+    "mobile": "",
+    "password": "SecurePassword123!",
+    "role": "marine",
+    "updatedAt": "2026-09-08T16:46:23.400Z"
+  },
+  {
+    "id": "u-1788886160943",
+    "name": "Captain Nair",
+    "email": "captain_1788886160941@neer.gov.in",
+    "mobile": "",
+    "password": "SeaSafetyPassword2026!",
+    "role": "marine",
+    "updatedAt": "2026-09-08T16:49:20.950Z"
+  },
+  {
+    "id": "u-1788886235810",
+    "name": "Captain Nair",
+    "email": "captain_1788886235804@neer.gov.in",
+    "mobile": "",
+    "password": "SeaSafetyPassword2026!",
+    "role": "marine",
+    "updatedAt": "2026-09-08T16:50:35.841Z"
+  },
+  {
+    "id": "u-1788886579838",
+    "name": "Captain Nair",
+    "email": "captain_1788886579835@neer.gov.in",
+    "mobile": "",
+    "password": "SeaSafetyPassword2026!",
+    "role": "marine",
+    "updatedAt": "2026-09-08T16:56:19.845Z"
   }
 ]

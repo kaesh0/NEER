@@ -20,7 +20,7 @@ const CHAT_PERSONAS = ["fisherman", "authority"];
 
 async function handleChatMessage(req, res) {
   try {
-    const { message, persona, sessionId } = req.body || {};
+    const { message, persona, sessionId, location } = req.body || {};
 
     if (!message || !message.trim()) {
       return res.status(400).json({ message: "MESSAGE REQUIRED" });
@@ -38,7 +38,7 @@ async function handleChatMessage(req, res) {
     // to the mock-file fallback when the service is unreachable. Returns a
     // `session_id` (Python-generated or a fallback uuid), the ORCA envelope as
     // `response`, and a `servedFrom` flag.
-    const result = await getChatResponse({ message, persona, sessionId });
+    const result = await getChatResponse({ message, persona, sessionId, location });
 
     // Conversation history now lives with the Python service, not in Node.
     // The `history` field from the old in-memory Map is dropped. If the

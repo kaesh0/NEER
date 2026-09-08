@@ -42,6 +42,8 @@ app.add_middleware(
 class QueryRequest(BaseModel):
     text: str
     session_id: Optional[str] = None
+    location: Optional[str] = None
+    persona: Optional[str] = None
 
 
 def _resolve_session(session_id: Optional[str]):
@@ -77,7 +79,12 @@ def handle_api_query(request: QueryRequest):
 
     # Run the exact same agent sequence the terminal runs for one turn, then
     # persist it with the shared _save_turn helper (unchanged from main.py).
-    turn_trace = run_pipeline(text)
+    turn_trace = run_pipeline(
+        text,
+        context_location=request.location,
+        context_persona=request.persona,
+        session_id=session_id,
+    )
     _save_turn(session_dir, seq, turn_trace)
 
     return {"session_id": session_id, "final_output": turn_trace["final_output"]}

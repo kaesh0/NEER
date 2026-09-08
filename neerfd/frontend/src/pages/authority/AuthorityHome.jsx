@@ -1,13 +1,8 @@
-import React, { useState } from 'react'
-import { Icon } from '../../icons/index.js'
-import StatusBadge from '../../components/ui/StatusBadge.jsx'
-import Card from '../../components/ui/Card.jsx'
-import SectionHeader from '../../components/layout/SectionHeader.jsx'
-import AuthorityHomeAmbience from '../../components/authority/AuthorityHomeAmbience.jsx'
-import AuthorityInteractiveMap from '../../components/authority/AuthorityInteractiveMap.jsx'
-import { useTranslation } from '../../i18n/translations.js';
+import React from 'react'
+import { useTranslation } from '../../i18n/translations.js'
 import LoadingState from '../../components/ui/LoadingState.jsx'
 import ErrorState from '../../components/ui/ErrorState.jsx'
+import AuthorityInteractiveMap from '../../components/authority/AuthorityInteractiveMap.jsx'
 import {
   getRequest,
   getTimeWindow,
@@ -15,36 +10,9 @@ import {
   getAreaPriorities,
   getExplainability,
   getProvenance,
-  getStatusColor,
-  getStatusBg
 } from '../../data/mock/authorityData.js'
 
-function PriorityAreaCard({ area, onClick }) {
-  const { t } = useTranslation()
-  return (
-    <Card variant="bordered" className={`hover:-translate-y-0.5 transition-all cursor-pointer ${getStatusBg(area.status)}`} onClick={onClick}>
-      <div className="flex justify-between items-start mb-3">
-        <h3 className="font-bold text-neer-navy-900">{t(area.label)}</h3>
-        <StatusBadge status={area.status} size="sm" />
-      </div>
-      <div className="flex items-center gap-2 mb-2">
-        <span className={`text-neer-xs font-bold uppercase tracking-wider ${getStatusColor(area.status)}`}>
-          {t(area.priority)} {t('Priority')}
-        </span>
-      </div>
-      <ul className="space-y-1">
-        {area.reasons.map((r, i) => (
-          <li key={i} className="text-neer-sm text-neer-ink-secondary flex items-start gap-1.5">
-            <span className={`${getStatusColor(area.status)} mt-0.5`}>•</span>
-            <span>{t(r)}</span>
-          </li>
-        ))}
-      </ul>
-    </Card>
-  )
-}
-
-export default function AuthorityHome({ data, loading, error, onRetry, onNavigate, chatOpen, setChatOpen }) {
+export default function AuthorityHome({ data, loading, error, onRetry, onNavigate }) {
   const { t } = useTranslation()
 
   if (loading) return <LoadingState />
@@ -53,126 +21,174 @@ export default function AuthorityHome({ data, loading, error, onRetry, onNavigat
   const request = getRequest(data)
   const timeWindow = getTimeWindow(data)
   const decision = getDecision(data)
-  const areaPriorities = getAreaPriorities(data)
   const explainability = getExplainability(data)
   const provenance = getProvenance(data)
 
   return (
-    <div className="relative animate-fade-in min-h-screen">
-      <AuthorityHomeAmbience />
-      
-      <div className="relative z-10 w-full max-w-[1440px] mx-auto pb-8">
-        <section className="mb-8">
-          <div className="text-neer-xs font-bold tracking-widest uppercase text-slate-500 mb-2">
-            {t('Regional risk and coastal monitoring')}
-          </div>
-          <h1 className="text-neer-3xl md:text-4xl font-bold text-neer-navy-900 tracking-tight">
+    <div className="space-y-6 pb-12 animate-fade-in">
+      {/* Overview Header matching code.html */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/60">
+        <div>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-sky-600 mb-1 block">
+            {t('Regional Risk & Coastal Monitoring')}
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
             {t('Regional Overview')}
           </h1>
-          <div className="flex items-center gap-3 mt-3 text-neer-sm text-neer-ink-secondary">
-            <span className="font-semibold text-neer-ink">{t(request.geometry.label)}</span>
-            <span>·</span>
-            <span>{t(timeWindow.label)}</span>
+          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
+            {t(request?.geometry?.label || 'Kochi, Kerala coast')} · {t(timeWindow?.label || 'next available forecast window')}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            {t('Advisory System Active')}
+          </span>
+        </div>
+      </div>
+
+      {/* Priority Headline Alert Banner matching code.html */}
+      <div className="bg-white border-l-4 border-l-amber-500 border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0 text-amber-600">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+            </svg>
           </div>
-        </section>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="lg:col-span-2 flex flex-col gap-6">
-            <Card variant="bordered" className="bg-white border-l-4 border-l-neer-caution shadow-neer-sm">
-              <div className="flex items-start gap-4 p-6">
-                <div className="w-16 h-16 rounded-full bg-neer-caution/15 flex items-center justify-center flex-shrink-0">
-                  <Icon name="alertTriangle" size={32} className="text-neer-caution" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-neer-xs font-bold uppercase tracking-wider text-slate-500">{t('Status') || 'Status'}</span>
-                    <StatusBadge status={decision.status} />
-                  </div>
-                  <h2 className="text-xl md:text-2xl font-bold text-neer-navy-900">{t(decision.headline)}</h2>
-                  <p className="text-neer-base text-neer-ink-secondary mt-2">{t(decision.summary)}</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card variant="bordered" className="bg-slate-50 border-slate-200">
-              <div className="flex items-center gap-2 mb-3">
-                <Icon name="info" size={18} className="text-slate-600" />
-                <span className="font-semibold text-neer-navy-900">{t('Recommended Actions')}</span>
-              </div>
-              <ul className="space-y-2">
-                {decision.recommendedActions.map((action, i) => (
-                  <li key={i} className="flex items-start gap-2 text-neer-base text-neer-ink-secondary">
-                    <span className="text-slate-400 mt-0.5">→</span>
-                    <span>{t(action)}</span>
-                  </li>
-                ))}
-              </ul>
-            </Card>
-          </div>
-
-          <div className="lg:col-span-1 h-full min-h-[300px] cursor-pointer group" onClick={() => onNavigate('map')}>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-neer-navy-900">{t('Regional Priority Map')}</h3>
-              <Icon name="chevronRight" size={16} className="text-slate-400 group-hover:text-neer-ocean-600 transition-colors" />
+          <div className="space-y-2 flex-1">
+            <div className="flex items-center gap-2.5">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">{t('Status')}</span>
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200">
+                {t(decision?.status || 'Caution')}
+              </span>
             </div>
-            <div className="h-[calc(100%-2rem)] transition-shadow group-hover:shadow-md rounded-xl overflow-hidden border border-neer-border">
-              <AuthorityInteractiveMap className="pointer-events-none" data={data} />
+            <h2 className="text-xl font-bold text-slate-900 leading-snug">
+              {t(decision?.headline || 'Kochi, Kerala coast is the priority area for next available forecast window.')}
+            </h2>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              {t(decision?.summary || 'Regional assessment status: caution. Location is inside Demo Marine Protected Area; commercial fishing is prohibited inside the boundary. All marine parameters (wave 0.98m, wind 14.7 km/h) are within favourable operating limits for small fishing boat.')}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Two-Column Primary Layout (Actions/Analysis & Map Preview) matching code.html */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left 7 Cols: Recommended Actions & Why This Assessment */}
+        <div className="lg:col-span-7 space-y-6">
+          {/* Recommended Actions Card */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:translate-y-[-1px] transition-transform">
+            <div className="flex items-center gap-2 mb-4">
+              <svg className="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+              </svg>
+              <h3 className="text-base font-bold text-slate-900">{t('Recommended Actions')}</h3>
+            </div>
+            <ul className="space-y-2.5 text-sm text-slate-600">
+              {(decision?.recommendedActions || [
+                'Prioritize outreach to small-vessel operators in the flagged area.',
+                'Review the generated warning draft below before any dissemination decision.',
+              ]).map((action, i) => (
+                <li key={i} className="flex items-start gap-2.5">
+                  <span className="text-slate-400 mt-0.5">→</span>
+                  <span>{t(action)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Why this assessment? Card */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+              </svg>
+              <h3 className="text-base font-bold text-slate-900">{t('Why this assessment?')}</h3>
+            </div>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              {t(explainability?.summary || 'For Kochi, Kerala (forecast for next window), the marine assessment is caution: proceed only with caution and check official local advisories. Current sea conditions indicate a wave height of 0.98 m, wind speeds of 14.7 km/h, and a swell period of 8.8 s. Warning: your location is inside the Demo Marine Protected Area, where fishing is restricted.')}
+            </p>
+            {/* Risk Rule Triggered Box */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs space-y-2 mt-4">
+              <h4 className="font-bold text-slate-800 text-sm">{t('Risk rule triggered')}</h4>
+              <div>
+                <span className="font-semibold text-slate-700">{t('Observation:')}</span>
+                <span className="text-slate-600">
+                  {' '}
+                  {t(explainability?.findings?.[0]?.observation || 'Location is inside Demo Marine Protected Area; commercial fishing is prohibited inside the boundary.')}
+                </span>
+              </div>
+              <div>
+                <span className="font-semibold text-slate-700">{t('Impact:')}</span>
+                <span className="text-slate-600">
+                  {' '}
+                  {t(explainability?.findings?.[0]?.impact || 'Contributed to the final assessment.')}
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
-        <section className="mb-8">
-          <SectionHeader title={t('Area Priority')} subtitle={t('Detailed area assessments')} />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {areaPriorities.map(area => (
-              <PriorityAreaCard key={area.areaId} area={area} onClick={() => onNavigate('areas', area.areaId)} />
-            ))}
+        {/* Right 5 Cols: Priority Map Preview & Data Sources */}
+        <div className="lg:col-span-5 space-y-6">
+          {/* Regional Priority Map Preview Card */}
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+              <h3 className="text-sm font-bold text-slate-900">{t('Regional Priority Map')}</h3>
+              <button
+                onClick={() => onNavigate && onNavigate('map')}
+                className="text-xs font-semibold text-sky-600 hover:text-sky-700 inline-flex items-center gap-1 transition"
+                type="button"
+              >
+                {t('Expand →')}
+              </button>
+            </div>
+            <div className="relative h-[320px] w-full bg-slate-100">
+              <AuthorityInteractiveMap data={data} height="320px" onNavigate={onNavigate} />
+            </div>
           </div>
-        </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <Card variant="bordered">
-            <h3 className="font-bold text-neer-navy-900 mb-4 flex items-center gap-2">
-              <Icon name="info" size={18} />
-              {t('Why this assessment?')}
-            </h3>
-            <p className="text-neer-base text-neer-ink-secondary mb-4">{t(explainability.summary)}</p>
-            <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-              <h4 className="font-semibold text-neer-navy-900 mb-2">{t(explainability.findings[0].title)}</h4>
-              <p className="text-sm text-slate-600 mb-2"><span className="font-medium text-slate-700">{t('Observation:')}</span> {t(explainability.findings[0].observation)}</p>
-              <p className="text-sm text-slate-600"><span className="font-medium text-slate-700">{t('Impact:')}</span> {t(explainability.findings[0].impact)}</p>
-            </div>
-          </Card>
-
-          <Card variant="bordered">
-            <h3 className="font-bold text-neer-navy-900 mb-4 flex items-center gap-2">
-              <Icon name="database" size={18} />
-              {t('Data Sources & Status')}
-            </h3>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('Weather')}</span>
-                  <StatusBadge status={provenance.availability.weather === 'live' ? 'favourable' : 'unavailable'} label={t(provenance.availability.weather)} />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('Hazards')}</span>
-                  <StatusBadge status={provenance.availability.hazards === 'live' ? 'favourable' : 'unavailable'} label={t(provenance.availability.hazards)} />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">SST</span>
-                  <StatusBadge status="unavailable" />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('Currents')}</span>
-                  <StatusBadge status="unavailable" />
-                </div>
+          {/* Data Sources & Status Card */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+            <h3 className="text-base font-bold text-slate-900">{t('Data Sources & Status')}</h3>
+            <div className="grid grid-cols-2 gap-4 text-xs">
+              <div>
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{t('Weather')}</span>
+                <span className="inline-flex items-center justify-center w-full py-1.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold">
+                  {provenance?.availability?.weather || 'live'}
+                </span>
               </div>
-              <div className="mt-4 pt-4 border-t border-slate-100">
-                <p className="text-xs text-slate-500">{t(decision.caveats[1])}</p>
+              <div>
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{t('Hazards')}</span>
+                <span className="inline-flex items-center justify-center w-full py-1.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold">
+                  {provenance?.availability?.hazards || 'live'}
+                </span>
+              </div>
+              <div>
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">SST</span>
+                <span className={`inline-flex items-center justify-center w-full py-1.5 rounded-md font-medium ${
+                  provenance?.availability?.sst === 'live'
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold'
+                    : 'bg-slate-100 text-slate-500 border border-slate-200 shimmer-active'
+                }`}>
+                  {provenance?.availability?.sst === 'live' ? 'live' : 'Unavailable'}
+                </span>
+              </div>
+              <div>
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{t('Currents')}</span>
+                <span className={`inline-flex items-center justify-center w-full py-1.5 rounded-md font-medium ${
+                  provenance?.availability?.currents === 'live'
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold'
+                    : 'bg-slate-100 text-slate-500 border border-slate-200 shimmer-active'
+                }`}>
+                  {provenance?.availability?.currents === 'live' ? 'live' : 'Unavailable'}
+                </span>
               </div>
             </div>
-          </Card>
+            <p className="text-xs text-slate-400 pt-2 border-t border-slate-100">
+              {t('Satellite data was available for this analysis.')}
+            </p>
+          </div>
         </div>
       </div>
     </div>

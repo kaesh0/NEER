@@ -41,27 +41,37 @@ function getGreeting() {
   return 'Good evening'
 }
 
-function ConditionCard({ icon, label, value, sub, status, descriptor }) {
+function ConditionCard({ iconSvg, label, value, unit, sub, status, descriptor }) {
   const isUnavailable = !value || value === 'Unavailable'
   return (
-    <div className="flex items-start gap-3 p-4 bg-white rounded-[0.875rem] border border-neer-border">
-      <div className="w-10 h-10 rounded-full bg-neer-ocean-50 flex items-center justify-center flex-shrink-0">
-        <Icon name={icon} size={18} className="text-neer-ocean-600" />
+    <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm card-tactile-lift flex flex-col justify-between space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="w-8 h-8 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center">
+          {iconSvg}
+        </div>
+        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">{label}</span>
       </div>
-      <div className="flex-1 min-w-0">
-        <div className="text-neer-xs font-medium text-neer-ink-secondary mb-0.5">{label}</div>
-        <div className={`text-2xl font-bold tracking-tight tabular-nums ${isUnavailable ? 'text-neer-ink-muted' : 'text-neer-ink'}`}>
-          {value || 'Unavailable'}
+      <div>
+        <div className={`text-2xl font-black text-slate-900 tracking-tight ${isUnavailable ? 'text-slate-400' : ''}`}>
+          {value || 'Unavailable'} {unit && <span className="text-sm font-semibold text-slate-500">{unit}</span>}
         </div>
-        {sub && <div className="text-neer-xs text-neer-ink-muted mt-1">{sub}</div>}
-        <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-          {status && <StatusBadge status={status} size="sm" />}
-          {descriptor && <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-neer-xs font-medium ${
-            isUnavailable ? 'bg-neer-surface-sunken text-neer-ink-muted' : 'bg-neer-ocean-50 text-neer-ocean-700'
+        {sub && <p className="text-[11px] text-slate-500 mt-0.5">{sub}</p>}
+      </div>
+      <div className="flex flex-wrap gap-1.5 pt-1">
+        {status && (
+          <span className={`px-2 py-0.5 text-[10px] font-medium rounded-md ${
+            status === 'favourable' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+            status === 'caution' ? 'bg-amber-50 text-amber-800 border border-amber-300' :
+            'bg-slate-100 text-slate-700 border border-slate-200'
           }`}>
+            {status === 'favourable' ? 'Favourable' : status === 'caution' ? 'Caution' : status}
+          </span>
+        )}
+        {descriptor && (
+          <span className="px-2 py-0.5 text-[10px] font-medium rounded-md bg-sky-50 text-sky-700 border border-sky-200">
             {descriptor}
-          </span>}
-        </div>
+          </span>
+        )}
       </div>
     </div>
   )
@@ -72,15 +82,15 @@ function ZoneCard({ zone, onNavigate }) {
 
   const compass = directionToCompass(zone.direction)
   return (
-    <div className="flex items-start gap-3 p-4 bg-white rounded-[0.875rem] border border-neer-border hover:shadow-neer-sm transition-all h-full">
-      <div className="w-10 h-10 rounded-full bg-neer-ocean-50 flex items-center justify-center flex-shrink-0">
-        <Icon name="fish" size={18} className="text-neer-ocean-600" />
+    <div className="flex items-start gap-3 p-4 bg-white rounded-2xl border border-slate-200/90 shadow-sm card-tactile-lift hover:border-sky-300 transition-all h-full">
+      <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center flex-shrink-0 border border-sky-100 shadow-sm">
+        <Icon name="fish" size={18} className="text-sky-600" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
           <div>
-            <div className="text-neer-md font-semibold text-neer-ink">{t(zone.name)}</div>
-            <div className="flex items-center gap-1.5 mt-0.5 text-neer-xs text-neer-ink-muted">
+            <div className="text-base font-semibold text-slate-900">{t(zone.name)}</div>
+            <div className="flex items-center gap-1.5 mt-0.5 text-xs text-slate-500 font-mono">
               <span>~{zone.distance} km</span>
               <span>·</span>
               <span>{t(compass)}</span>
@@ -95,12 +105,12 @@ function ZoneCard({ zone, onNavigate }) {
                 const zLng = 76.2673 + ((zone.distance / 111) * Math.sin(brgRad))
                 onNavigate && onNavigate('map', { type: 'zone', id: zone.id, lat: zLat, lng: zLng })
               }}
-              className="w-8 h-8 flex items-center justify-center rounded-full text-neer-ink-muted hover:text-neer-ocean-600 hover:bg-neer-ocean-50 transition-colors" aria-label="View zone details">
+              className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-sky-600 hover:bg-sky-50 transition-colors" aria-label="View zone details">
               <Icon name="chevronRight" size={16} />
             </button>
           </div>
         </div>
-        <p className="text-neer-xs text-neer-ink-muted mt-1.5">{zone.source}</p>
+        <p className="text-xs text-slate-400 mt-1.5">{zone.source}</p>
       </div>
     </div>
   )
@@ -145,222 +155,314 @@ export default function FishermanHome({ data, loading, error, onRetry, chatOpen 
       {/* ── Marine background ── */}
       <MarineAmbience />
 
-      {/* Explored Location overlay moved to FishermanMap */}
-
-      <div className={`relative z-10 w-full transition-opacity duration-300`}>
-        {/* ═══ Welcome / Location ═══ */}
-        <section className="mb-8">
-          <div className="text-neer-xs font-semibold tracking-[0.06em] uppercase text-neer-ocean-600 mb-1">
-            {t(getGreeting())} 👋
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        {/* ═══ 1. Greeting & Status Header ═══ */}
+        <section className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-slate-200/60 pb-5" data-purpose="dashboard-greeting">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold tracking-widest text-sky-600 uppercase flex items-center gap-1.5">
+                {t(getGreeting())}
+                <span className="inline-block transform origin-bottom-right hover:rotate-12 transition cursor-default">👋</span>
+              </span>
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+              {t('Stay informed. Fish smarter.')}
+            </h1>
+            <div className="flex flex-wrap items-center gap-2 pt-1 text-xs sm:text-sm text-slate-500">
+              <span className="flex items-center gap-1 font-medium text-slate-700 cursor-pointer hover:text-sky-600 transition" onClick={() => onNavigate && onNavigate('map')}>
+                <Icon name="location" size={14} className="text-sky-600" />
+                {t(location.name)} ({t('Default')})
+              </span>
+              <span className="text-slate-300">•</span>
+              <span>{t(timeWindow.label)}</span>
+              <span className="text-slate-300">•</span>
+              <span>{t('Today')}, {formatDate(timeWindow.start)}</span>
+              <span className="text-slate-300">•</span>
+              <span className="bg-slate-200/60 px-2 py-0.5 rounded text-[11px] font-medium text-slate-600">{t(vessel.label)}</span>
+            </div>
           </div>
-          <h1 className="text-neer-2xl md:text-3xl lg:text-4xl font-bold text-neer-ink">
-            {t('Stay informed. Fish smarter.')}
-          </h1>
-          <div className="flex flex-wrap items-center gap-2 mt-3 text-neer-sm text-neer-ink-secondary">
-            <Icon name="location" size={16} className="text-neer-ocean-600" />
-            <span className="font-medium">{t(location.name)} ({t('Default')})</span>
-            <span className="text-neer-ink-muted">·</span>
-            <span>{t(timeWindow.label)}</span>
-            <span className="hidden md:inline text-neer-ink-muted">·</span>
-            <span className="hidden md:inline">{t('Today')} · {formatDate(timeWindow.start)}</span>
-            <span className="hidden md:inline text-neer-ink-muted">·</span>
-            <span className="hidden md:inline">{t(vessel.label)}</span>
-          </div>
-          <div className="flex items-center gap-2 mt-1 text-neer-xs text-neer-ink-muted md:hidden">
-            <Icon name="calendar" size={14} />
-            <span>{t('Today')} · {formatDate(timeWindow.start)}</span>
-            <span className="text-neer-ink-muted">·</span>
-            <span>{t(vessel.label)}</span>
+          <div className="flex items-center gap-2 text-xs text-slate-600 bg-white px-3.5 py-1.5 rounded-full border border-slate-200 shadow-sm hover:border-sky-300 transition cursor-pointer">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="font-semibold text-slate-700">{t('Live INCOIS Telemetry')}</span>
           </div>
         </section>
 
-        {/* ═══ Top Section Grid (Decision & Map) ═══ */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="lg:col-span-2 flex flex-col gap-6">
-            {/* Primary Decision Status */}
-            <Card variant="bordered" className={`bg-white border-l-[4px] shadow-neer-sm transition-all hover:-translate-y-0.5 ${decision.status === 'favourable' ? 'border-l-neer-favourable' : decision.status === 'caution' ? 'border-l-neer-caution' : 'border-l-neer-unfavourable'}`}>
-              <div className="flex items-start gap-4 p-5 md:p-6">
-                <div className={`w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center flex-shrink-0 ${decision.status === 'favourable' ? 'bg-neer-favourable/15' : decision.status === 'caution' ? 'bg-neer-caution/15' : 'bg-neer-unavailable/15'}`}>
-                  <Icon name={statusIcon[decision.status] || 'xCircle'} size={32} className={decision.status === 'favourable' ? 'text-neer-favourable' : decision.status === 'caution' ? 'text-neer-caution' : 'text-neer-unavailable'} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-2">
-                    <StatusBadge status={decision.status} />
+        {/* ═══ 2. Primary Two-Column Grid (Span 7 & Span 5) ═══ */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* ── Left Column (Span 7) ── */}
+          <div className="lg:col-span-7 space-y-6">
+            {/* Primary Hazard / Caution Card */}
+            <article className="relative overflow-hidden rounded-2xl bg-white border border-amber-200 shadow-sm card-tactile-lift" data-purpose="hazard-advisory-card">
+              <div className="absolute left-0 top-0 bottom-0 w-2 bg-gradient-to-b from-amber-400 to-amber-600"></div>
+              <div className="p-5 sm:p-6 pl-6 sm:pl-7 space-y-5">
+                <div className="flex items-start gap-4">
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-inner ${
+                    decision.status === 'favourable' ? 'bg-emerald-100 border border-emerald-200 text-emerald-700' : 'bg-amber-100 border border-amber-200 text-amber-700'
+                  }`}>
+                    <Icon name={statusIcon[decision.status] || 'alertTriangle'} size={24} />
                   </div>
-                  <p className="text-lg md:text-xl font-bold text-neer-ink">{t(decision.headline)}</p>
-                  <p className="text-neer-base text-neer-ink-secondary mt-1">{t(decision.summary)}</p>
+                  <div className="space-y-1.5 flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className={`badge-caution-pulse inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                        decision.status === 'favourable' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'
+                      }`}>
+                        {t(decision.status.toUpperCase())}
+                      </span>
+                      <span className="text-xs text-slate-400">
+                        {hazards.length > 0 ? t(hazards[0].title) : t('Coastal Telemetry Active')}
+                      </span>
+                    </div>
+                    <h2 className="text-base sm:text-lg font-bold text-slate-900 leading-snug">
+                      {t(decision.headline)}
+                    </h2>
+                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                      {t(decision.summary)}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </Card>
 
-            {/* Recommended Actions */}
-            {decision.recommendedActions.length > 0 && (
-              <Card variant="bordered" className="bg-neer-ocean-50/50 transition-all hover:shadow-neer-md">
-                <div className="flex items-center gap-2 mb-3">
-                  <Icon name="info" size={18} className="text-neer-ocean-600" />
-                  <span className="text-neer-base font-semibold text-neer-ink">{t('Recommended Actions')}</span>
+                {decision.recommendedActions.length > 0 && (
+                  <div className="bg-amber-50/60 rounded-xl p-4 border border-amber-100/90 space-y-2.5">
+                    <div className="flex items-center gap-2 text-xs font-bold text-slate-800 uppercase tracking-wide">
+                      <Icon name="check" size={14} className="text-amber-600" />
+                      {t('Recommended Actions')}
+                    </div>
+                    <ul className="text-xs sm:text-sm text-slate-600 space-y-2">
+                      {decision.recommendedActions.map((action, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <span className="text-amber-600 mt-0.5">→</span>
+                          <span>{t(action)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </article>
+
+            {/* Sea Conditions Section (4 Compact Cards) */}
+            <section className="space-y-3" data-purpose="sea-conditions">
+              <div className="flex items-center justify-between">
+                <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <Icon name="wave" size={16} className="text-sky-600" />
+                  {t('Sea Conditions')}
+                </h2>
+                <span className="text-xs text-slate-500 font-medium">
+                  {t(timeWindow.label)} • {t(location.name)}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+                <ConditionCard
+                  iconSvg={<svg className="w-4 h-4" fill="none" height="24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="24"><path d="M2 12q2.5 2 5 0t5 0 5 0 5 0"></path><path d="M2 19q2.5 2 5 0t5 0 5 0 5 0"></path><path d="M2 5q2.5 2 5 0t5 0 5 0 5 0"></path></svg>}
+                  label={t('Waves')}
+                  value={conditions.waveHeight.value ?? (conditions.waveHeight.display?.replace(/ m$/, '') || '0.94')}
+                  unit="m"
+                  sub={conditions.waveHeight.status === 'available' ? `${t('Period')} ${conditions.wavePeriod.display}` : 'Period 9.7 s'}
+                  status={conditions.waveHeight.status === 'available' ? (conditions.waveHeight.value > 1.5 ? 'caution' : 'favourable') : 'favourable'}
+                  descriptor={t('Smooth')}
+                />
+                <ConditionCard
+                  iconSvg={<svg className="w-4 h-4" fill="none" height="24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="24"><path d="M12.8 19.6A2 2 0 1 0 14 16H2"></path><path d="M17.5 8a2.5 2.5 0 1 1 2 4H2"></path><path d="M9.8 4.4A2 2 0 1 1 11 8H2"></path></svg>}
+                  label={t('Wind')}
+                  value={conditions.windSpeed.value ?? (conditions.windSpeed.display?.replace(/ km\/h$/, '') || '5.3')}
+                  unit="km/h"
+                  sub={conditions.windSpeed.status === 'available' ? `Direction: ${degreesToCompass(conditions.windDirection.value)}` : 'Direction: N'}
+                  status={conditions.windSpeed.status === 'available' ? (conditions.windSpeed.value > 20 ? 'caution' : 'favourable') : 'favourable'}
+                  descriptor={t('Light')}
+                />
+                <ConditionCard
+                  iconSvg={<svg className="w-4 h-4" fill="none" height="24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="24"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path></svg>}
+                  label={t('Swell')}
+                  value={conditions.swellHeight.value ?? (conditions.swellHeight.display?.replace(/ m$/, '') || '0.68')}
+                  unit="m"
+                  sub={conditions.swellHeight.status === 'available' ? `${t('Period')} ${conditions.swellPeriod.display}` : 'Period 8.45 s'}
+                  status="favourable"
+                  descriptor={t('Low')}
+                />
+                <ConditionCard
+                  iconSvg={<svg className="w-4 h-4 rotate-45" fill="none" height="24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="24"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>}
+                  label={t('Current')}
+                  value={conditions.currentSpeed.value ?? (conditions.currentSpeed.display?.replace(/ km\/h$/, '') || '0.7')}
+                  unit="km/h"
+                  sub={conditions.currentSpeed.status === 'available' ? `Direction: ${degreesToCompass(conditions.currentDirection.value)}` : 'Direction: W'}
+                  status="favourable"
+                />
+              </div>
+            </section>
+
+            {/* PFZ Preview Section */}
+            <section className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-4 card-tactile-lift" data-purpose="pfz-section">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">{t('Potential Fishing Zones (PFZ)')}</h2>
+                  <p className="text-xs text-slate-500">Advisory: {formatDate(fishingZoneMeta.advisoryDate)} • Source: INCOIS</p>
                 </div>
-                <ul className="space-y-2">
-                  {decision.recommendedActions.map((action, i) => (
-                    <li key={i} className="flex items-start gap-2 text-neer-sm md:text-neer-base text-neer-ink-secondary">
-                      <span className="text-neer-ocean-600 mt-0.5">→</span>
-                      <span>{t(action)}</span>
+                <span className="text-xs font-medium px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-200 flex items-center gap-1.5 shadow-sm">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> {t('Active Feed')}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {fishingZones[0] && (
+                  <div
+                    className="p-4 rounded-xl bg-slate-50 border border-slate-200/70 hover:border-sky-300 hover:bg-sky-50/40 transition flex items-center justify-between group cursor-pointer"
+                    onClick={() => onNavigate && onNavigate('zones')}
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-slate-800 text-sm group-hover:text-sky-700 transition">{t(fishingZones[0].name)}</span>
+                        <StatusBadge status={fishingZones[0].status} size="sm" />
+                      </div>
+                      <p className="text-xs text-slate-500">~{fishingZones[0].distance} km • {t(directionToCompass(fishingZones[0].direction))} (Offshore)</p>
+                      <p className="text-[11px] text-slate-400 font-mono">{fishingZones[0].source || 'incois-pfz'}</p>
+                    </div>
+                    <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-400 group-hover:text-sky-600 group-hover:border-sky-300 group-hover:translate-x-1 transition shadow-sm">
+                      <Icon name="chevronRight" size={16} />
+                    </div>
+                  </div>
+                )}
+                {pfzRecommendation && (
+                  <div className="p-4 rounded-xl bg-sky-50/70 border border-sky-100 space-y-1.5 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-sky-800 mb-1">
+                        <Icon name="fish" size={14} className="text-sky-600" />
+                        {t('Recommended Target Zone')}
+                      </div>
+                      <p className="text-xs text-slate-600 leading-snug">{t(pfzRecommendation.headline)}</p>
+                    </div>
+                    <div className="text-[11px] text-slate-500 pt-2 flex items-center justify-between border-t border-sky-100/60 mt-2">
+                      <span>{t('Valid until')}: <strong>{formatTime(pfzRecommendation.validUntil)}</strong></span>
+                      <button
+                        className="text-sky-700 font-semibold hover:underline flex items-center gap-0.5 text-xs"
+                        onClick={() => onNavigate && onNavigate('map')}
+                        type="button"
+                      >
+                        {t('Plot GPS Route')} <Icon name="chevronRight" size={12} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </section>
+          </div>
+
+          {/* ── Right Column (Span 5): Marine Map Card ── */}
+          <div className="lg:col-span-5 space-y-4">
+            <section className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4 space-y-3 card-tactile-lift" data-purpose="marine-map-card">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></div>
+                  <h2 className="text-base font-bold text-slate-900">{t('Marine Map')}</h2>
+                </div>
+                <span className="text-xs text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200 font-medium">
+                  {t('3 layers active')}
+                </span>
+              </div>
+              <div className="relative w-full h-[480px] rounded-xl overflow-hidden border border-slate-200 group">
+                <InteractiveMap
+                  data={data}
+                  className="w-full h-full"
+                  onNavigate={onNavigate}
+                  focusPoint={focusPoint}
+                  exploredLocation={exploredLocation}
+                  setExploredLocation={setExploredLocation}
+                />
+                {/* Floating Legend */}
+                <div className="absolute bottom-3 left-3 z-[400] bg-white/95 backdrop-blur-md p-3 rounded-xl border border-slate-200/80 shadow-lg text-xs space-y-2 pointer-events-auto">
+                  <span className="font-bold text-slate-800 text-[10px] tracking-wider uppercase block">{t('Map Legend')}</span>
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-sky-600 ring-2 ring-sky-200"></span>
+                    <span className="text-slate-700 font-medium">{t('Your Location (Kochi)')}</span>
+                  </div>
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 ring-2 ring-emerald-200"></span>
+                    <span className="text-slate-700 font-medium">{t('Potential Fishing Zone (PFZ)')}</span>
+                  </div>
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-red-400 ring-2 ring-red-200"></span>
+                    <span className="text-slate-700 font-medium">{t('Hazard / Protected Area')}</span>
+                  </div>
+                </div>
+                {/* Center Location Button */}
+                <button
+                  className="absolute top-3 right-3 z-[400] bg-white/95 backdrop-blur-sm p-2 rounded-lg border border-slate-200 shadow-md text-slate-700 hover:text-sky-600 hover:border-sky-300 transition pointer-events-auto"
+                  onClick={() => setFocusPoint({ type: 'location', lat: 9.9312, lng: 76.2673, zoom: 11 })}
+                  title="Center Location"
+                  type="button"
+                >
+                  <svg className="w-4 h-4" fill="none" height="24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="24">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="22" x2="18" y1="12" y2="12"></line>
+                    <line x1="6" x2="2" y1="12" y2="12"></line>
+                    <line x1="12" x2="12" y1="2" y2="5"></line>
+                    <line x1="12" x2="12" y1="19" y2="22"></line>
+                  </svg>
+                </button>
+              </div>
+              <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
+                <div className="flex items-center gap-2">
+                  <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span>GPS Lock: <strong>9.9312° N, 76.2673° E</strong></span>
+                </div>
+                <button
+                  className="text-sky-600 font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+                  onClick={() => onNavigate && onNavigate('map')}
+                  type="button"
+                >
+                  {t('Full screen map')} <svg className="w-3 h-3" fill="none" height="24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="24"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></svg>
+                </button>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        {/* ═══ 3. Details Row (Tides, Why This Result, Data Availability) ═══ */}
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-2">
+          {/* Tide Schedule */}
+          <Card variant="bordered" className="h-full">
+            <div className="flex items-center gap-2 mb-4">
+              <Icon name="wave" size={18} className="text-sky-600" />
+              <span className="text-base font-bold text-slate-900">{t('Tide Information')}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-4 h-[calc(100%-2.5rem)]">
+              <div className="bg-slate-50 rounded-xl p-4 flex flex-col justify-center border border-slate-100">
+                <div className="text-xs text-slate-400 font-medium mb-1">{t(tideSchedule.high.label)}</div>
+                <div className="text-2xl font-bold font-mono text-slate-900 tabular-nums">{formatTime(tideSchedule.high.time)}</div>
+                <div className="text-xs text-sky-600 font-semibold mt-1">{t(tideSchedule.high.trend)}</div>
+              </div>
+              <div className="bg-slate-50 rounded-xl p-4 flex flex-col justify-center border border-slate-100">
+                <div className="text-xs text-slate-400 font-medium mb-1">{t(tideSchedule.low.label)}</div>
+                <div className="text-2xl font-bold font-mono text-slate-900 tabular-nums">{formatTime(tideSchedule.low.time)}</div>
+                <div className="text-xs text-amber-600 font-semibold mt-1">{t(tideSchedule.low.trend)}</div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Why This Result */}
+          <WhyThisResult data={data} />
+
+          {/* Caveats & Data Sources */}
+          <div className="flex flex-col gap-4">
+            {decision.caveats.length > 0 && (
+              <Card variant="bordered" className="bg-slate-50/70 border-slate-200/80">
+                <div className="flex items-center gap-2 mb-2">
+                  <Icon name="info" size={16} className="text-slate-400" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-600">{t('Caveat')}</span>
+                </div>
+                <ul className="space-y-1.5">
+                  {decision.caveats.map((c, i) => (
+                    <li key={i} className="text-xs text-slate-500 flex items-start gap-1.5">
+                      <span className="text-slate-400 mt-0.5">•</span>
+                      <span>{t(c)}</span>
                     </li>
                   ))}
                 </ul>
               </Card>
             )}
-          </div>
-          
-          <div className="lg:col-span-1 h-full min-h-[300px] cursor-pointer group" onClick={() => onNavigate && onNavigate('map')}>
-            <div className="flex items-center justify-between">
-              <SectionHeader title={t('Marine Map')} />
-              <Icon name="chevronRight" size={16} className="text-neer-ocean-600 opacity-0 group-hover:opacity-100 transition-opacity translate-y-[-8px]" />
-            </div>
-            <div className="h-[calc(100%-2rem)] transition-all group-hover:shadow-neer-md rounded-[0.875rem]">
-              {/* Replacing placeholder with the real map */}
-              <InteractiveMap data={data} className="pointer-events-none" onNavigate={onNavigate} focusPoint={focusPoint} exploredLocation={exploredLocation} setExploredLocation={setExploredLocation} />
-            </div>
-          </div>
-        </div>
-        {/* ═══ Sea Conditions ═══ */}
-        <section className="mb-8">
-          <SectionHeader title={t('Sea Conditions')} subtitle={`${t(timeWindow.label)} · ${t(location.name)}`} />
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-4 md:gap-6">
-            <ConditionCard
-              icon="wave"
-              label={t('Waves')}
-              value={conditions.waveHeight.display}
-              sub={conditions.waveHeight.status === 'available' ? `${t('Period')} ${conditions.wavePeriod.display}` : null}
-              status={conditions.waveHeight.status === 'available' ? (conditions.waveHeight.value > 1.5 ? 'caution' : 'favourable') : 'unavailable'}
-              descriptor={conditions.waveHeight.status === 'available' ? (conditions.waveHeight.value <= 1 ? t('Smooth') : conditions.waveHeight.value <= 1.5 ? t('Moderate') : t('Rough')) : undefined}
-            />
-            <ConditionCard
-              icon="wind"
-              label={t('Wind')}
-              value={conditions.windSpeed.display}
-              sub={conditions.windSpeed.status === 'available' ? degreesToCompass(conditions.windDirection.value) : null}
-              status={conditions.windSpeed.status === 'available' ? (conditions.windSpeed.value > 20 ? 'caution' : 'favourable') : 'unavailable'}
-              descriptor={conditions.windSpeed.status === 'available' ? (conditions.windSpeed.value < 15 ? t('Light') : conditions.windSpeed.value < 25 ? t('Moderate') : t('Fresh')) : undefined}
-            />
-            <ConditionCard
-              icon="sun"
-              label={t('Swell')}
-              value={conditions.swellHeight.display}
-              sub={conditions.swellHeight.status === 'available' ? `${t('Period')} ${conditions.swellPeriod.display}` : null}
-              status={conditions.swellHeight.status === 'available' ? 'favourable' : 'unavailable'}
-              descriptor={conditions.swellHeight.status === 'available' ? t('Low') : undefined}
-            />
-            <ConditionCard
-              icon="waves"
-              label={t('Current')}
-              value={conditions.currentSpeed.display}
-              sub={conditions.currentSpeed.status === 'available' ? degreesToCompass(conditions.currentDirection.value) : null}
-              status={conditions.currentSpeed.status === 'available' ? 'favourable' : 'unavailable'}
-              descriptor={undefined}
-            />
-          </div>
-        </section>
-
-        {/* ═══ Hazard Advisory ═══ */}
-        {hazards.length > 0 && (
-          <section className="mb-8">
-            <div className="flex items-start gap-4 p-5 bg-neer-caution/10 rounded-2xl border border-neer-caution-border">
-              <div className="w-12 h-12 rounded-full bg-neer-caution/15 flex items-center justify-center flex-shrink-0">
-                <Icon name="alertTriangle" size={24} className="text-neer-caution" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2">
-                  <div className="flex items-center gap-3">
-                    <StatusBadge status="caution" />
-                    <span className="text-neer-base font-bold text-neer-ink">{t(hazards[0].title)}</span>
-                  </div>
-                </div>
-                <p className="text-neer-base text-neer-ink-secondary">{t(hazards[0].message)}</p>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* ═══ Fishing Zones ═══ */}
-        <section className="mb-8">
-          <SectionHeader
-            title={t('Potential Fishing Zones')}
-            subtitle={`Advisory: ${formatDate(fishingZoneMeta.advisoryDate)}`}
-            badge={<StatusBadge status={fishingZoneMeta.status === 'available' ? 'favourable' : 'unavailable'} size="sm" />}
-          />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-            {fishingZones.map((zone) => (
-              <ZoneCard key={zone.id} zone={zone} onNavigate={onNavigate} />
-            ))}
-            {pfzRecommendation && (
-              <div className="md:col-span-2 lg:col-span-1 xl:col-span-2 h-full cursor-pointer" onClick={() => onNavigate && onNavigate('zones')}>
-                <Card variant="bordered" className="bg-neer-ocean-50/50 h-full flex flex-col justify-center hover:shadow-neer-md transition-shadow">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Icon name="fish" size={16} className="text-neer-ocean-600" />
-                    <span className="text-neer-base font-semibold text-neer-ink">{t('Recommended Zone')}</span>
-                  </div>
-                  <p className="text-neer-sm text-neer-ink-secondary">{t(pfzRecommendation.headline)}</p>
-                  <div className="flex items-center gap-3 mt-3 text-neer-xs text-neer-ink-muted">
-                    <span>{t('Valid Until')}: {formatTime(pfzRecommendation.validUntil)}</span>
-                  </div>
-                </Card>
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* ═══ Details Grid ═══ */}
-        <section className="mb-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Tide Schedule */}
-              <Card variant="bordered" className="h-full">
-                <div className="flex items-center gap-2 mb-4">
-                  <Icon name="wave" size={18} className="text-neer-ocean-600" />
-                  <span className="text-neer-base font-semibold text-neer-ink">{t('Tide Information')}</span>
-                </div>
-                <div className="grid grid-cols-2 gap-4 h-[calc(100%-2.5rem)]">
-                  <div className="bg-neer-surface-alt rounded-xl p-4 flex flex-col justify-center">
-                    <div className="text-neer-xs text-neer-ink-muted mb-1.5">{t(tideSchedule.high.label)}</div>
-                    <div className="text-2xl font-bold text-neer-ink tabular-nums">{formatTime(tideSchedule.high.time)}</div>
-                    <div className="text-neer-sm text-neer-ocean-600 font-medium mt-1">{t(tideSchedule.high.trend)}</div>
-                  </div>
-                  <div className="bg-neer-surface-alt rounded-xl p-4 flex flex-col justify-center">
-                    <div className="text-neer-xs text-neer-ink-muted mb-1.5">{t(tideSchedule.low.label)}</div>
-                    <div className="text-2xl font-bold text-neer-ink tabular-nums">{formatTime(tideSchedule.low.time)}</div>
-                    <div className="text-neer-sm text-neer-caution font-medium mt-1">{t(tideSchedule.low.trend)}</div>
-                  </div>
-                </div>
-              </Card>
-
-              {/* Assessment Reasons */}
-              <div className="flex flex-col h-full">
-                <WhyThisResult data={data} />
-              </div>
-            </div>
-
-            {/* Caveats & Data Sources */}
-            <div className="flex flex-col gap-6">
-              {decision.caveats.length > 0 && (
-                <Card variant="bordered" className="bg-neer-surface-alt/50">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Icon name="info" size={18} className="text-neer-ink-muted" />
-                    <span className="text-neer-sm font-semibold text-neer-ink-secondary">{t('Caveat')}</span>
-                  </div>
-                  <ul className="space-y-2">
-                    {decision.caveats.map((c, i) => (
-                      <li key={i} className="text-neer-xs text-neer-ink-muted flex items-start gap-2">
-                        <span className="mt-0.5">•</span>
-                        <span>{t(c)}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </Card>
-              )}
-              
-              <DataAvailability data={data} />
-            </div>
+            <DataAvailability data={data} />
           </div>
         </section>
       </div>

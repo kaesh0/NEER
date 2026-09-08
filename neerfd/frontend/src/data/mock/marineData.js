@@ -28,6 +28,8 @@ function cond(val, unit, fallback = 'Unavailable') {
 export const overallConditions = {
   waveHeight: cond(c.waveHeight, 'm'),
   windSpeed: cond(c.windSpeed, 'km/h'),
+  seaSurfaceTemperature: cond(c.seaSurfaceTemperature, '°C'),
+  currentSpeed: cond(c.currentSpeed, 'km/h'),
 }
 
 // ── Route & Segments ──────────────────────────────────────────────────────

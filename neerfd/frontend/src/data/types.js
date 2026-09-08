@@ -28,5 +28,5 @@
  *   { id: string, text: string, languageCode?: string }
  */
 
-// Placeholder — real types are implicit in JSDoc above.
+// Note: Types are documented via JSDoc type definitions above.
 export {}

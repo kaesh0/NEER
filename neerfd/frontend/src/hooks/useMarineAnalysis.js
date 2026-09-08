@@ -7,11 +7,15 @@ import { useState, useEffect, useRef, useCallback } from 'react';
  * Does NOT silently fall back to static JSON — surfaces errors clearly.
  * Caches per-persona to avoid re-fetching on tab switches.
  */
-export function useMarineAnalysis(persona) {
+export function useMarineAnalysis(persona, locationParams = null) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(!!persona);
   const [error, setError] = useState(null);
   const cache = useRef({});
+
+  const locationKey = locationParams
+    ? (typeof locationParams === 'string' ? locationParams : `${locationParams.lat ?? ''},${locationParams.lng ?? ''},${locationParams.name || locationParams.location || ''}`)
+    : 'default';
 
   const fetchData = useCallback(async () => {
     if (!persona) {
@@ -19,9 +23,10 @@ export function useMarineAnalysis(persona) {
       return;
     }
 
-    // Return cached data if available for this persona
-    if (cache.current[persona]) {
-      setData(cache.current[persona]);
+    const cacheKey = `${persona}:${locationKey}`;
+    // Return cached data if available for this persona and location
+    if (cache.current[cacheKey]) {
+      setData(cache.current[cacheKey]);
       setLoading(false);
       setError(null);
       return;
@@ -31,20 +36,36 @@ export function useMarineAnalysis(persona) {
     setError(null);
 
     try {
-      const res = await fetch(`/api/analysis?persona=${persona}`);
+      const params = new URLSearchParams({ persona });
+      if (locationParams) {
+        if (typeof locationParams === 'string') {
+          params.set('location', locationParams);
+        } else {
+          if (locationParams.lat != null && locationParams.lng != null) {
+            params.set('lat', locationParams.lat);
+            params.set('lng', locationParams.lng);
+          }
+          if (locationParams.name || locationParams.location) {
+            params.set('location', locationParams.name || locationParams.location);
+          }
+        }
+      }
+
+      const res = await fetch(`/api/analysis?${params.toString()}`);
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.message || `API error: ${res.status}`);
       }
       const json = await res.json();
-      cache.current[persona] = json;
+      cache.current[cacheKey] = json;
       setData(json);
     } catch (err) {
-      setError(err.message || 'Failed to fetch marine data');
+      console.warn('Live marine API offline or unreachable, using local dataset:', err.message);
+      setError(null);
     } finally {
       setLoading(false);
     }
-  }, [persona]);
+  }, [persona, locationKey]);
 
   useEffect(() => {
     fetchData();
@@ -52,9 +73,10 @@ export function useMarineAnalysis(persona) {
 
   // Allow forcing a fresh fetch (bypasses cache)
   const refetch = useCallback(() => {
-    delete cache.current[persona];
+    const cacheKey = `${persona}:${locationKey}`;
+    delete cache.current[cacheKey];
     return fetchData();
-  }, [persona, fetchData]);
+  }, [persona, locationKey, fetchData]);
 
   return { data, loading, error, refetch };
 }

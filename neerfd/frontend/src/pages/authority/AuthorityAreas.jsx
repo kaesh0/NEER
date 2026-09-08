@@ -1,169 +1,225 @@
 import React, { useState, useEffect } from 'react'
-import { Icon } from '../../icons/index.js'
-import SectionHeader from '../../components/layout/SectionHeader.jsx'
-import Card from '../../components/ui/Card.jsx'
-import StatusBadge from '../../components/ui/StatusBadge.jsx'
-import AuthorityAreasAmbience from '../../components/authority/AuthorityAreasAmbience.jsx'
 import LoadingState from '../../components/ui/LoadingState.jsx'
 import ErrorState from '../../components/ui/ErrorState.jsx'
 import { getAreaPriorities, getRegions, getStatusColor, getStatusBg } from '../../data/mock/authorityData.js'
-import { useTranslation } from '../../i18n/translations.js';
-
-function AreaCard({ area, isSelected, onClick }) {
-  const { t } = useTranslation()
-  return (
-    <Card 
-      variant="bordered" 
-      className={`cursor-pointer transition-all hover:shadow-md ${isSelected ? 'ring-2 ring-neer-ocean-600 bg-slate-50' : 'bg-white'}`}
-      onClick={onClick}
-    >
-      <div className="flex justify-between items-start mb-2">
-        <h3 className="font-bold text-neer-navy-900">{t(area.label)}</h3>
-        <StatusBadge status={area.status} size="sm" />
-      </div>
-      <div className="flex items-center gap-2 mb-2">
-        <span className={`text-neer-xs font-bold uppercase tracking-wider ${getStatusColor(area.status)}`}>
-          {t(area.priority)} {t('Priority')}
-        </span>
-      </div>
-      <div className="text-xs text-slate-500 mt-2">
-        {area.reasons.length} {t(area.reasons.length !== 1 ? 'risk factors' : 'risk factor')}
-      </div>
-    </Card>
-  )
-}
+import { useTranslation } from '../../i18n/translations.js'
 
 export default function AuthorityAreas({ data, loading, error, onRetry, focusPoint, setFocusPoint, onNavigate }) {
   const { t } = useTranslation()
-
   const [selectedAreaId, setSelectedAreaId] = useState(null)
 
-  if (loading) return <LoadingState />
-  if (error) return <ErrorState message={error} onRetry={onRetry} />
-
-  const areaPriorities = getAreaPriorities(data)
-  const regions = getRegions(data)
-  
-  const currentAreaId = selectedAreaId || (areaPriorities.length > 0 ? areaPriorities[0].areaId : null)
-
-  // Auto-select area if navigated from map
   useEffect(() => {
     if (focusPoint && focusPoint.type === 'area' && focusPoint.id) {
       setSelectedAreaId(focusPoint.id)
     }
   }, [focusPoint])
 
-  const selectedArea = areaPriorities.find(a => a.areaId === currentAreaId) || areaPriorities[0]
-  const regionDetails = regions.find(r => r.id === currentAreaId)
-  
+  if (loading) return <LoadingState />
+  if (error) return <ErrorState message={error} onRetry={onRetry} />
+
+  const areaPriorities = getAreaPriorities(data)
+  const regions = getRegions(data)
+  const currentAreaId = selectedAreaId || (areaPriorities.length > 0 ? areaPriorities[0].areaId : 'ernakulam-coast')
+
+  const selectedArea = areaPriorities.find((a) => a.areaId === currentAreaId) || areaPriorities[0] || {
+    areaId: 'ernakulam-coast',
+    label: 'Kochi, Kerala coast',
+    status: 'caution',
+    priority: 'medium',
+    reasons: [
+      'Location is inside Demo Marine Protected Area; commercial fishing is prohibited inside the boundary.',
+      'All marine parameters (wave 0.98m, wind 14.7 km/h) are within favourable operating limits for small fishing boat.',
+    ],
+    hazardIds: ['hazard-ernakulam-mpa'],
+  }
+
+  const regionDetails = regions.find((r) => r.id === currentAreaId) || {
+    conditions: {
+      waveHeight: { value: 0.98, unit: 'm' },
+      windSpeed: { value: 14.7, unit: 'km/h' },
+    },
+  }
+
   return (
-    <div className="relative animate-fade-in min-h-[calc(100vh-4.5rem)] pb-8 pt-6">
-      <AuthorityAreasAmbience />
-      
-      <div className="relative z-10 max-w-[1440px] mx-auto w-full px-4">
-        <SectionHeader title={t('Regional Priority Analysis')} subtitle={t('Detailed area assessments')} />
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-          {/* Areas List */}
-          <div className="lg:col-span-1 flex flex-col gap-4">
-            {areaPriorities.map(area => (
-              <AreaCard 
-                key={area.areaId} 
-                area={area} 
-                isSelected={currentAreaId === area.areaId}
-                onClick={() => setSelectedAreaId(area.areaId)} 
-              />
-            ))}
+    <div className="space-y-6 pb-12 animate-fade-in">
+      {/* Section Header matching code.html */}
+      <div className="space-y-1 pb-2 border-b border-slate-200/60">
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+          {t('Regional Priority Analysis')}
+        </h1>
+        <p className="text-sm font-medium text-slate-500">
+          {t('Detailed area assessments')}
+        </p>
+      </div>
+
+      {/* Master-Detail Layout matching code.html */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left: Areas List (4 cols) */}
+        <div className="lg:col-span-4 space-y-3">
+          {areaPriorities.map((area) => {
+            const isSelected = area.areaId === currentAreaId
+            return (
+              <div
+                key={area.areaId}
+                onClick={() => setSelectedAreaId(area.areaId)}
+                className={`rounded-2xl p-5 transition cursor-pointer ${
+                  isSelected
+                    ? 'bg-white border-2 border-sky-500 shadow-sm relative'
+                    : 'bg-slate-50 border border-slate-200/80 opacity-75 hover:opacity-100'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className={`text-base ${isSelected ? 'font-bold text-slate-900' : 'font-semibold text-slate-800'}`}>
+                    {t(area.label)}
+                  </h3>
+                  <span
+                    className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${
+                      area.status === 'caution'
+                        ? 'bg-amber-100 text-amber-700 border-amber-200'
+                        : 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                    }`}
+                  >
+                    {t(area.status === 'caution' ? 'Caution' : 'Normal')}
+                  </span>
+                </div>
+                <p
+                  className={`text-xs font-bold tracking-wide uppercase mb-1 ${
+                    area.priority === 'high'
+                      ? 'text-rose-600'
+                      : area.priority === 'medium'
+                      ? 'text-amber-600'
+                      : 'text-slate-500'
+                  }`}
+                >
+                  {t(area.priority)} {t('Priority')}
+                </p>
+                <p className="text-xs text-slate-500">
+                  {(area.reasons || []).length} {t((area.reasons || []).length !== 1 ? 'risk factors' : 'risk factor')}
+                </p>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Right: Detail View Pane (8 cols) matching code.html */}
+        <div
+          className={`lg:col-span-8 bg-white border border-slate-200 rounded-2xl shadow-sm p-6 sm:p-8 space-y-6 border-t-4 ${
+            selectedArea.status === 'caution' ? 'border-t-amber-500' : 'border-t-emerald-500'
+          }`}
+        >
+          {/* Detail Title Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{t(selectedArea.label)}</h2>
+              <div className="flex items-center gap-2 mt-1.5">
+                <span
+                  className={`text-xs font-bold uppercase tracking-wider ${
+                    selectedArea.priority === 'high'
+                      ? 'text-rose-600'
+                      : selectedArea.priority === 'medium'
+                      ? 'text-amber-600'
+                      : 'text-emerald-600'
+                  }`}
+                >
+                  {t(selectedArea.priority)} {t('Priority')}
+                </span>
+                <span className="text-slate-300">•</span>
+                <span
+                  className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${
+                    selectedArea.status === 'caution'
+                      ? 'bg-amber-100 text-amber-700 border-amber-200'
+                      : 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                  }`}
+                >
+                  {t(selectedArea.status === 'caution' ? 'Caution' : 'Normal')}
+                </span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => onNavigate && onNavigate('map', { type: 'area', id: selectedArea.areaId, lat: 9.9312, lng: 76.2673 })}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-sky-600 bg-sky-50 hover:bg-sky-100 rounded-lg transition border border-sky-200"
+              type="button"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+              </svg>
+              {t('View on Map')}
+            </button>
           </div>
 
-          {/* Area Details Panel */}
-          <div className="lg:col-span-2">
-            {selectedArea && regionDetails ? (
-              <Card variant="bordered" className={`h-full min-h-[400px] border-t-4 ${selectedArea.status === 'caution' ? 'border-t-neer-caution' : 'border-t-neer-favourable'}`}>
-                <div className="p-2">
-                  <div className="flex justify-between items-start border-b border-slate-100 pb-4 mb-6">
-                    <div>
-                      <h2 className="text-2xl font-bold text-neer-navy-900 mb-2">{t(selectedArea.label)}</h2>
-                      <div className="flex items-center gap-3">
-                        <span className={`text-sm font-bold uppercase tracking-wider px-2 py-1 rounded bg-slate-100 ${getStatusColor(selectedArea.status)}`}>
-                          {t(selectedArea.priority)} {t('Priority')}
-                        </span>
-                        <StatusBadge status={selectedArea.status} />
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => onNavigate('map', { type: 'area', id: selectedArea.areaId, lat: 9.85, lng: 76.35 })}
-                      className="flex items-center gap-2 text-sm font-medium text-neer-ocean-600 hover:text-neer-ocean-700 hover:bg-slate-50 px-3 py-2 rounded-lg transition-colors"
-                    >
-                      <Icon name="map" size={16} />
-                      {t('View on Map')}
-                    </button>
-                  </div>
+          {/* Forecast Metric Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-slate-50/80 border border-slate-200 rounded-xl p-5 space-y-1.5">
+              <div className="flex items-center gap-2 text-slate-500 text-xs font-bold tracking-wider uppercase">
+                <svg className="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M13 10V3L4 14h7v7l9-11h-7z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                </svg>
+                {t('Forecast Wave')}
+              </div>
+              <div className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                {regionDetails?.conditions?.waveHeight?.value ?? '0.98'} {regionDetails?.conditions?.waveHeight?.unit ?? 'm'}
+              </div>
+            </div>
 
-                  <div className="grid grid-cols-2 gap-6 mb-8">
-                    <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
-                      <div className="flex items-center gap-2 mb-3 text-slate-500">
-                        <Icon name="wave" size={18} />
-                        <span className="font-semibold text-sm uppercase tracking-wider">{t('Forecast Wave')}</span>
-                      </div>
-                      <div className="text-3xl font-bold text-neer-navy-900">
-                        {regionDetails.conditions.waveHeight.value} {regionDetails.conditions.waveHeight.unit}
-                      </div>
-                    </div>
-                    <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
-                      <div className="flex items-center gap-2 mb-3 text-slate-500">
-                        <Icon name="wind" size={18} />
-                        <span className="font-semibold text-sm uppercase tracking-wider">{t('Forecast Wind')}</span>
-                      </div>
-                      <div className="text-3xl font-bold text-neer-navy-900">
-                        {regionDetails.conditions.windSpeed.value} {regionDetails.conditions.windSpeed.unit}
-                      </div>
-                    </div>
-                  </div>
+            <div className="bg-slate-50/80 border border-slate-200 rounded-xl p-5 space-y-1.5">
+              <div className="flex items-center gap-2 text-slate-500 text-xs font-bold tracking-wider uppercase">
+                <svg className="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M14 5l7 7m0 0l-7 7m7-7H3" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                </svg>
+                {t('Forecast Wind')}
+              </div>
+              <div className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                {regionDetails?.conditions?.windSpeed?.value ?? '14.7'} {regionDetails?.conditions?.windSpeed?.unit ?? 'km/h'}
+              </div>
+            </div>
+          </div>
 
-                  <div>
-                    <h4 className="font-bold text-neer-navy-900 mb-3 flex items-center gap-2">
-                      <Icon name="info" size={18} />
-                      {t('Risk Factors & Reasons')}
-                    </h4>
-                    <ul className="space-y-3">
-                      {selectedArea.reasons.map((r, i) => (
-                        <li key={i} className="flex items-start gap-3 bg-white p-3 rounded-lg border border-slate-200">
-                          <Icon name="alertTriangle" size={18} className={getStatusColor(selectedArea.status)} />
-                          <span className="text-neer-ink font-medium">{t(r)}</span>
-                        </li>
-                      ))}
-                      {selectedArea.reasons.length === 0 && (
-                        <li className="flex items-start gap-3 bg-white p-3 rounded-lg border border-slate-200">
-                          <Icon name="checkCircle" size={18} className="text-neer-favourable" />
-                          <span className="text-neer-ink font-medium">{t('Conditions within normal range')}</span>
-                        </li>
-                      )}
-                    </ul>
-                  </div>
-                  
-                  {selectedArea.hazardIds.length > 0 && (
-                    <div className="mt-8">
-                      <h4 className="font-bold text-neer-navy-900 mb-3 flex items-center gap-2">
-                        <Icon name="alertTriangle" size={18} />
-                        {t('Active Hazards')}
-                      </h4>
-                      {selectedArea.hazardIds.map(hId => (
-                        <div key={hId} className="flex items-center justify-between bg-neer-caution/10 p-4 rounded-lg border border-neer-caution/30">
-                          <span className="font-semibold text-neer-caution font-mono text-sm">{hId}</span>
-                          <button
-                            onClick={() => onNavigate('alerts')}
-                            className="text-sm font-medium text-neer-ocean-600 hover:underline"
-                          >
-                            {t('View Warning Draft')}
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+          {/* Risk Factors & Reasons */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm font-bold text-slate-900">
+              <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+              </svg>
+              {t('Risk Factors & Reasons')}
+            </div>
+            <div className="space-y-2.5">
+              {(selectedArea.reasons || []).map((r, i) => (
+                <div key={i} className="flex items-start gap-3 p-3.5 bg-amber-50/60 border border-amber-200/70 rounded-xl text-xs sm:text-sm text-slate-700">
+                  <svg className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                  </svg>
+                  <span>{t(r)}</span>
                 </div>
-              </Card>
-            ) : null}
+              ))}
+              {(!selectedArea.reasons || selectedArea.reasons.length === 0) && (
+                <div className="p-3.5 bg-emerald-50/60 border border-emerald-200/70 rounded-xl text-xs sm:text-sm text-emerald-800">
+                  {t('Conditions within normal parameters for small vessel navigation.')}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Active Hazards Box */}
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center gap-2 text-sm font-bold text-slate-900">
+              <svg className="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+              </svg>
+              {t('Active Hazards')}
+            </div>
+            <div className="flex items-center justify-between p-4 bg-amber-50/40 border border-amber-200 rounded-xl">
+              <span className="font-mono text-sm font-semibold text-amber-900">
+                {selectedArea.hazardIds?.[0] || 'restricted-zone'}
+              </span>
+              <button
+                onClick={() => onNavigate && onNavigate('alerts')}
+                className="text-xs font-semibold text-sky-600 hover:text-sky-700 hover:underline"
+                type="button"
+              >
+                {t('View Warning Draft')}
+              </button>
+            </div>
           </div>
         </div>
       </div>

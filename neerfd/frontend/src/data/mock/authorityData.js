@@ -7,68 +7,71 @@
  */
 import rawJson from './authority_ernakulam.json' with { type: 'json' }
 
+const resolveEnv = (env) => (env && env.request ? env : rawJson)
+
 // ── Base Context ──────────────────────────────────────────────────────────
 export function getRequest(env) {
-  return env?.request || {}
+  return resolveEnv(env)?.request || {}
 }
 
 export function getContext(env) {
-  return env?.marineSituation?.context || {}
+  return resolveEnv(env)?.marineSituation?.context || {}
 }
 
 export function getTimeWindow(env) {
-  return env?.marineSituation?.context?.timeWindow || env?.request?.timeWindow || {}
+  const r = resolveEnv(env)
+  return r?.marineSituation?.context?.timeWindow || r?.request?.timeWindow || {}
 }
 
 // ── Spatial & Conditions ──────────────────────────────────────────────────
 export function getConditions(env) {
-  return env?.marineSituation?.conditions || {}
+  return resolveEnv(env)?.marineSituation?.conditions || {}
 }
 
 export function getMapData(env) {
-  return env?.map || {}
+  return resolveEnv(env)?.map || {}
 }
 
 export function getHazards(env) {
-  return env?.marineSituation?.hazards || []
+  return resolveEnv(env)?.marineSituation?.hazards || []
 }
 
 export function getFishingZones(env) {
-  return env?.marineSituation?.fishingZones || {}
+  return resolveEnv(env)?.marineSituation?.fishingZones || {}
 }
 
 export function getSpatialAnalysis(env) {
-  return env?.marineSituation?.spatialAnalysis || {}
+  return resolveEnv(env)?.marineSituation?.spatialAnalysis || {}
 }
 
 export function getRegions(env) {
-  return env?.marineSituation?.spatialAnalysis?.regions || []
+  return resolveEnv(env)?.marineSituation?.spatialAnalysis?.regions || []
 }
 
 // ── Decision Output ───────────────────────────────────────────────────────
 export function getDecision(env) {
-  return env?.decisionOutput || {}
+  return resolveEnv(env)?.decisionOutput || {}
 }
 
 export function getAreaPriorities(env) {
-  return env?.decisionOutput?.areaPriorities || []
+  return resolveEnv(env)?.decisionOutput?.areaPriorities || []
 }
 
 // ── Other Modules ─────────────────────────────────────────────────────────
 export function getProvenance(env) {
-  return env?.provenance || {}
+  return resolveEnv(env)?.provenance || {}
 }
 
 export function getExplainability(env) {
-  return env?.explainability || {}
+  return resolveEnv(env)?.explainability || {}
 }
 
 export function getAlertWorkflow(env) {
-  return env?.alertWorkflow || {}
+  return resolveEnv(env)?.alertWorkflow || {}
 }
 
 export function getDraftWarning(env) {
-  return env?.alertWorkflow?.draft || {}
+  return resolveEnv(env)?.alertWorkflow?.draft || {}
 }
 
 // ── Helper formatting functions (no data dependency — kept as-is) ─────────

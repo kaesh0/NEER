@@ -1,7 +1,7 @@
 // The only layer that touches the data source (mirrors how a Mongoose model
 // is the only place that talks to the database — no repository in between).
 //
-// For this demo the primary data source is now the live Python marine-intelligence
+// The primary data source is the live Python marine-intelligence
 // service (NEER-main/api.py) over HTTP. The frozen mock JSON files on disk are
 // still present and become the safety-net fallback when the Python service is
 // unreachable, the same live/cached/fallback discipline used everywhere else in
@@ -22,18 +22,18 @@ function getAiServiceUrl() {
 const PERSONA_MOCKS = {
   fisherman: "fisherman_kochi.json",
   authority: "authority_ernakulam.json",
+  maritime_operator: "maritime_kochi_lakshadweep.json",
 };
 
 const MOCKS_DIR = path.join(__dirname, "..", "mocks");
 
 // Default text queries the Node backend sends to the Python service for each
-// persona. These hardcode a default location (Kochi / Kerala) so the analysis
-// endpoint works without any user-supplied location today. TEMPORARY — a real
-// implementation would take the user's actual location instead of these defaults,
-// but that is out of scope for now.
+// persona. These guarantee a hardcoded default location (Kochi, Kerala: 9.9312, 76.2673)
+// so the analysis endpoint reliably works without any user-supplied location.
 const DEFAULT_PYTHON_QUERIES = {
-  fisherman: "Is it safe to fish near Kochi tomorrow morning?",
-  authority: "Which coastal areas near Kerala need attention this week?",
+  fisherman: "Is it safe to fish near Kochi, Kerala tomorrow morning?",
+  authority: "Which coastal areas near Kochi, Kerala need attention this week?",
+  maritime_operator: "Maritime transit and fairway navigability assessment near Kochi, Kerala",
 };
 
 // Error object the HTTP helper throws when the Python service cannot be reached.
@@ -112,19 +112,29 @@ async function getAnalysisByPersona(persona, locationParams = {}) {
   const { lat, lng, location } = locationParams || {};
   let text = DEFAULT_PYTHON_QUERIES[persona];
 
+  // If a coastal port/harbour name is provided, prioritize it so the Python NLP
+  // and geocoder resolve the administrative state (e.g. Maharashtra, Tamil Nadu, Andhra Pradesh),
+  // enabling live INCOIS PFZ sector lookup and human-friendly narratives.
+  const isRawCoordLabel = location && /^\s*\d+(\.\d+)?°?\s*[NS]?\s*,\s*\d+(\.\d+)?°?\s*[EW]?/i.test(location);
+
   if (lat && lng) {
     const latNum = parseFloat(lat).toFixed(4);
     const lngNum = parseFloat(lng).toFixed(4);
+    const placeDesc = (location && !isRawCoordLabel) ? `${location} (${latNum}, ${lngNum})` : `${latNum}, ${lngNum}`;
     if (persona === "fisherman") {
-      text = `Is it safe to fish at ${latNum}, ${lngNum} tomorrow?`;
+      text = `Is it safe to fish near ${placeDesc} tomorrow morning?`;
+    } else if (persona === "authority") {
+      text = `Regional coastal assessment for ${placeDesc}`;
     } else {
-      text = `Regional coastal assessment for coordinates ${latNum}, ${lngNum}`;
+      text = `Maritime transit and fairway navigability assessment for ${placeDesc}`;
     }
-  } else if (location) {
+  } else if (location && !isRawCoordLabel) {
     if (persona === "fisherman") {
       text = `Is it safe to fish near ${location} tomorrow morning?`;
-    } else {
+    } else if (persona === "authority") {
       text = `Which coastal areas near ${location} need attention this week?`;
+    } else {
+      text = `Maritime transit and fairway navigability assessment near ${location}`;
     }
   }
 

@@ -1,11 +1,8 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { Icon } from '../../icons/index.js'
-import Button from '../../components/ui/Button.jsx'
-import Input from '../../components/ui/Input.jsx'
-import Select from '../../components/ui/Select.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
-import bgImage from '../../assets/neer_marine_bg.jpg'
 import { useTranslation } from '../../i18n/translations.js'
+import loginFishermanBg from '../../assets/login_fisherman_bg.jpg'
 
 export default function Login({ onNavigate, onLoginSuccess }) {
   const { t } = useTranslation()
@@ -13,7 +10,7 @@ export default function Login({ onNavigate, onLoginSuccess }) {
   
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [persona, setPersona] = useState('fisherman')
+  const [role, setRole] = useState('fisherman') // 'fisherman', 'operator', 'authority'
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -29,9 +26,9 @@ export default function Login({ onNavigate, onLoginSuccess }) {
 
     setLoading(true)
     try {
-      const loggedUser = await login(email, password, persona)
-      const targetRole = loggedUser?.role || persona
-      onLoginSuccess && onLoginSuccess(targetRole)
+      const targetRole = role === 'operator' ? 'marine' : role
+      const loggedUser = await login(email, password, targetRole)
+      onLoginSuccess && onLoginSuccess(loggedUser?.role || targetRole)
     } catch (err) {
       setError(err.message || t('Login failed'))
     } finally {
@@ -40,139 +37,257 @@ export default function Login({ onNavigate, onLoginSuccess }) {
   }
 
   const handleGuest = () => {
+    const targetRole = role === 'operator' ? 'marine' : role
     loginAsGuest()
-    onNavigate('landing')
+    onLoginSuccess && onLoginSuccess(targetRole)
   }
 
   return (
-    <div className="relative min-h-screen bg-neer-navy-900 flex">
-      {/* Left side: Premium Background */}
-      <div className="hidden lg:block lg:w-1/2 relative bg-neer-navy-950">
-        <div 
-          className="absolute inset-0 bg-cover bg-center opacity-80 mix-blend-luminosity"
-          style={{ backgroundImage: `url(${bgImage})` }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-neer-navy-900/60 to-neer-navy-900/90" />
-        <div className="absolute inset-0 flex flex-col justify-between p-12">
-          <div className="flex items-center gap-2">
-            <div className="w-12 h-12 bg-neer-ocean-600 rounded-xl flex items-center justify-center shadow-lg">
-              <Icon name="wave" size={24} className="text-white" />
-            </div>
-            <span className="text-2xl font-black text-white tracking-tight">NEER</span>
-          </div>
-          <div className="max-w-md">
-            <h1 className="text-4xl font-bold text-white mb-4 leading-tight">
-              {t('Marine Intelligence for India')}
-            </h1>
-            <p className="text-neer-ocean-100 text-lg">
-              {t('One platform for fishermen, maritime operators, and coastal authorities.')}
-            </p>
-          </div>
+    <main className="min-h-screen w-full flex flex-col lg:flex-row font-sans bg-slate-50 text-slate-800 antialiased overflow-x-hidden selection:bg-sky-200 selection:text-sky-900">
+      {/* LEFT SIDE: High-fidelity Maritime Photography with Deep Gradient Scrim */}
+      <section className="relative w-full lg:w-[48%] xl:w-[50%] flex flex-col justify-between p-8 sm:p-12 lg:p-16 overflow-hidden min-h-[460px] lg:min-h-screen" data-purpose="editorial-marine-visual">
+        {/* Authentic Marine Photography Background */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            alt="Traditional fishing boat on calm coastal waters" 
+            className="w-full h-full object-cover object-center transform scale-105 transition-transform duration-1000 ease-out" 
+            src={loginFishermanBg}
+          />
+          {/* Deep ocean gradient scrim & atmospheric mood */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#061325] via-[#092244]/80 to-[#040f1d]/75 mix-blend-multiply"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-[#061325]/90 via-[#071d3a]/60 to-transparent"></div>
         </div>
-      </div>
 
-      {/* Right side: Auth Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-12 relative overflow-hidden bg-slate-50">
-        {/* Mobile background (faded) */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center lg:hidden opacity-10"
-          style={{ backgroundImage: `url(${bgImage})` }}
-        />
-        
-        <div className="w-full max-w-md relative z-10 bg-white/90 backdrop-blur-md p-8 rounded-2xl border border-neer-border shadow-neer-xl">
-          <button 
-            onClick={() => onNavigate('landing')}
-            className="flex items-center gap-1.5 text-sm font-medium text-neer-ink-secondary hover:text-neer-ocean-600 transition-colors mb-8"
-          >
-            <Icon name="chevronLeft" size={16} />
-            {t('Back to Home')}
-          </button>
+        {/* Top Header: Brand Emblem & Wordmark */}
+        <header className="relative z-10 flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-white/10 border border-white/20 backdrop-blur-md flex items-center justify-center shadow-lg text-sky-300">
+            <svg className="w-6 h-6 stroke-[2.2]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 15c2.5 0 2.5-3 5-3s2.5 3 5 3 2.5-3 5-3 2.5 3 5 3M3 9c2.5 0 2.5-3 5-3s2.5 3 5 3 2.5-3 5-3 2.5 3 5 3" strokeLinecap="round" strokeLinejoin="round"></path>
+            </svg>
+          </div>
+          <div>
+            <span className="text-2xl font-bold tracking-wider text-white font-heading">NEER</span>
+            <span className="block text-[11px] font-medium tracking-widest text-sky-200/80 uppercase">Ocean Platform</span>
+          </div>
+        </header>
 
-          <h2 className="text-2xl font-bold text-neer-navy-900 mb-2">{t('Welcome back')}</h2>
-          <p className="text-neer-ink-secondary mb-8">{t('Access your marine intelligence workspace.')}</p>
+        {/* Center Content: Editorial Statement */}
+        <div className="relative z-10 my-auto py-12 lg:py-0 max-w-lg">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-sky-200 text-xs font-medium mb-6 backdrop-blur-sm">
+            <span>Connected Oceans</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl xl:text-5xl font-bold text-white font-heading tracking-tight leading-[1.18] mb-5">
+            Marine Intelligence Platform
+          </h1>
+          <p className="text-slate-200 text-base sm:text-lg font-normal leading-relaxed text-balance">
+            Empowering coastal communities, fishermen, and maritime operators with clear, timely sea insights.
+          </p>
+        </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              label={t('Email / Mobile')}
-              type="text"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={t('Enter your email or mobile')}
-              required
-            />
-            
-            <div className="relative">
-              <Input
-                label={t('Password')}
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-[34px] p-1 text-neer-ink-muted hover:text-neer-ocean-600 transition-colors"
-                aria-label={showPassword ? t('Hide password') : t('Show password')}
-              >
-                <Icon name={showPassword ? 'eyeOff' : 'eye'} size={18} />
-              </button>
+        {/* Bottom: Quiet Place Caption & Subtle Language Indicator */}
+        <footer className="relative z-10 flex items-center justify-between pt-6 border-t border-white/15 text-xs text-sky-200/75">
+          <div className="flex items-center gap-2">
+            <Icon name="mapPin" size={14} className="text-sky-300" />
+            <span className="tracking-wide">Kochi, Kerala coast</span>
+          </div>
+          <div className="flex items-center gap-2.5 text-sky-200/60 font-medium">
+            <span>English</span>
+            <span>•</span>
+            <span>हिंदी</span>
+            <span>•</span>
+            <span>தமிழ்</span>
+            <span>•</span>
+            <span>বাংলা</span>
+          </div>
+        </footer>
+      </section>
+
+      {/* RIGHT SIDE: Clean, Spacious, Off-white Surface with Auth Container */}
+      <section className="w-full lg:w-[52%] xl:w-[50%] flex items-center justify-center p-6 sm:p-12 lg:p-16 bg-slate-50" data-purpose="auth-content-container">
+        {/* Elevated Auth Card with smooth fade-in */}
+        <div className="w-full max-w-[480px] bg-white rounded-3xl p-8 sm:p-10 shadow-[0_12px_40px_-12px_rgba(11,25,46,0.08)] border border-slate-100 animate-fade-in-up">
+          {/* Back to Home Link */}
+          <div className="mb-7">
+            <button 
+              type="button"
+              onClick={() => onNavigate && onNavigate('landing')}
+              className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors group cursor-pointer"
+            >
+              <Icon name="arrowLeft" size={16} className="transition-transform group-hover:-translate-x-1 text-slate-400 group-hover:text-slate-800" />
+              <span>Back to home</span>
+            </button>
+          </div>
+
+          {/* Heading & Greeting */}
+          <div className="mb-7">
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 font-heading tracking-tight mb-2">Welcome back</h2>
+            <p className="text-slate-500 text-sm">Access your workspace</p>
+          </div>
+
+          {/* BEGIN: Sign In Form */}
+          <form className="space-y-5" onSubmit={handleSubmit}>
+            {/* Role Selector: Clean Pill Buttons */}
+            <div className="space-y-2" data-purpose="role-selector">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600">
+                Select your role
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {/* Option 1: Fisherman */}
+                <button
+                  type="button"
+                  onClick={() => setRole('fisherman')}
+                  className={`flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border text-xs font-medium transition-all text-center gap-1.5 select-none cursor-pointer ${
+                    role === 'fisherman'
+                      ? 'border-[#0284c7] bg-[#f0f9ff] text-[#0369a1] shadow-sm font-semibold'
+                      : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  <Icon name="fish" size={16} className={role === 'fisherman' ? 'text-[#0284c7]' : 'text-slate-500'} />
+                  <span>Fisherman</span>
+                </button>
+
+                {/* Option 2: Marine Operator */}
+                <button
+                  type="button"
+                  onClick={() => setRole('operator')}
+                  className={`flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border text-xs font-medium transition-all text-center gap-1.5 select-none cursor-pointer ${
+                    role === 'operator'
+                      ? 'border-[#0284c7] bg-[#f0f9ff] text-[#0369a1] shadow-sm font-semibold'
+                      : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  <Icon name="ship" size={16} className={role === 'operator' ? 'text-[#0284c7]' : 'text-slate-500'} />
+                  <span>Operator</span>
+                </button>
+
+                {/* Option 3: Coastal Authority */}
+                <button
+                  type="button"
+                  onClick={() => setRole('authority')}
+                  className={`flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border text-xs font-medium transition-all text-center gap-1.5 select-none cursor-pointer ${
+                    role === 'authority'
+                      ? 'border-[#0284c7] bg-[#f0f9ff] text-[#0369a1] shadow-sm font-semibold'
+                      : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  <Icon name="shield" size={16} className={role === 'authority' ? 'text-[#0284c7]' : 'text-slate-500'} />
+                  <span>Authority</span>
+                </button>
+              </div>
             </div>
 
-            <div className="flex justify-end pt-1">
-              <button type="button" className="text-sm font-medium text-neer-ocean-600 hover:text-neer-ocean-700">
-                {t('Forgot password?')}
-              </button>
+            {/* Email / Mobile Field */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600" htmlFor="identifier">
+                Email / Mobile
+              </label>
+              <div className="relative rounded-xl border border-slate-200 bg-white focus-within:border-sky-600 focus-within:ring-2 focus-within:ring-sky-100 transition-all">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <Icon name="user" size={16} />
+                </div>
+                <input 
+                  autoComplete="username" 
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-transparent text-sm text-slate-800 placeholder:text-slate-400 border-0 focus:ring-0 focus:outline-none" 
+                  id="identifier" 
+                  placeholder="Enter email or phone number" 
+                  required 
+                  type="text"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
             </div>
 
-            <Select
-              label={t('Choose your workspace')}
-              name="persona"
-              value={persona}
-              onChange={(e) => setPersona(e.target.value)}
-              options={[
-                { value: 'fisherman', label: t('Fisherman') },
-                { value: 'marine', label: t('Marine / Maritime Operator') },
-                { value: 'authority', label: t('Authority') }
-              ]}
-            />
+            {/* Password Field */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600" htmlFor="password">
+                  Password
+                </label>
+                <button type="button" className="text-xs font-medium text-sky-600 hover:text-sky-700 hover:underline transition-colors">
+                  Forgot password?
+                </button>
+              </div>
+              <div className="relative rounded-xl border border-slate-200 bg-white focus-within:border-sky-600 focus-within:ring-2 focus-within:ring-sky-100 transition-all">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <Icon name="lock" size={16} />
+                </div>
+                <input 
+                  autoComplete="current-password" 
+                  className="w-full pl-10 pr-11 py-3 rounded-xl bg-transparent text-sm text-slate-800 placeholder:text-slate-400 border-0 focus:ring-0 focus:outline-none" 
+                  id="password" 
+                  placeholder="••••••••" 
+                  required 
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                {/* Password visibility toggle */}
+                <button 
+                  aria-label="Toggle password visibility" 
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors focus:outline-none cursor-pointer" 
+                  onClick={() => setShowPassword(!showPassword)} 
+                  type="button"
+                >
+                  <Icon name={showPassword ? 'eyeOff' : 'eye'} size={16} />
+                </button>
+              </div>
+            </div>
 
             {error && (
-              <div className="p-3 bg-neer-unfavourable/10 border border-neer-unfavourable/20 rounded-lg flex items-start gap-2">
-                <Icon name="alertTriangle" size={16} className="text-neer-unfavourable mt-0.5 flex-shrink-0" />
-                <span className="text-sm text-neer-unfavourable font-medium">{error}</span>
+              <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2 text-xs text-red-700">
+                <Icon name="alertTriangle" size={16} className="text-red-500 mt-0.5 flex-shrink-0" />
+                <span>{error}</span>
               </div>
             )}
 
-            <Button type="submit" variant="primary" className="w-full justify-center mt-2" loading={loading}>
-              {t('Login')}
-            </Button>
+            {/* Primary Sign In Action Button */}
+            <div className="pt-2">
+              <button 
+                className="w-full py-3.5 px-6 rounded-xl font-medium text-sm text-white bg-[#0b192e] hover:bg-[#003351] active:scale-[0.99] transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2 group focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900 cursor-pointer disabled:opacity-50" 
+                disabled={loading}
+                type="submit"
+              >
+                <span>{loading ? 'Signing in...' : 'Sign In'}</span>
+                <Icon name="arrowRight" size={16} className="text-sky-400 transition-transform group-hover:translate-x-1" />
+              </button>
+            </div>
           </form>
+          {/* END: Sign In Form */}
 
-          <div className="mt-8 flex items-center gap-4">
-            <div className="flex-1 h-px bg-neer-border" />
-            <span className="text-sm text-neer-ink-muted">{t('or')}</span>
-            <div className="flex-1 h-px bg-neer-border" />
+          {/* Divider */}
+          <div className="relative my-6 flex items-center justify-center">
+            <div className="border-t border-slate-200 w-full"></div>
+            <span className="bg-white px-3 text-xs uppercase tracking-wider text-slate-400 font-medium absolute">or</span>
           </div>
 
-          <div className="mt-6 flex flex-col gap-3">
-            <Button type="button" variant="secondary" className="w-full justify-center" onClick={handleGuest}>
-              {t('Continue as Guest')}
-            </Button>
-            
-            <p className="text-center text-sm text-neer-ink-secondary mt-2">
-              {t('Don\'t have an account?')} {' '}
+          {/* Secondary Action: Continue as Guest */}
+          <div>
+            <button 
+              className="w-full py-3 px-4 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-sm font-medium transition-all duration-150 flex items-center justify-center gap-2 group active:scale-[0.99] cursor-pointer" 
+              onClick={handleGuest} 
+              type="button"
+            >
+              <Icon name="compass" size={16} className="text-sky-600 group-hover:rotate-45 transition-transform duration-300" />
+              <span>Continue as Guest</span>
+            </button>
+          </div>
+
+          {/* Registration Link */}
+          <div className="mt-7 text-center">
+            <p className="text-xs sm:text-sm text-slate-500">
+              Don't have an account? 
               <button 
-                onClick={() => onNavigate('register')}
-                className="font-semibold text-neer-ocean-600 hover:text-neer-ocean-700 hover:underline"
+                type="button"
+                onClick={() => onNavigate && onNavigate('register')}
+                className="font-semibold text-sky-600 hover:text-sky-700 hover:underline transition-colors ml-1 cursor-pointer"
               >
-                {t('Create an account')}
+                Create an account
               </button>
             </p>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   )
 }

@@ -15,7 +15,7 @@ export default function AppShell({
     <div className={`flex flex-col min-h-dvh ${className}`}>
       {header !== false && <AppHeader {...(typeof header === 'object' ? header : {})} />}
       {banner}
-      <main className="flex-1 w-full mx-auto px-[clamp(1rem,4vw,1.75rem)] md:px-8 lg:px-12 pt-5 pb-24 md:pb-8">
+      <main className="flex-1 w-full">
         {children}
       </main>
       {bottomNav && (

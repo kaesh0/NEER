@@ -46,7 +46,9 @@
     },
     "conditions": {
       "waveHeight": { "value": 1.7, "unit": "m", "status": "available", "forecastFor": "2026-09-05T10:00:00+05:30", "sourceRef": "open-meteo-marine" },
-      "windSpeed": { "value": 20, "unit": "km/h", "status": "available", "forecastFor": "2026-09-05T10:00:00+05:30", "sourceRef": "open-meteo-marine" }
+      "windSpeed": { "value": 20, "unit": "km/h", "status": "available", "forecastFor": "2026-09-05T10:00:00+05:30", "sourceRef": "open-meteo-marine" },
+      "seaSurfaceTemperature": { "value": 28.5, "unit": "°C", "status": "available", "forecastFor": "2026-09-05T10:00:00+05:30", "sourceRef": "open-meteo-marine" },
+      "currentSpeed": { "value": 1.4, "unit": "km/h", "status": "available", "forecastFor": "2026-09-05T10:00:00+05:30", "sourceRef": "open-meteo-marine" }
     },
     "fishingZones": { "status": "unavailable", "reason": "Not applicable for the maritime operator persona.", "zones": [] },
     "hazards": [
@@ -118,12 +120,12 @@
       ]
     },
     "dataAvailability": {
-      "overallStatus": "partial",
+      "overallStatus": "full",
       "weather": "live",
       "pfz": "unavailable",
       "hazards": "live",
-      "currents": "unavailable",
-      "sst": "unavailable"
+      "currents": "live",
+      "sst": "live"
     },
     "sourceReferences": [
       {
@@ -204,9 +206,9 @@
     ]
   },
   "provenance": {
-    "overallStatus": "partial",
-    "summary": "Weather and hazard data are live along the route. Current and SST data are unavailable.",
-    "availability": { "weather": "live", "hazards": "live", "currents": "unavailable", "sst": "unavailable" },
+    "overallStatus": "full",
+    "summary": "Weather, hazard, current, and SST data are live along the voyage corridor.",
+    "availability": { "weather": "live", "hazards": "live", "currents": "live", "sst": "live" },
     "sources": ["open-meteo-marine", "incois-osf"]
   },
   "explainability": {

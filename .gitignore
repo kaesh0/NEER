@@ -52,3 +52,6 @@ lerna-debug.log*
 NEER-main/mosdac_data/
 NEER-main/conversations/
 
+# Temporary design archives & browser artifacts
+*.zip
+.chrome-temp/

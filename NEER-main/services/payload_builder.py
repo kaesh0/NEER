@@ -559,8 +559,13 @@ def _authority_payload(meta: dict, intent: dict, weather: dict, ocean: dict, ris
     decision_status = STATUS_TO_DECISION.get(risk.get("status"), "unavailable")
     decision_type = "regional_risk_assessment"
     base_name = location.get("name", "Monitored coast")
-    # Raw coordinate queries have no place name; avoid "Coordinates supplied by user coast".
-    region_label = "Monitored coast" if base_name.startswith("Coordinates") else f"{base_name} coast"
+    # Clean region label: if base_name already contains coast, don't duplicate it
+    if base_name.startswith("Coordinates"):
+        region_label = "Monitored coast"
+    elif "coast" in base_name.lower():
+        region_label = base_name
+    else:
+        region_label = f"{base_name} coast"
 
     region_id = _slug(location.get("name", "region"))
     source_refs = _source_refs(weather, ocean, window)

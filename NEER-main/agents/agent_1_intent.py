@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import re
 import os
+import math
 from urllib.error import URLError
 from urllib.request import Request, urlopen
 
@@ -34,37 +35,65 @@ _MARINE_PROBE_CACHE: dict[tuple[float, float], bool] = {}
 # geocode reliably as coastal cities.
 # ---------------------------------------------------------------------------
 COASTAL_GAZETTEER: dict[str, dict] = {
-    # Aliases / nicknames
-    "kochi":        {"name": "Kochi, Kerala",                          "latitude": 9.9312,  "longitude": 76.2673, "admin1": "Kerala",                  "country_code": "IN"},
-    "cochin":       {"name": "Kochi, Kerala",                          "latitude": 9.9312,  "longitude": 76.2673, "admin1": "Kerala",                  "country_code": "IN"},
-    "vizag":        {"name": "Visakhapatnam, Andhra Pradesh",           "latitude": 17.6868, "longitude": 83.2185, "admin1": "Andhra Pradesh",           "country_code": "IN"},
-    "alleppey":     {"name": "Alappuzha, Kerala",                       "latitude": 9.4981,  "longitude": 76.3388, "admin1": "Kerala",                  "country_code": "IN"},
-    "calicut":      {"name": "Kozhikode, Kerala",                       "latitude": 11.2588, "longitude": 75.7804, "admin1": "Kerala",                  "country_code": "IN"},
-    # Union territories with no large Open-Meteo city entry
-    "goa":          {"name": "Panaji, Goa",                             "latitude": 15.40,   "longitude": 73.80,   "admin1": "Goa",                     "country_code": "IN"},
-    "lakshadweep":  {"name": "Kavaratti, Lakshadweep",                  "latitude": 10.5669, "longitude": 72.6420, "admin1": "Lakshadweep",             "country_code": "IN"},
-    "daman":        {"name": "Daman, Daman and Diu",                    "latitude": 20.3974, "longitude": 72.8328, "admin1": "Daman and Diu",           "country_code": "IN"},
-    "diu":          {"name": "Diu, Daman and Diu",                      "latitude": 20.7141, "longitude": 70.9822, "admin1": "Daman and Diu",           "country_code": "IN"},
-    "puducherry":   {"name": "Puducherry",                              "latitude": 11.9416, "longitude": 79.8083, "admin1": "Puducherry",              "country_code": "IN"},
-    "pondicherry":  {"name": "Puducherry",                              "latitude": 11.9416, "longitude": 79.8083, "admin1": "Puducherry",              "country_code": "IN"},
+    # Key coastal cities and ports
+    "kochi":                 {"name": "Kochi, Kerala",                          "latitude": 9.9312,  "longitude": 76.2673, "admin1": "Kerala",                  "country_code": "IN"},
+    "cochin":                {"name": "Kochi, Kerala",                          "latitude": 9.9312,  "longitude": 76.2673, "admin1": "Kerala",                  "country_code": "IN"},
+    "visakhapatnam":         {"name": "Visakhapatnam, Andhra Pradesh",           "latitude": 17.6868, "longitude": 83.2185, "admin1": "Andhra Pradesh",           "country_code": "IN"},
+    "vizag":                 {"name": "Visakhapatnam, Andhra Pradesh",           "latitude": 17.6868, "longitude": 83.2185, "admin1": "Andhra Pradesh",           "country_code": "IN"},
+    "mumbai":                {"name": "Mumbai, Maharashtra",                   "latitude": 18.9667, "longitude": 72.8333, "admin1": "Maharashtra",            "country_code": "IN"},
+    "bombay":                {"name": "Mumbai, Maharashtra",                   "latitude": 18.9667, "longitude": 72.8333, "admin1": "Maharashtra",            "country_code": "IN"},
+    "chennai":               {"name": "Chennai, Tamil Nadu",                   "latitude": 13.0827, "longitude": 80.2707, "admin1": "Tamil Nadu",             "country_code": "IN"},
+    "madras":                {"name": "Chennai, Tamil Nadu",                   "latitude": 13.0827, "longitude": 80.2707, "admin1": "Tamil Nadu",             "country_code": "IN"},
+    "mangalore":             {"name": "Mangalore, Karnataka",                  "latitude": 12.8698, "longitude": 74.8426, "admin1": "Karnataka",              "country_code": "IN"},
+    "mangaluru":             {"name": "Mangalore, Karnataka",                  "latitude": 12.8698, "longitude": 74.8426, "admin1": "Karnataka",              "country_code": "IN"},
+    "panaji":                {"name": "Panaji, Goa",                             "latitude": 15.40,   "longitude": 73.80,   "admin1": "Goa",                     "country_code": "IN"},
+    "goa":                   {"name": "Panaji, Goa",                             "latitude": 15.40,   "longitude": 73.80,   "admin1": "Goa",                     "country_code": "IN"},
+    "veraval":               {"name": "Veraval, Gujarat",                      "latitude": 20.9071, "longitude": 70.3632, "admin1": "Gujarat",                "country_code": "IN"},
+    "porbandar":             {"name": "Porbandar, Gujarat",                    "latitude": 21.6417, "longitude": 69.6293, "admin1": "Gujarat",                "country_code": "IN"},
+    "dwarka":                {"name": "Dwarka, Gujarat",                       "latitude": 22.2394, "longitude": 68.9678, "admin1": "Gujarat",                "country_code": "IN"},
+    "puri":                  {"name": "Puri, Odisha",                          "latitude": 19.8133, "longitude": 85.8315, "admin1": "Odisha",                 "country_code": "IN"},
+    "paradip":               {"name": "Paradip, Odisha",                       "latitude": 20.3167, "longitude": 86.6167, "admin1": "Odisha",                 "country_code": "IN"},
+    "haldia":                {"name": "Haldia, West Bengal",                   "latitude": 22.0667, "longitude": 88.0694, "admin1": "West Bengal",            "country_code": "IN"},
+    "digha":                 {"name": "Digha, West Bengal",                    "latitude": 21.6266, "longitude": 87.5074, "admin1": "West Bengal",            "country_code": "IN"},
+    "alleppey":              {"name": "Alappuzha, Kerala",                       "latitude": 9.4981,  "longitude": 76.3388, "admin1": "Kerala",                  "country_code": "IN"},
+    "alappuzha":             {"name": "Alappuzha, Kerala",                       "latitude": 9.4981,  "longitude": 76.3388, "admin1": "Kerala",                  "country_code": "IN"},
+    "calicut":               {"name": "Kozhikode, Kerala",                       "latitude": 11.2588, "longitude": 75.7804, "admin1": "Kerala",                  "country_code": "IN"},
+    "kozhikode":             {"name": "Kozhikode, Kerala",                       "latitude": 11.2588, "longitude": 75.7804, "admin1": "Kerala",                  "country_code": "IN"},
+    "kollam":                {"name": "Kollam, Kerala",                          "latitude": 8.8932,  "longitude": 76.6141, "admin1": "Kerala",                  "country_code": "IN"},
+    "kannur":                {"name": "Kannur, Kerala",                          "latitude": 11.8745, "longitude": 75.3704, "admin1": "Kerala",                  "country_code": "IN"},
+    "ratnagiri":             {"name": "Ratnagiri, Maharashtra",                  "latitude": 16.9902, "longitude": 73.3120, "admin1": "Maharashtra",            "country_code": "IN"},
+    "karwar":                {"name": "Karwar, Karnataka",                       "latitude": 14.8136, "longitude": 74.1298, "admin1": "Karnataka",              "country_code": "IN"},
+    "udupi":                 {"name": "Udupi, Karnataka",                        "latitude": 13.3409, "longitude": 74.7421, "admin1": "Karnataka",              "country_code": "IN"},
+    "kanyakumari":           {"name": "Kanyakumari, Tamil Nadu",                 "latitude": 8.0883,  "longitude": 77.5385, "admin1": "Tamil Nadu",             "country_code": "IN"},
+    "rameswaram":            {"name": "Rameswaram, Tamil Nadu",                  "latitude": 9.2876,  "longitude": 79.3129, "admin1": "Tamil Nadu",             "country_code": "IN"},
+    "tuticorin":             {"name": "Thoothukudi, Tamil Nadu",                 "latitude": 8.7642,  "longitude": 78.1348, "admin1": "Tamil Nadu",             "country_code": "IN"},
+    "thoothukudi":           {"name": "Thoothukudi, Tamil Nadu",                 "latitude": 8.7642,  "longitude": 78.1348, "admin1": "Tamil Nadu",             "country_code": "IN"},
+    "cuddalore":             {"name": "Cuddalore, Tamil Nadu",                   "latitude": 11.7480, "longitude": 79.7714, "admin1": "Tamil Nadu",             "country_code": "IN"},
+    "machilipatnam":         {"name": "Machilipatnam, Andhra Pradesh",           "latitude": 16.1875, "longitude": 81.1389, "admin1": "Andhra Pradesh",           "country_code": "IN"},
+    "kakinada":              {"name": "Kakinada, Andhra Pradesh",                "latitude": 16.9891, "longitude": 82.2475, "admin1": "Andhra Pradesh",           "country_code": "IN"},
+    "lakshadweep":           {"name": "Kavaratti, Lakshadweep",                  "latitude": 10.5669, "longitude": 72.6420, "admin1": "Lakshadweep",             "country_code": "IN"},
+    "kavaratti":             {"name": "Kavaratti, Lakshadweep",                  "latitude": 10.5669, "longitude": 72.6420, "admin1": "Lakshadweep",             "country_code": "IN"},
+    "daman":                 {"name": "Daman, Daman and Diu",                    "latitude": 20.3974, "longitude": 72.8328, "admin1": "Daman and Diu",           "country_code": "IN"},
+    "diu":                   {"name": "Diu, Daman and Diu",                      "latitude": 20.7141, "longitude": 70.9822, "admin1": "Daman and Diu",           "country_code": "IN"},
+    "puducherry":            {"name": "Puducherry",                              "latitude": 11.9416, "longitude": 79.8083, "admin1": "Puducherry",              "country_code": "IN"},
+    "pondicherry":           {"name": "Puducherry",                              "latitude": 11.9416, "longitude": 79.8083, "admin1": "Puducherry",              "country_code": "IN"},
+    "port blair":            {"name": "Port Blair, Andaman and Nicobar",        "latitude": 11.6233, "longitude": 92.7265, "admin1": "Andaman and Nicobar",    "country_code": "IN"},
+    "andaman":               {"name": "Port Blair, Andaman and Nicobar",        "latitude": 11.6233, "longitude": 92.7265, "admin1": "Andaman and Nicobar",    "country_code": "IN"},
+    "andaman and nicobar":   {"name": "Port Blair, Andaman and Nicobar",        "latitude": 11.6233, "longitude": 92.7265, "admin1": "Andaman and Nicobar",    "country_code": "IN"},
     # Coastal state names → representative coastal city
-    "andhra pradesh": {"name": "Visakhapatnam, Andhra Pradesh",         "latitude": 17.6868, "longitude": 83.2185, "admin1": "Andhra Pradesh",         "country_code": "IN"},
-    "andhra":         {"name": "Visakhapatnam, Andhra Pradesh",         "latitude": 17.6868, "longitude": 83.2185, "admin1": "Andhra Pradesh",         "country_code": "IN"},
-    "kerala":         {"name": "Kochi, Kerala",                         "latitude": 9.9312,  "longitude": 76.2673, "admin1": "Kerala",                 "country_code": "IN"},
-    "gujarat":        {"name": "Veraval, Gujarat",                      "latitude": 20.9071, "longitude": 70.3632, "admin1": "Gujarat",                "country_code": "IN"},
-    "gujrat":         {"name": "Veraval, Gujarat",                      "latitude": 20.9071, "longitude": 70.3632, "admin1": "Gujarat",                "country_code": "IN"},
-    "bombay":         {"name": "Mumbai, Maharashtra",                   "latitude": 18.9667, "longitude": 72.8333, "admin1": "Maharashtra",            "country_code": "IN"},
-    "madras":         {"name": "Chennai, Tamil Nadu",                   "latitude": 13.0827, "longitude": 80.2707, "admin1": "Tamil Nadu",             "country_code": "IN"},
-    "bengal":         {"name": "Haldia, West Bengal",                   "latitude": 22.0667, "longitude": 88.0694, "admin1": "West Bengal",            "country_code": "IN"},
-    "tamil nadu":     {"name": "Chennai, Tamil Nadu",                   "latitude": 13.0827, "longitude": 80.2707, "admin1": "Tamil Nadu",             "country_code": "IN"},
-    "tamilnadu":      {"name": "Chennai, Tamil Nadu",                   "latitude": 13.0827, "longitude": 80.2707, "admin1": "Tamil Nadu",             "country_code": "IN"},
-    "odisha":         {"name": "Puri, Odisha",                          "latitude": 19.8133, "longitude": 85.8315, "admin1": "Odisha",                 "country_code": "IN"},
-    "orissa":         {"name": "Puri, Odisha",                          "latitude": 19.8133, "longitude": 85.8315, "admin1": "Odisha",                 "country_code": "IN"},
-    "west bengal":    {"name": "Haldia, West Bengal",                   "latitude": 22.0667, "longitude": 88.0694, "admin1": "West Bengal",            "country_code": "IN"},
-    "maharashtra":    {"name": "Mumbai, Maharashtra",                   "latitude": 18.9667, "longitude": 72.8333, "admin1": "Maharashtra",            "country_code": "IN"},
-    "karnataka":      {"name": "Mangalore, Karnataka",                  "latitude": 12.8698, "longitude": 74.8426, "admin1": "Karnataka",              "country_code": "IN"},
-    "andaman":        {"name": "Port Blair, Andaman and Nicobar",       "latitude": 11.6233, "longitude": 92.7265, "admin1": "Andaman and Nicobar",    "country_code": "IN"},
-    "andaman and nicobar": {"name": "Port Blair, Andaman and Nicobar", "latitude": 11.6233, "longitude": 92.7265, "admin1": "Andaman and Nicobar",    "country_code": "IN"},
+    "andhra pradesh":        {"name": "Visakhapatnam, Andhra Pradesh",           "latitude": 17.6868, "longitude": 83.2185, "admin1": "Andhra Pradesh",           "country_code": "IN"},
+    "andhra":                {"name": "Visakhapatnam, Andhra Pradesh",           "latitude": 17.6868, "longitude": 83.2185, "admin1": "Andhra Pradesh",           "country_code": "IN"},
+    "kerala":                {"name": "Kochi, Kerala",                          "latitude": 9.9312,  "longitude": 76.2673, "admin1": "Kerala",                  "country_code": "IN"},
+    "gujarat":               {"name": "Veraval, Gujarat",                      "latitude": 20.9071, "longitude": 70.3632, "admin1": "Gujarat",                "country_code": "IN"},
+    "gujrat":                {"name": "Veraval, Gujarat",                      "latitude": 20.9071, "longitude": 70.3632, "admin1": "Gujarat",                "country_code": "IN"},
+    "bengal":                {"name": "Haldia, West Bengal",                   "latitude": 22.0667, "longitude": 88.0694, "admin1": "West Bengal",            "country_code": "IN"},
+    "tamil nadu":            {"name": "Chennai, Tamil Nadu",                   "latitude": 13.0827, "longitude": 80.2707, "admin1": "Tamil Nadu",             "country_code": "IN"},
+    "tamilnadu":             {"name": "Chennai, Tamil Nadu",                   "latitude": 13.0827, "longitude": 80.2707, "admin1": "Tamil Nadu",             "country_code": "IN"},
+    "odisha":                {"name": "Puri, Odisha",                          "latitude": 19.8133, "longitude": 85.8315, "admin1": "Odisha",                 "country_code": "IN"},
+    "orissa":                {"name": "Puri, Odisha",                          "latitude": 19.8133, "longitude": 85.8315, "admin1": "Odisha",                 "country_code": "IN"},
+    "west bengal":           {"name": "Haldia, West Bengal",                   "latitude": 22.0667, "longitude": 88.0694, "admin1": "West Bengal",            "country_code": "IN"},
+    "maharashtra":           {"name": "Mumbai, Maharashtra",                   "latitude": 18.9667, "longitude": 72.8333, "admin1": "Maharashtra",            "country_code": "IN"},
+    "karnataka":             {"name": "Mangalore, Karnataka",                  "latitude": 12.8698, "longitude": 74.8426, "admin1": "Karnataka",              "country_code": "IN"},
 }
 
 INLAND_GAZETTEER: dict[str, dict] = {
@@ -155,7 +184,7 @@ _VALID_PERSONAS      = {"fisherman", "authority"}
 _VALID_QUERY_TYPES   = {"safety", "fishing", "marine_conditions"}
 _VALID_TIME_WINDOWS  = {"today", "tomorrow", "next available forecast hour"}
 _VALID_VESSELS       = {"small fishing boat", "medium trawler", "large cargo vessel"}
-NARROW_TOPICS        = {"wind_speed", "wave_height", "swell", "pfz", "geofence", "score", "sea_surface_temperature", "chlorophyll"}
+NARROW_TOPICS        = {"weather", "wind_speed", "wave_height", "swell", "pfz", "geofence", "hazards", "route", "score", "sea_surface_temperature", "chlorophyll", "timing"}
 
 INLAND_STATES = {
     "haryana", "punjab", "rajasthan", "delhi", "uttar pradesh", "bihar",
@@ -172,17 +201,13 @@ def detect_narrow_topic(text: str) -> str | None:
         return None
     t = text.lower()
 
-    # Broad open-ended question patterns
+    # Broad open-ended question patterns (asking about whole trip/safety assessment)
     broad_indicators = [
         r"\bis it safe to fish\b",
         r"\bis it safe\b",
         r"\bcan i go\b",
         r"\bcan i fish\b",
         r"\bshould i go\b",
-        r"\bhow are conditions\b",
-        r"\bhow is the weather\b",
-        r"\bweather forecast\b",
-        r"\bsea conditions\b",
         r"\btrip assessment\b",
         r"\bmarine assessment\b",
         r"\bfull report\b",
@@ -190,8 +215,6 @@ def detect_narrow_topic(text: str) -> str | None:
         r"\bjaana theek\b",
         r"\bja sakte\b",
         r"\bja sakta\b",
-        r"\bmausam kaisa\b",
-        r"\bkaisa rahega\b",
         r"\boverall\b",
     ]
     for pattern in broad_indicators:
@@ -199,6 +222,7 @@ def detect_narrow_topic(text: str) -> str | None:
             return None
 
     # Topic detectors
+    has_weather = bool(re.search(r"\b(weather|mausam|sea\s*conditions?|conditions?\s*there|weather\s*there|how\s*is\s*the\s*weather)\b", t))
     has_wind = bool(re.search(r"\b(wind\s*speeds?|windspeed|winds?|hawa|pawan)\b", t))
     has_wave = bool(re.search(r"\b(wave\s*heights?|waves?|lehar|lehrein|tarang)\b", t))
     has_swell = bool(re.search(r"\b(swell\s*periods?|swell\s*heights?|swell\s*surge|kallakkadal|swell)\b", t))
@@ -210,12 +234,17 @@ def detect_narrow_topic(text: str) -> str | None:
         t
     ))
     has_chloro = bool(re.search(r"(?:ch[l]+or|kloro)", t))
+    has_hazard = bool(re.search(r"\b(hazards?|dangers?|khatra|khatre|any\s*hazards?|active\s*hazards?)\b", t))
+    has_route = bool(re.search(r"\b(route|routes|navigation|navigational\s*path|passage\s*corridor|rasta|waypoint)\b", t))
+    has_timing = bool(re.search(r"\b(good\s*time|best\s*time|right\s*time|optimal\s*time|what\s*time|timing|timings|when\s*(?:should|can|to|would)\s*(?:i|we|be)?\s*(?:go|fish|sail|a\s*good)|kab\s*(?:jaana|jaayein|machhli)|shubh\s*samay|achha\s*samay|samay|time\s*for\s*fishing)\b", t))
 
     # Disambiguate swell vs wave if user asked specifically about swell
     if has_swell and not re.search(r"\bwave\s*heights?\b", t):
         has_wave = False
 
     matched = []
+    if has_timing:
+        matched.append("timing")
     if has_wind:
         matched.append("wind_speed")
     if has_wave:
@@ -226,12 +255,18 @@ def detect_narrow_topic(text: str) -> str | None:
         matched.append("pfz")
     if has_geofence:
         matched.append("geofence")
+    if has_route:
+        matched.append("route")
     if has_score:
         matched.append("score")
     if has_sst:
         matched.append("sea_surface_temperature")
     if has_chloro:
         matched.append("chlorophyll")
+    if has_hazard and not matched:
+        matched.append("hazards")
+    if has_weather and not matched:
+        matched.append("weather")
 
     if len(matched) == 1:
         return matched[0]
@@ -355,10 +390,26 @@ def _regex_extract_intent(searchable_text: str) -> dict:
         "warning jaari", "alert jaari", "advisory jaari", "suchna jaari",
         "jaari karna chahiye", "jaari karni chahiye", "jaari karo",
     )
-    if any(w in searchable_text for w in ("safe", "safety", "risk", "danger", "jaana", "ja sakte", "ja sakta", "go fishing", "safe hai")):
-        query_type = "safety"
-    elif any(w in searchable_text for w in ("fish", "fishing", "pfz", "machhli")):
+    safety_markers = (
+        "safe", "safety", "risk", "danger", "hazard", "khatra",
+        "can i go", "can we go", "should i go", "should we go",
+        "can i fish", "can we fish", "should i fish",
+        "can i sail", "can we sail", "should i sail",
+        "can i venture", "venture out", "go out", "go fishing",
+        "launch my boat", "launch boat", "leave harbor", "leave port",
+        "is it okay", "is it good",
+        "jaana", "ja sakte", "ja sakta", "safe hai", "theek hai",
+    )
+    fishing_markers = (
+        "where to fish", "where should i fish", "where can i fish",
+        "fishing spot", "fishing spots", "fishing zone", "fishing zones",
+        "pfz", "potential fishing zone", "catch fish", "find fish",
+        "machhli kahan", "machli zone", "machli kahan",
+    )
+    if any(w in searchable_text for w in fishing_markers):
         query_type = "fishing"
+    elif any(w in searchable_text for w in safety_markers):
+        query_type = "safety"
     else:
         query_type = "marine_conditions"
 
@@ -376,6 +427,8 @@ def _regex_extract_intent(searchable_text: str) -> dict:
     )
     persona = "authority" if any(m in searchable_text for m in _AUTHORITY_MARKERS) else "fisherman"
     narrow_topic = detect_narrow_topic(searchable_text)
+    if narrow_topic == "timing":
+        query_type = "fishing"
     return {"persona": persona, "query_type": query_type, "narrow_topic": narrow_topic, "time_window": time_window, "vessel_type": vessel}
 
 
@@ -407,14 +460,28 @@ def _geocode_with_candidates(candidates: list[str]) -> tuple[dict | None, str | 
 
     for candidate in candidates:
         candidate_key = candidate.lower().strip()
+        candidate_prefix = candidate_key.split(",")[0].strip()
+
         if candidate_key in COASTAL_GAZETTEER:
             hit = dict(COASTAL_GAZETTEER[candidate_key])
             hit["source"] = "Indian Coastal Directory"
             hit["geocoded_from"] = candidate
             return hit, None
 
+        if candidate_prefix in COASTAL_GAZETTEER:
+            hit = dict(COASTAL_GAZETTEER[candidate_prefix])
+            hit["source"] = "Indian Coastal Directory"
+            hit["geocoded_from"] = candidate
+            return hit, None
+
         if candidate_key in INLAND_GAZETTEER:
             hit = dict(INLAND_GAZETTEER[candidate_key])
+            hit["source"] = "Indian Inland Directory"
+            hit["geocoded_from"] = candidate
+            return hit, None
+
+        if candidate_prefix in INLAND_GAZETTEER:
+            hit = dict(INLAND_GAZETTEER[candidate_prefix])
             hit["source"] = "Indian Inland Directory"
             hit["geocoded_from"] = candidate
             return hit, None
@@ -552,21 +619,75 @@ def _regex_location_candidates(agent_query: str, original_query: str) -> list[st
     return candidates
 
 
+def _reverse_geocode_coastal(lat: float, lon: float) -> str:
+    """Find the closest coastal gazetteer location using haversine distance.
+    Returns e.g. 'Panaji, Goa' or 'Off Panaji Coast, Goa'.
+    """
+    best_item = None
+    min_dist = float("inf")
+    R = 6371.0  # km
+
+    seen_names = set()
+    for entry in COASTAL_GAZETTEER.values():
+        name = entry.get("name")
+        if not name or name in seen_names:
+            continue
+        seen_names.add(name)
+
+        c_lat = entry["latitude"]
+        c_lon = entry["longitude"]
+
+        d_lat = math.radians(c_lat - lat)
+        d_lon = math.radians(c_lon - lon)
+        a = (
+            math.sin(d_lat / 2.0) ** 2
+            + math.cos(math.radians(lat)) * math.cos(math.radians(c_lat)) * math.sin(d_lon / 2.0) ** 2
+        )
+        c = 2.0 * math.atan2(math.sqrt(max(0.0, a)), math.sqrt(max(0.0, 1.0 - a)))
+        dist = R * c
+
+        if dist < min_dist:
+            min_dist = dist
+            best_item = entry
+
+    if not best_item:
+        return f"{lat:.4f}° N, {lon:.4f}° E"
+
+    full_name = best_item["name"]
+    parts = [p.strip() for p in full_name.split(",")]
+    place = parts[0]
+    admin = parts[1] if len(parts) > 1 else ""
+
+    if min_dist <= 8.0:
+        return full_name
+    elif min_dist <= 45.0:
+        return f"Off {place} Coast, {admin}" if admin else f"Off {place} Coast"
+    else:
+        rounded_km = round(min_dist / 5.0) * 5
+        return f"Off {place} Coast (~{rounded_km} km), {admin}" if admin else f"Off {place} Coast (~{rounded_km} km)"
+
+
 # ---------------------------------------------------------------------------
 # Main agent entry point
 # ---------------------------------------------------------------------------
 
-def agent_1_intent(query: str) -> dict:
+def agent_1_intent(query: str, fallback_location: str | None = None, fallback_persona: str | None = None) -> dict:
     agent_query, language = prepare_for_agent_1(query)
     searchable_text = f"{agent_query.lower()}\n{query.lower()}"
 
     # ── 1. Coordinate detection (always deterministic) ──────────────────────
     coords = re.search(r"\b([0-3]?\d(?:\.\d+)?)\s*[, ]\s*([6-9]\d(?:\.\d+)?)\b", searchable_text)
+    if not coords and fallback_location:
+        coords = re.search(r"\b([0-3]?\d(?:\.\d+)?)\s*[, ]\s*([6-9]\d(?:\.\d+)?)\b", fallback_location)
+
     if coords and float(coords.group(1)) <= 38.0 and 65.0 <= float(coords.group(2)) <= 98.0:
+        c_lat = float(coords.group(1))
+        c_lon = float(coords.group(2))
         location: dict | None = {
-            "name": "Coordinates supplied by user",
-            "latitude": float(coords.group(1)),
-            "longitude": float(coords.group(2)),
+            "name": _reverse_geocode_coastal(c_lat, c_lon),
+            "latitude": c_lat,
+            "longitude": c_lon,
+            "source": "Coastal reverse geocoding",
         }
         clarification: str | None = None
         llm_location_name: str = ""
@@ -594,6 +715,11 @@ def agent_1_intent(query: str) -> dict:
         time_window = extracted["time_window"]
         vessel     = extracted["vessel_type"]
 
+    if fallback_persona and fallback_persona in ("fisherman", "authority", "marine"):
+        # If user is in authority/marine mode in frontend, apply fallback_persona unless query was explicitly contradictory
+        if persona in ("general", "fisherman") and fallback_persona != "fisherman":
+            persona = fallback_persona
+
     # Fallback / verification for narrow single-topic classification
     if not narrow_topic or narrow_topic not in NARROW_TOPICS:
         narrow_topic = detect_narrow_topic(searchable_text)
@@ -601,11 +727,26 @@ def agent_1_intent(query: str) -> dict:
     # ── 3. Geocoding (deterministic) ────────────────────────────────────────
     if location is None:
         if llm_location_name:
-            # LLM gave a clean location name → use it as primary candidate
             candidates = [llm_location_name] + _regex_location_candidates(agent_query, query)
         else:
             candidates = _regex_location_candidates(agent_query, query)
+
+        # If fallback_location is provided, add it as a candidate if not already present
+        if fallback_location and fallback_location.strip():
+            fb = fallback_location.strip()
+            if not candidates:
+                candidates = [fb]
+            elif fb not in candidates:
+                candidates.append(fb)
+
         location, clarification = _geocode_with_candidates(candidates)
+
+        # If geocoding failed with extracted candidates, try fallback_location directly
+        if location is None and fallback_location and fallback_location.strip():
+            fb_loc, _ = _geocode_with_candidates([fallback_location.strip()])
+            if fb_loc:
+                location = fb_loc
+                clarification = None
 
     # ── 4. Coastal location check (early pipeline gate) ──────────────────────
     is_coastal, non_coastal_msg = check_is_coastal(location)

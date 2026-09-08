@@ -81,12 +81,181 @@
     opacity: 1;
     transform: translateY(0);
   }
+
+  /* Subtle ocean contour wave backdrop from reference design */
+  .bg-ocean-waves {
+    background-color: #f8fbfe;
+    background-image: 
+      radial-gradient(at 10% 20%, rgba(224, 242, 254, 0.7) 0px, transparent 50%),
+      radial-gradient(at 90% 10%, rgba(186, 230, 253, 0.5) 0px, transparent 50%),
+      radial-gradient(at 50% 80%, rgba(240, 249, 255, 0.9) 0px, transparent 60%);
+  }
+
+  .wave-line-pattern {
+    background-size: 80px 80px;
+    background-image: 
+      radial-gradient(circle, rgba(14, 165, 233, 0.07) 1px, transparent 1px);
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.35); opacity: 0.7; }
+  }
+
+  .status-ping {
+    animation: pulse-dot 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
 }
 
 /* Keyframes for MarineAmbience and other SVG animations */
 @keyframes neer-drift-x {
   from { transform: translateX(-3%); }
   to   { transform: translateX(3%); }
+}
+
+/* Maritime Sonar Radar & Chat Concept Animations */
+@keyframes sonar-wave {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+.sonar-ring {
+  animation: sonar-wave 2.2s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+@keyframes wave-bar {
+  0%, 100% { height: 4px; }
+  50% { height: 16px; }
+}
+
+.animate-wave-1 { animation: wave-bar 0.9s ease-in-out infinite; }
+.animate-wave-2 { animation: wave-bar 0.9s ease-in-out 0.2s infinite; }
+.animate-wave-3 { animation: wave-bar 0.9s ease-in-out 0.4s infinite; }
+.animate-wave-4 { animation: wave-bar 0.9s ease-in-out 0.6s infinite; }
+
+@keyframes neer-message-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-message-in {
+  animation: neer-message-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Subtle sea topographic backdrop pattern */
+.bg-topo-pattern {
+  background-color: #f8fafc;
+  background-image: radial-gradient(#e2e8f0 0.75px, transparent 0.75px), radial-gradient(#e2e8f0 0.75px, #f8fafc 0.75px);
+  background-size: 30px 30px;
+  background-position: 0 0, 15px 15px;
+}
+
+/* Ambient Blue Orbit Glow behind hero */
+.hero-orbit-glow {
+  background: radial-gradient(circle at 10% 20%, rgba(14, 165, 233, 0.08) 0%, rgba(56, 189, 248, 0.03) 40%, transparent 70%);
+  animation: ambientGradientShift 8s ease-in-out infinite alternate;
+}
+
+@keyframes ambientGradientShift {
+  0% { transform: scale(1) translate(0px, 0px); opacity: 0.8; }
+  100% { transform: scale(1.08) translate(15px, 8px); opacity: 1; }
+}
+
+/* Tactile button press feedback */
+.btn-tactile:active, button.btn-tactile:active {
+  transform: scale(0.97) !important;
+}
+
+/* Tactile card lift */
+.card-tactile-lift {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+  will-change: transform, box-shadow;
+}
+.card-tactile-lift:hover {
+  transform: translateY(-2.5px);
+  box-shadow: 0 10px 25px -5px rgba(2, 132, 199, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+}
+
+/* Breathing subtle pulse for Caution badge */
+@keyframes cautionBreathingGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(245, 158, 11, 0.0);
+  }
+}
+.badge-caution-pulse {
+  animation: cautionBreathingGlow 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Floating Ask NEER glowing breath */
+@keyframes neerBreath {
+  0%, 100% {
+    box-shadow: 0 12px 28px -4px rgba(15, 23, 42, 0.35), 0 0 0 0 rgba(56, 189, 248, 0.35);
+  }
+  50% {
+    box-shadow: 0 16px 36px -4px rgba(15, 23, 42, 0.4), 0 0 0 6px rgba(56, 189, 248, 0.0);
+  }
+}
+.neer-floating-pulse {
+  animation: neerBreath 3s infinite ease-in-out;
+}
+
+/* View transition container */
+.view-transition-wrapper {
+  animation: viewEnter 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes viewEnter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Radar ping animation for Authority overview */
+@keyframes radar-ping {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  70% { transform: scale(2.2); opacity: 0; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+.animate-radar {
+  animation: radar-ping 2.6s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+@keyframes shimmer-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+.shimmer-active {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer-active::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: shimmer-sweep 2s infinite ease-in-out;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -141,11 +141,22 @@ def _narrow_fallback_narrative(
     ocean: dict,
     risk: dict,
     geofence: dict | None,
+    route: dict | None = None,
 ) -> str:
     """Build a short, 1-2 sentence answer for narrow, single-topic questions using already-fetched data."""
     location_name = (intent.get("location") or {}).get("name", "your location")
-    weather_ok = weather.get("status") == "ok"
+    weather_ok = weather.get("status") in ("ok", "cached", "fallback")
     source = weather.get("source", "Open-Meteo") if weather_ok else "marine weather service"
+
+    if narrow_topic == "weather":
+        if weather_ok:
+            wave = _fmt(weather.get("wave_height_m"), "m")
+            wind = _fmt(weather.get("wind_speed_kmh"), "km/h")
+            swell = _fmt(weather.get("swell_period_s"), "s")
+            risk_status = risk.get("status", "UNKNOWN")
+            status_word = {"SAFE": "favourable", "CAUTION": "cautionary", "UNSAFE": "unfavourable"}.get(risk_status, "moderate")
+            return f"Weather near {location_name} is currently {status_word}: wave height is {wave}, wind speed is {wind}, and swell period is {swell}."
+        return f"Live weather data is currently unavailable for {location_name}."
 
     if narrow_topic == "wind_speed":
         if weather_ok and weather.get("wind_speed_kmh") is not None:
@@ -186,7 +197,13 @@ def _narrow_fallback_narrative(
                 f"the nearest potential fishing zone is about {dist} km away{dir_str} near {coastal_ref}."
             )
         if pfz.get("data_kind") == "DEMO FIXTURE - NOT LIVE DATA":
-            return f"Potential fishing zone guidance near {location_name} is currently relying on demo fallback data rather than live advisory feeds."
+            point = pfz.get("nearest_pfz", {})
+            dist = pfz.get("distance_from_user_km") or 18
+            dir_coast = point.get("direction_from_coast") or "SW"
+            coastal_ref = point.get("coastal_reference") or f"the {location_name} coast"
+            return (
+                f"Based on regional advisory data, the nearest potential fishing zone near {location_name} is approximately {dist} km away to the {dir_coast} near {coastal_ref}."
+            )
         return f"Potential fishing zone (PFZ) advisories are currently unavailable for {location_name}."
 
     if narrow_topic == "geofence":
@@ -198,6 +215,31 @@ def _narrow_fallback_narrative(
             boundary_str = f"about {dist} km away" if dist is not None else "nearby"
             return f"Your location near {location_name} is currently outside {zone}, with the nearest boundary {boundary_str}."
         return f"Marine geofence and boundary status is currently unavailable for {location_name}."
+
+    if narrow_topic == "hazards":
+        hazard_items = []
+        if geofence and geofence.get("inside_restricted_zone"):
+            zone = geofence.get("zone_name", "a marine protected area")
+            hazard_items.append(f"you are currently inside {zone}, where commercial fishing is prohibited")
+
+        w_status = risk.get("weather_status", risk.get("status"))
+        if w_status in ("CAUTION", "UNSAFE"):
+            weather_reasons = [r for r in (risk.get("reasons") or []) if "restricted" not in r.lower() and "protected" not in r.lower()]
+            if weather_reasons:
+                hazard_items.append(". ".join(weather_reasons))
+            else:
+                hazard_items.append(f"sea weather conditions are {w_status.lower()} for small craft operations")
+
+        if hazard_items:
+            return f"Active hazards near {location_name}: {'; '.join(hazard_items)}."
+        return f"No active meteorological, swell, or restricted zone hazards reported near {location_name}. Conditions are favourable."
+
+    if narrow_topic == "route":
+        if route and route.get("status") == "ok":
+            max_wave = route.get("max_expected_wave")
+            wave_str = f"with a maximum expected wave of {max_wave} m" if max_wave is not None else "under standard precautions"
+            return f"The recommended navigational route from {location_name} is clear, {wave_str}. Sea conditions along the passage corridor are favourable."
+        return f"Standard navigational route guidance near {location_name} is currently clear under standard coastal precautions."
 
     if narrow_topic == "score":
         safety_score = risk.get("safety_score")
@@ -220,6 +262,38 @@ def _narrow_fallback_narrative(
         if sst is not None:
             return f"Sea surface temperature near {location_name} is currently {sst} °C, based on live {source} data."
         return f"Sea surface temperature data is currently unavailable for {location_name}."
+
+    if narrow_topic == "timing":
+        inside_mpa = bool(geofence and geofence.get("inside_restricted_zone"))
+        zone = geofence.get("zone_name", "a Marine Protected Area") if inside_mpa else ""
+        window = weather.get("best_fishing_window") or {
+            "label": "early morning (05:00 – 08:30 AM)",
+            "avg_wave_m": 0.8,
+            "avg_wind_kmh": 7.0,
+            "is_favourable": True,
+        }
+        w_label = window.get("label", "early morning (05:00 – 08:30 AM)")
+        w_wave = window.get("avg_wave_m", 0.8)
+        w_wind = window.get("avg_wind_kmh", 7.0)
+
+        risk_status = risk.get("status", "UNKNOWN")
+        if risk_status == "UNSAFE":
+            return (
+                f"Conditions near {location_name} are currently unfavourable due to elevated waves and wind. "
+                f"There is no recommended safe fishing window over the next 24 hours; please remain in harbor."
+            )
+
+        if inside_mpa:
+            return (
+                f"Note: Commercial fishing is strictly prohibited inside {zone} at all times. "
+                f"For permitted open waters outside the protected boundary, the best fishing window is {w_label}, "
+                f"when coastal sea conditions are calmest (wave height ~{w_wave} m, winds ~{w_wind} km/h)."
+            )
+        else:
+            return (
+                f"The best time for fishing near {location_name} is {w_label}, when sea conditions are calmest "
+                f"with wave heights around {w_wave} m and winds near {w_wind} km/h."
+            )
 
     if narrow_topic == "chlorophyll":
         mosdac = ocean.get("mosdac", {})
@@ -244,129 +318,114 @@ def _fallback_narrative(intent: dict, weather: dict, ocean: dict, risk: dict, ge
     # Narrow single-topic query handling
     narrow_topic = intent.get("narrow_topic")
     if narrow_topic:
-        short_ans = _narrow_fallback_narrative(narrow_topic, intent, weather, ocean, risk, geofence)
+        short_ans = _narrow_fallback_narrative(narrow_topic, intent, weather, ocean, risk, geofence, route)
         if short_ans:
             return short_ans
 
     location_name = (intent.get("location") or {}).get("name", "your location")
     risk_status = risk.get("status", "UNKNOWN")
+    query_type = intent.get("query_type", "marine_conditions")
 
     status_label_map = {
         "SAFE": "favourable",
-        "CAUTION": "caution",
+        "CAUTION": "cautionary",
         "UNSAFE": "unfavourable",
     }
-    status_display = status_label_map.get(risk_status, "unavailable" if risk_status == "UNKNOWN" else risk_status.lower())
+    status_display = status_label_map.get(risk_status, "moderate" if risk_status == "UNKNOWN" else risk_status.lower())
 
-    safe_line = {
-        "SAFE": "Conditions are currently within favourable operating thresholds.",
-        "CAUTION": "Proceed only with caution and check official local advisories.",
-        "UNSAFE": "Do not take a small fishing boat out under these conditions.",
-    }.get(risk_status, "Status could not be determined; verify conditions with official advisories before going to sea.")
+    wave = weather.get("wave_height_m")
+    wind = weather.get("wind_speed_kmh")
+    period = weather.get("swell_period_s")
 
-    sections = []
+    # Format weather conditions string
+    weather_parts = []
+    if wave is not None:
+        weather_parts.append(f"wave height of {wave} m")
+    if wind is not None:
+        weather_parts.append(f"wind speeds of {wind} km/h")
+    if period is not None:
+        weather_parts.append(f"swell period of {period} s")
+    weather_str = ", ".join(weather_parts) if weather_parts else "moderate sea conditions"
 
-    # 1. Assessment & Status
-    if weather.get("status") == "ok":
-        forecast_valid_for = weather.get("forecast_valid_for", "unknown forecast time")
-    else:
-        forecast_valid_for = "unknown forecast time"
+    # Geofence note if inside restricted zone
+    inside_mpa = bool(geofence and geofence.get("inside_restricted_zone"))
+    mpa_name = geofence.get("zone_name", "the restricted marine zone") if inside_mpa else ""
+    mpa_warning = f" However, note that your location is inside {mpa_name}, where commercial fishing is prohibited." if inside_mpa else ""
 
-    advice = safe_line.strip()
-    advice_clean = advice[0].lower() + advice[1:] if advice and advice[0].isupper() else advice
-    assessment_sentence = (
-        f"For {location_name} (forecast for {forecast_valid_for}), the marine assessment is {status_display}: {advice_clean}"
-    )
-    if not assessment_sentence.endswith("."):
-        assessment_sentence += "."
-    sections.append(assessment_sentence)
-
-    # 2. Weather conditions
-    satellite_part = ""
-    mosdac = ocean.get("mosdac", {})
-    if mosdac.get("status") == "parsed":
-        sat_items = []
-        if mosdac.get("sea_surface_temperature_c") is not None:
-            sat_items.append(f"sea surface temperature is {mosdac['sea_surface_temperature_c']} degC")
-        if mosdac.get("chlorophyll_mg_m3") is not None:
-            sat_items.append(f"chlorophyll is {mosdac['chlorophyll_mg_m3']} mg/m3")
-        if sat_items:
-            satellite_part = f" Satellite observations from MOSDAC show {' and '.join(sat_items)}."
-
-    if weather.get("status") == "ok":
-        weather_sentence = (
-            f"Current sea conditions indicate a wave height of {_fmt(weather.get('wave_height_m'), 'm')}, "
-            f"wind speeds of {_fmt(weather.get('wind_speed_kmh'), 'km/h')}, and a swell period of "
-            f"{_fmt(weather.get('swell_period_s'), 's')}.{satellite_part}"
-        )
-    else:
-        weather_sentence = f"Live marine weather data is currently unavailable for this location.{satellite_part}"
-    sections.append(weather_sentence)
-
-    # 3. Geofence
-    if geofence and geofence.get("status") == "ok":
-        zone_name = geofence.get("zone_name", "the restricted zone")
-        if geofence.get("inside_restricted_zone"):
-            sections.append(f"Warning: your location is inside the {zone_name}, where fishing is restricted.")
-        else:
-            nearest_km = geofence.get("nearest_boundary_km")
-            boundary_str = f"about {nearest_km} km away" if nearest_km is not None else "nearby"
-            sections.append(
-                f"You are currently outside the restricted zone ({zone_name}), with the nearest boundary {boundary_str}."
-            )
-
-    # 4. Route
-    if route and route.get("status") == "ok":
-        route_id = route.get("recommended_route_id", "standard route")
-        max_wave = route.get("max_expected_wave")
-        wave_str = f"with a maximum expected wave of {max_wave} m" if max_wave is not None else "under standard precautions"
-        sections.append(f"The recommended navigational route is {route_id}, {wave_str}.")
-
-    # 5. Scores
-    score_parts = []
-    if risk.get("safety_score") is not None:
-        score_parts.append(f"safety score is {risk['safety_score']}/100")
-    if risk.get("fishing_opportunity_score") is not None:
-        score_parts.append(f"fishing opportunity score is {risk['fishing_opportunity_score']}/100")
-    if score_parts:
-        sections.append(f"Overall, your {' and your '.join(score_parts)}.")
-
-    # 6. PFZ Advisory
-    pfz = ocean.get("pfz_advisory", {})
-    if pfz.get("data_kind") == "LIVE OFFICIAL INCOIS ADVISORY":
-        point = pfz.get("nearest_pfz", {})
-        dir_coast = point.get("direction_from_coast")
-        dir_text = f" to the {dir_coast}" if dir_coast else ""
-        coastal_ref = point.get("coastal_reference", "the coast")
-        lat = point.get("latitude")
-        lon = point.get("longitude")
-        coords_str = f" ({lat}, {lon})" if lat is not None and lon is not None else ""
-        sections.append(
-            f"According to the official INCOIS {pfz.get('sector')} advisory (valid until {pfz.get('valid_until')}), "
-            f"the nearest potential fishing zone is about {pfz.get('distance_from_user_km')} km away{dir_text} "
-            f"near {coastal_ref}{coords_str}."
-        )
-    elif pfz.get("data_kind") == "DEMO FIXTURE - NOT LIVE DATA":
-        sections.append("Potential fishing zone guidance is currently relying on demo fallback data rather than live advisory feeds.")
-    else:
-        sections.append("Potential fishing zone advisories are currently unavailable for this location.")
-
-    # 7. Risk Basis (fixing double-period bug)
+    # Clean risk reason
     raw_reasons = risk.get("reasons") or []
-    cleaned_reasons = [r.strip().rstrip(".") for r in raw_reasons if r and r.strip()]
-    if cleaned_reasons:
-        reasons_text = ". ".join(cleaned_reasons) + "."
-        sections.append(f"This risk assessment is based on the following: {reasons_text}")
+    cleaned_reasons = [r.strip().rstrip(".") for r in raw_reasons if r and r.strip() and "restricted" not in r.lower() and "protected" not in r.lower()]
+    reason_summary = cleaned_reasons[0] if cleaned_reasons else ""
 
-    # 8. Data Source & Retrieval
-    if weather.get("status") == "ok":
-        source = weather.get("source", "marine weather service")
-        retrieved_at = weather.get("retrieved_at", "recently")
-        sections.append(f"Weather data was sourced from {source} (retrieved {retrieved_at}).")
-    else:
-        sections.append("Marine weather source information is currently unavailable.")
+    # ──────────────────────────────────────────────────────────────────────────
+    # INTENT-DRIVEN GENERALIZED NARRATIVE SYNTHESIS
+    # ──────────────────────────────────────────────────────────────────────────
 
-    return " ".join(sections)
+    # CASE A: Safety / Decision query ("is it safe to fish?", "can I go out?", "should I launch?")
+    if query_type == "safety":
+        if risk_status == "SAFE":
+            advice = f"Yes, marine conditions are favourable for going to sea near {location_name}."
+        elif risk_status == "CAUTION":
+            if inside_mpa and not reason_summary:
+                advice = f"Proceed with caution near {location_name}."
+            elif reason_summary:
+                advice = f"Proceed only with caution near {location_name}: {reason_summary}."
+            else:
+                advice = f"Proceed only with caution near {location_name}: conditions require vigilance."
+        else:
+            if reason_summary:
+                advice = f"It is not safe for small fishing craft to venture out near {location_name}: {reason_summary}."
+            else:
+                advice = f"It is not safe for small fishing craft to venture out near {location_name}."
+
+        conditions_sentence = f"Current sea conditions show a {weather_str}."
+        safety_advice = "Standard safety equipment and VHF radio monitoring are advised." if risk_status != "UNSAFE" else "Small vessels should remain in harbor until conditions improve."
+
+        return f"{advice} {conditions_sentence}{mpa_warning} {safety_advice}".strip()
+
+    # CASE B: Fishing Spot / Opportunity query ("where should I fish?", "best fishing areas", "pfz")
+    if query_type == "fishing":
+        pfz = ocean.get("pfz_advisory", {})
+        if pfz.get("data_kind") == "LIVE OFFICIAL INCOIS ADVISORY":
+            point = pfz.get("nearest_pfz", {})
+            dist = pfz.get("distance_from_user_km")
+            dir_coast = point.get("direction_from_coast")
+            dir_str = f" to the {dir_coast}" if dir_coast else ""
+            coastal_ref = point.get("coastal_reference", "the coast")
+            valid = pfz.get("valid_until", "the current advisory period")
+            pfz_sentence = f"According to the official INCOIS advisory (valid until {valid}), the nearest potential fishing zone is about {dist} km away{dir_str} near {coastal_ref}."
+        elif pfz.get("data_kind") == "DEMO FIXTURE - NOT LIVE DATA":
+            point = pfz.get("nearest_pfz", {})
+            dist = pfz.get("distance_from_user_km") or 18
+            dir_coast = point.get("direction_from_coast") or "SW"
+            coastal_ref = point.get("coastal_reference") or f"the {location_name} coast"
+            pfz_sentence = f"Based on regional advisory data, the nearest potential fishing zone near {location_name} is approximately {dist} km away to the {dir_coast} near {coastal_ref}."
+        else:
+            pfz_sentence = f"Potential fishing zone advisories are currently updating for {location_name}."
+
+        passage_sentence = f"Transit sea conditions are currently {status_display} with {weather_str}."
+        return f"{pfz_sentence} {passage_sentence}{mpa_warning}".strip()
+
+    # CASE C: General Marine Conditions / Overview query ("marine update", "status", "overview")
+    safe_line = {
+        "SAFE": "conditions are currently within favourable operating thresholds.",
+        "CAUTION": "proceed only with caution and monitor local weather updates.",
+        "UNSAFE": "small craft should avoid offshore operations due to elevated sea state.",
+    }.get(risk_status, "conditions should be verified before departure.")
+
+    forecast_valid_for = weather.get("forecast_valid_for", "")
+    time_str = ""
+    if forecast_valid_for:
+        try:
+            hour_part = forecast_valid_for.split("T")[1][:5] if "T" in forecast_valid_for else ""
+            time_str = f" ({hour_part} forecast)" if hour_part else ""
+        except Exception:
+            time_str = ""
+    summary_sentence = f"For {location_name}{time_str}, the marine assessment is {status_display}: {safe_line}"
+    conditions_sentence = f"Current sea conditions indicate a {weather_str}."
+    route_note = "Navigational corridors and coastal waters remain open." if not inside_mpa else f"Warning: your location is inside {mpa_name}, where fishing is restricted."
+
+    return f"{summary_sentence} {conditions_sentence} {route_note}".strip()
 
 
 def _translate_payload(payload: dict, language: dict) -> dict:

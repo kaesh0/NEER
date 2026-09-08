@@ -1,8 +1,8 @@
 {
-  "name": "orca-mock-server",
+  "name": "neer-backend-gateway",
   "private": true,
-  "version": "0.1.0",
-  "description": "Mock analysis backend for the ORCA frontend demo. Serves the frozen response-envelope JSON files from disk.",
+  "version": "1.0.0",
+  "description": "API Gateway, auth orchestrator, and fallback controller for NEER Marine Intelligence",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",

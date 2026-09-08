@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, Circle, useMap, useMapEvents } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, Circle, Polyline, useMap, useMapEvents } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { getLocation, getFishingZones, getHazards, getMapData } from '../../data/mock/fishermanData.js'
 import StatusBadge from '../ui/StatusBadge.jsx'
 import { useTranslation } from '../../i18n/translations.js';
+import { getCoastalPlaceName } from '../../utils/coastalGeocoder.js';
 
 // Fix Leaflet's default icon path issues in React/Vite
 delete L.Icon.Default.prototype._getIconUrl
@@ -23,6 +24,12 @@ const customIcon = (color) => {
   })
 }
 
+// Strict bounding box for the Indian subcontinent, coastal maritime waters, Lakshadweep, and Andaman & Nicobar
+const INDIA_BOUNDS = [
+  [4.0, 65.0],   // Southwest: South of Lakshadweep & Kanyakumari (Indira Point is ~6.7° N)
+  [38.0, 98.5],  // Northeast: Northern frontier to East of Andaman & Nicobar
+]
+
 const pulseIcon = new L.DivIcon({
   className: 'bg-transparent',
   html: `<div class="relative w-4 h-4">
@@ -34,13 +41,13 @@ const pulseIcon = new L.DivIcon({
   iconAnchor: [8, 8],
 })
 
-function MapFocusController({ focusPoint }) {
+function MapFocusController({ focusPoint, center }) {
   const { t } = useTranslation()
 
   const map = useMap()
 
   useEffect(() => {
-    // Fix leafet container sizing bug on mount/flex-grow
+    // Fix leaflet container sizing bug on mount/flex-grow
     const timer = setTimeout(() => {
       map.invalidateSize()
     }, 150)
@@ -56,8 +63,10 @@ function MapFocusController({ focusPoint }) {
       } else if (focusPoint.type === 'hazard') {
         map.flyTo([focusPoint.lat, focusPoint.lng], 10, { animate: true, duration: 1.5 })
       }
+    } else if (center && center[0] != null && center[1] != null) {
+      map.flyTo(center, map.getZoom(), { animate: true, duration: 1.0 })
     }
-  }, [focusPoint, map])
+  }, [focusPoint, center?.[0], center?.[1], map])
 
   return null
 }
@@ -116,16 +125,29 @@ export default function InteractiveMap({ data, height = '100%', className = '', 
       <MapContainer
         center={[initialLat, initialLng]}
         zoom={mapData.zoom || 10}
-        scrollWheelZoom={false}
+        minZoom={4}
+        maxBounds={INDIA_BOUNDS}
+        maxBoundsViscosity={1.0}
+        scrollWheelZoom={true}
         className="z-0"
         style={{ height: '100%', width: '100%' }}
       >
+        {/* Primary Basemap (Standard OpenStreetMap - Clean, Fast, Zero API Key Required) */}
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+          maxZoom={19}
         />
 
-        <MapFocusController focusPoint={focusPoint} />
+        {/* Marine Navigation Seamark Overlay (OpenSeaMap) */}
+        <TileLayer
+          attribution='&copy; <a href="http://www.openseamap.org">OpenSeaMap</a> contributors'
+          url="https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png"
+          maxZoom={18}
+          opacity={0.85}
+        />
+
+        <MapFocusController focusPoint={focusPoint} center={[initialLat, initialLng]} />
         <MapInteractionHandler onMapClick={setClickedPoint} />
 
         {/* User Location */}
@@ -140,7 +162,7 @@ export default function InteractiveMap({ data, height = '100%', className = '', 
 
         {/* Hazards */}
         {hazards.map((h, i) => {
-          // If hazard has coordinates we'd plot it. Mocking coordinates slightly off coast for demo if not in JSON.
+          // If hazard lacks explicit coordinates, place relative marker for spatial reference
           const hazardLat = centerLat - 0.2 - (i * 0.1)
           const hazardLng = centerLng - 0.2 - (i * 0.1)
           return (
@@ -191,13 +213,21 @@ export default function InteractiveMap({ data, height = '100%', className = '', 
           )
         })}
         
+        {/* Route waypoint polyline matching code.html */}
+        <Polyline
+          positions={[[location.lat || 9.9312, location.lng || 76.2673], [9.85, 76.02], [9.78, 75.92]]}
+          pathOptions={{ color: '#0284c7', weight: 3, dashArray: '5, 8', opacity: 0.8 }}
+        />
+        
         {/* Explored Location Click Marker */}
         {activePoint && (
           <Marker position={[activePoint.lat, activePoint.lng]} icon={pulseIcon}>
             <Popup autoPan={false}>
               <div className="flex flex-col gap-2 min-w-[200px] p-1">
                 <div>
-                  <div className="font-bold text-neer-navy-900 text-sm">{t('Explore this location')}</div>
+                  <div className="font-bold text-neer-navy-900 text-sm">
+                    {getCoastalPlaceName(activePoint.lat, activePoint.lng)}
+                  </div>
                   <div className="text-[10px] text-neer-ink-secondary mt-0.5 font-mono">
                     {activePoint.lat.toFixed(4)}° N, {activePoint.lng.toFixed(4)}° E
                   </div>

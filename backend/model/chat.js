@@ -36,11 +36,13 @@ const CHAT_PERSONAS = ["fisherman", "authority"];
  * `servedFrom: "fallback_mock"` and a generated session_id, since Python didn't
  * see the request).
  */
-async function getChatResponse({ message, persona, sessionId }) {
+async function getChatResponse({ message, persona, sessionId, location }) {
   try {
     const pythonResponse = await queryPythonService("/api/query", {
       text: message,
       session_id: sessionId || undefined,
+      location: location || undefined,
+      persona: persona || undefined,
     });
     return {
       session_id: pythonResponse.session_id,

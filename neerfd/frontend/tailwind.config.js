@@ -6,7 +6,46 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['Space Grotesk', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
+      },
       colors: {
+        marine: {
+          50: '#f0f9ff',
+          100: '#e0f2fe',
+          200: '#bae6fd',
+          300: '#7dd3fc',
+          400: '#38bdf8',
+          500: '#0ea5e9',
+          600: '#0284c7',
+          700: '#0369a1',
+          800: '#075985',
+          900: '#0c4a6e',
+          950: '#082f49',
+        },
+        deepnavy: {
+          800: '#111e33',
+          900: '#0b1626',
+          950: '#070e1a'
+        },
+        brand: {
+          navy: '#0b192e',
+          deep: '#061325',
+          marine: '#003351',
+          primary: '#0284c7',
+          accent: '#38bdf8',
+          surface: '#f8fafc',
+        },
+        caution: {
+          50: '#fffbeb',
+          100: '#fef3c7',
+          200: '#fde68a',
+          500: '#f59e0b',
+          600: '#d97706',
+          700: '#b45309',
+        },
         neer: {
           // Navy palette (primary)
           navy: {
@@ -94,7 +133,7 @@ export default {
           green: '#138808',
           white: '#ffffff',
         },
-        // Map placeholder palette
+        // Map chart & canvas palette
         chart: {
           land: '#e9edf1',
           coast: '#d3e3ee',
@@ -149,6 +188,9 @@ export default {
         'neer-xl': '1.125rem',
       },
       boxShadow: {
+        'subtle': '0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -2px rgba(15, 23, 42, 0.03)',
+        'card-hover': '0 12px 30px -4px rgba(2, 132, 199, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.04)',
+        'float': '0 10px 25px -3px rgba(11, 25, 46, 0.25)',
         'neer-xs': '0 1px 2px rgba(10, 46, 82, 0.06)',
         'neer-sm': '0 1px 2px rgba(10, 46, 82, 0.04), 0 3px 10px rgba(10, 46, 82, 0.06)',
         'neer-md': '0 2px 6px rgba(10, 46, 82, 0.05), 0 12px 28px rgba(10, 46, 82, 0.1)',

@@ -7,10 +7,21 @@
  */
 import rawJson from './authority_ernakulam.json' with { type: 'json' }
 
-const resolveEnv = (env) => (env && env.request ? env : rawJson)
+const resolveEnv = (env) => {
+  if (!env) return rawJson
+  if (env.is_coastal === false) return env
+  return env.request ? env : rawJson
+}
 
 // ── Base Context ──────────────────────────────────────────────────────────
 export function getRequest(env) {
+  if (env?.is_coastal === false) {
+    return {
+      geometry: {
+        label: env?.location?.name || env?.request?.geometry?.label || 'Inland Area',
+      },
+    }
+  }
   return resolveEnv(env)?.request || {}
 }
 
@@ -25,6 +36,7 @@ export function getTimeWindow(env) {
 
 // ── Spatial & Conditions ──────────────────────────────────────────────────
 export function getConditions(env) {
+  if (env?.is_coastal === false) return {}
   return resolveEnv(env)?.marineSituation?.conditions || {}
 }
 
@@ -33,27 +45,41 @@ export function getMapData(env) {
 }
 
 export function getHazards(env) {
+  if (env?.is_coastal === false) return []
   return resolveEnv(env)?.marineSituation?.hazards || []
 }
 
 export function getFishingZones(env) {
+  if (env?.is_coastal === false) return {}
   return resolveEnv(env)?.marineSituation?.fishingZones || {}
 }
 
 export function getSpatialAnalysis(env) {
+  if (env?.is_coastal === false) return {}
   return resolveEnv(env)?.marineSituation?.spatialAnalysis || {}
 }
 
 export function getRegions(env) {
+  if (env?.is_coastal === false) return []
   return resolveEnv(env)?.marineSituation?.spatialAnalysis?.regions || []
 }
 
 // ── Decision Output ───────────────────────────────────────────────────────
 export function getDecision(env) {
+  if (env?.is_coastal === false) {
+    const d = env?.decisionOutput || {}
+    return {
+      status: 'inland',
+      headline: d.headline || 'Non-Coastal / Inland Location',
+      summary: d.summary || 'Marine and oceanographic assessment is restricted to coastal waters.',
+      narrative: d.narrative || '',
+    }
+  }
   return resolveEnv(env)?.decisionOutput || {}
 }
 
 export function getAreaPriorities(env) {
+  if (env?.is_coastal === false) return []
   return resolveEnv(env)?.decisionOutput?.areaPriorities || []
 }
 

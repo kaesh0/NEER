@@ -31,7 +31,7 @@ export default function MobileNav({ items = [], className = '' }) {
             >
               <Icon name={item.icon} size={16} aria-hidden="true" />
               <span className="text-[0.55rem] leading-none font-semibold tracking-wider">{item.label.toUpperCase()}</span>
-              {item.badge != null && (
+              {item.badge != null && item.badge > 0 && (
                 <span className="absolute -top-0.5 right-1 min-w-[1rem] h-2 px-0.5 text-[0.45rem] font-bold leading-2 text-center text-white bg-neer-unfavourable rounded-full">
                   {item.badge}
                 </span>

@@ -313,7 +313,7 @@ export default function AppHeader({
                     type="button"
                   >
                     <span>{t(item.label)}</span>
-                    {item.badge != null && (
+                    {item.badge != null && item.badge > 0 && (
                       <span className="w-4 h-4 bg-red-500 text-white rounded-full text-[10px] font-bold flex items-center justify-center shadow-sm">
                         {item.badge}
                       </span>

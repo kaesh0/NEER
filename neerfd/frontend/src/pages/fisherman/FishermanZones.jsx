@@ -1,62 +1,64 @@
 import React from 'react'
 import { getFishingZones, getFishingZoneMeta, getPfzRecommendation, directionToCompass, formatTime, formatDate } from '../../data/mock/fishermanData.js'
 import { useTranslation } from '../../i18n/translations.js'
+import InlandLocationNotice from '../../components/ui/InlandLocationNotice.jsx'
+import LoadingState from '../../components/ui/LoadingState.jsx'
+import ErrorState from '../../components/ui/ErrorState.jsx'
 
-export default function FishermanZones({ data, loading, error, onRetry, onNavigate }) {
+export default function FishermanZones({ data, loading, error, onRetry, onNavigate, selectedLocation, onLocationChange }) {
   const { t } = useTranslation()
+
+  if (loading) return <LoadingState />
+  if (error) return <ErrorState message={error} onRetry={onRetry} />
+
+  const isInland = selectedLocation?.isCoastal === false || data?.is_coastal === false || data?.decisionOutput?.status === 'inland'
+
+  if (isInland) {
+    return (
+      <div className="tab-view-content flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 view-transition-wrapper" id="view-zones">
+        <div className="border-b border-slate-200 pb-4">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-amber-600 uppercase tracking-widest">{t('Regional Priority & Fishing Zones')}</span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800">{t('Non-Coastal Sector')}</span>
+          </div>
+          <h1 className="text-2xl font-black text-slate-900 mt-1">{t('Potential Fishing Zones (PFZ) Inactive')}</h1>
+          <p className="text-sm text-slate-500">
+            {selectedLocation?.name || t('This area')} {t('is located inland. Oceanic chlorophyll-a and sea surface temperature (SST) divergence zones apply exclusively to coastal and maritime waters.')}
+          </p>
+        </div>
+
+        <InlandLocationNotice 
+          location={selectedLocation} 
+          onSelectLocation={onLocationChange}
+          onOpenLocationModal={() => onNavigate && onNavigate('map')}
+        />
+      </div>
+    )
+  }
 
   const fishingZones = getFishingZones(data)
   const fishingZoneMeta = getFishingZoneMeta(data)
   const pfzRecommendation = getPfzRecommendation(data)
 
-  // Top highlight cluster
-  const highlightZone = fishingZones[0] || {
-    id: 'chillickal-001',
-    name: 'CHILLICKAL 001',
-    distance: 52.5,
-    direction: 'SW',
-    bearing: 228,
-    status: 'favourable',
-    lat: 9.78,
-    lng: 75.92,
+  // If no zones available and not inland
+  if (fishingZones.length === 0) {
+    return (
+      <div className="tab-view-content flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 view-transition-wrapper" id="view-zones">
+        <div className="border-b border-slate-200 pb-4">
+          <h1 className="text-2xl font-black text-slate-900">{t('Potential Fishing Zones (PFZ)')}</h1>
+          <p className="text-sm text-slate-500">{t('No active PFZ advisories available for this sector.')}</p>
+        </div>
+        <InlandLocationNotice 
+          location={selectedLocation} 
+          onSelectLocation={onLocationChange}
+          onOpenLocationModal={() => onNavigate && onNavigate('map')}
+        />
+      </div>
+    )
   }
 
-  // Pre-configured full cards fallback from reference data if zones are fewer than 3
-  const displayZones = fishingZones.length >= 3 ? fishingZones.slice(0, 3) : [
-    fishingZones[0] || {
-      id: 'chillickal-001',
-      name: 'CHILLICKAL 001',
-      distance: 52.5,
-      direction: 'South-West (228°)',
-      species: 'Mackerel, Sardine, Tuna',
-      temp: '28.4°C',
-      status: 'favourable',
-      lat: 9.78,
-      lng: 75.92,
-    },
-    fishingZones[1] || {
-      id: 'munambam-north-004',
-      name: 'MUNAMBAM NORTH 004',
-      distance: 38.2,
-      direction: 'North-West (315°)',
-      species: 'Anchovy, Carangids',
-      temp: '28.1°C',
-      status: 'favourable',
-      lat: 10.15,
-      lng: 76.05,
-    },
-    fishingZones[2] || {
-      id: 'alappuzha-shelf-002',
-      name: 'ALAPPUZHA SHELF 002',
-      distance: 68.0,
-      direction: 'South (182°)',
-      species: 'Ribbon fish, Squids',
-      temp: '28.7°C',
-      status: 'caution',
-      lat: 9.45,
-      lng: 76.20,
-    },
-  ]
+  const highlightZone = fishingZones[0]
+  const displayZones = fishingZones.slice(0, 3)
 
   return (
     <div className="tab-view-content flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 view-transition-wrapper" id="view-zones">
@@ -67,7 +69,7 @@ export default function FishermanZones({ data, loading, error, onRetry, onNaviga
           <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800">{t('INCOIS Live Feed Active')}</span>
         </div>
         <h1 className="text-2xl font-black text-slate-900 mt-1">{t('Regional Priority & Potential Fishing Zones (PFZ)')}</h1>
-        <p className="text-sm text-slate-500">{t('Real-time chlorophyll frontal analysis and ocean sea surface temperature divergence bands around Kochi & Kerala coast.')}</p>
+        <p className="text-sm text-slate-500">{t('Real-time chlorophyll frontal analysis and ocean sea surface temperature divergence bands around')} {selectedLocation?.name || t('coastal waters')}.</p>
       </div>
 
       {/* Regional Priority Summary Banner (4 KPI Cards) */}
@@ -75,10 +77,10 @@ export default function FishermanZones({ data, loading, error, onRetry, onNaviga
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
           <div className="text-xs text-slate-400 font-semibold uppercase">{t('Regional Priority')}</div>
           <div className="text-xl font-bold text-slate-900 mt-1 flex items-center gap-2">
-            <span>{t('Kochi Coast')}</span>
-            <span className="px-2 py-0.5 rounded text-xs bg-amber-100 text-amber-800 font-semibold">{t('Medium')}</span>
+            <span>{selectedLocation?.name ? selectedLocation.name.split(',')[0] : t('Coastal Sector')}</span>
+            <span className="px-2 py-0.5 rounded text-xs bg-amber-100 text-amber-800 font-semibold">{t('Active')}</span>
           </div>
-          <p className="text-xs text-slate-500 mt-1">9.9312° N, 76.2673° E</p>
+          <p className="text-xs text-slate-500 mt-1">{selectedLocation?.lat ? `${selectedLocation.lat.toFixed(4)}° N, ${selectedLocation.lng.toFixed(4)}° E` : ''}</p>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
@@ -89,14 +91,14 @@ export default function FishermanZones({ data, loading, error, onRetry, onNaviga
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
           <div className="text-xs text-slate-400 font-semibold uppercase">{t('Active Marine Zones')}</div>
-          <div className="text-xl font-bold text-sky-600 mt-1">3 {t('Identified')}</div>
-          <p className="text-xs text-slate-500 mt-1">2 {t('Favourable')}, 1 {t('Moderate')}</p>
+          <div className="text-xl font-bold text-sky-600 mt-1">{displayZones.length} {t('Identified')}</div>
+          <p className="text-xs text-slate-500 mt-1">{displayZones.filter(z => z.status === 'favourable').length} {t('Favourable')}, {displayZones.filter(z => z.status !== 'favourable').length} {t('Moderate')}</p>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="text-xs text-slate-400 font-semibold uppercase">{t('Restricted Perimeters')}</div>
-          <div className="text-xl font-bold text-red-600 mt-1">1 {t('Marine Sanctuary')}</div>
-          <p className="text-xs text-slate-500 mt-1">{t('Exit required prior to fishing')}</p>
+          <div className="text-xs text-slate-400 font-semibold uppercase">{t('Advisory Status')}</div>
+          <div className="text-xl font-bold text-emerald-600 mt-1">{t('Active')}</div>
+          <p className="text-xs text-slate-500 mt-1">{t('Live coastal telemetry')}</p>
         </div>
       </div>
 
@@ -113,7 +115,7 @@ export default function FishermanZones({ data, loading, error, onRetry, onNaviga
               </svg>
               {t('Highest Probability Cluster')}
             </div>
-            <h2 className="text-xl font-black text-slate-900">{t(highlightZone.name)} — {t('Offshore Kochi Sector')}</h2>
+            <h2 className="text-xl font-black text-slate-900">{t(highlightZone.name)} — Offshore {selectedLocation?.name ? selectedLocation.name.split(',')[0] : 'Coastal'} Sector</h2>
             <p className="text-xs sm:text-sm text-slate-600 max-w-2xl">
               {t('High concentration of chlorophyll-a gradients detected by Oceansat radiometer. Strong pelagic and demersal fish congregation forecast.')}
             </p>

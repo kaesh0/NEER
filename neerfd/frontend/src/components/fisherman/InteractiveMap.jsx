@@ -80,7 +80,7 @@ function MapInteractionHandler({ onMapClick }) {
   return null
 }
 
-export default function InteractiveMap({ data, height = '100%', className = '', focusPoint = null, onNavigate, setExploredLocation, exploredLocation }) {
+export default function InteractiveMap({ data, height = '100%', className = '', focusPoint = null, onNavigate, setExploredLocation, exploredLocation, selectedLocation }) {
   const { t } = useTranslation()
   const [clickedPoint, setClickedPoint] = useState(null)
   
@@ -98,17 +98,22 @@ export default function InteractiveMap({ data, height = '100%', className = '', 
     }
   }, [focusPoint])
 
-  if (!data) return null
+  if (!data && !selectedLocation) return null
 
-  const location = getLocation(data)
-  const fishingZones = getFishingZones(data)
-  const hazards = getHazards(data)
-  const mapData = getMapData(data)
+  const location = data ? getLocation(data) : {}
+  const fishingZones = data ? getFishingZones(data) : []
+  const hazards = data ? getHazards(data) : []
+  const mapData = data ? getMapData(data) : { center: [76.2673, 9.9312], zoom: 10 }
 
-  const centerLat = Array.isArray(mapData.center) ? mapData.center[1] : (mapData.center?.lat || 9.9312)
-  const centerLng = Array.isArray(mapData.center) ? mapData.center[0] : (mapData.center?.lng || 76.2673)
-  const initialLat = exploredLocation ? exploredLocation.lat : (location.lat || centerLat)
-  const initialLng = exploredLocation ? exploredLocation.lng : (location.lng || centerLng)
+  const activeLat = exploredLocation?.lat ?? selectedLocation?.lat ?? location.lat ?? 9.9312
+  const activeLng = exploredLocation?.lng ?? selectedLocation?.lng ?? location.lng ?? 76.2673
+  const activeName = selectedLocation?.name || location.name || 'Current Location'
+  const isKerala = activeName.toLowerCase().includes('kerala') || activeName.toLowerCase().includes('kochi')
+
+  const centerLat = activeLat
+  const centerLng = activeLng
+  const initialLat = activeLat
+  const initialLng = activeLng
   
   const activePoint = exploredLocation || clickedPoint
 
@@ -151,14 +156,12 @@ export default function InteractiveMap({ data, height = '100%', className = '', 
         <MapInteractionHandler onMapClick={setClickedPoint} />
 
         {/* User Location */}
-        {location.lat && location.lng && (
-          <Marker position={[location.lat, location.lng]} icon={customIcon('#0284c7')}>
-            <Popup className="neer-popup">
-              <div className="font-bold text-neer-navy-900 mb-1">{t(location.name)}</div>
-              <div className="text-neer-xs text-neer-ink-secondary">{t('Current Location')}</div>
-            </Popup>
-          </Marker>
-        )}
+        <Marker position={[activeLat, activeLng]} icon={customIcon('#0284c7')}>
+          <Popup className="neer-popup">
+            <div className="font-bold text-neer-navy-900 mb-1">{t(activeName)}</div>
+            <div className="text-neer-xs text-neer-ink-secondary">{t('Current Location')}</div>
+          </Popup>
+        </Marker>
 
         {/* Hazards */}
         {hazards.map((h, i) => {
@@ -213,11 +216,21 @@ export default function InteractiveMap({ data, height = '100%', className = '', 
           )
         })}
         
-        {/* Route waypoint polyline matching code.html */}
-        <Polyline
-          positions={[[location.lat || 9.9312, location.lng || 76.2673], [9.85, 76.02], [9.78, 75.92]]}
-          pathOptions={{ color: '#0284c7', weight: 3, dashArray: '5, 8', opacity: 0.8 }}
-        />
+        {/* Route waypoint polyline: dynamic seaward trajectory */}
+        {selectedLocation?.isCoastal !== false && (
+          <Polyline
+            positions={
+              isKerala
+                ? [[activeLat, activeLng], [9.85, 76.02], [9.78, 75.92]]
+                : [
+                    [activeLat, activeLng],
+                    [activeLat + (activeLng > 80 ? -0.06 : 0.04), activeLng + (activeLng > 80 ? 0.12 : -0.12)],
+                    [activeLat + (activeLng > 80 ? -0.12 : 0.07), activeLng + (activeLng > 80 ? 0.22 : -0.22)],
+                  ]
+            }
+            pathOptions={{ color: '#0284c7', weight: 3, dashArray: '5, 8', opacity: 0.8 }}
+          />
+        )}
         
         {/* Explored Location Click Marker */}
         {activePoint && (

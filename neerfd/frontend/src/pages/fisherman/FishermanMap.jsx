@@ -7,7 +7,7 @@ import { useTranslation } from '../../i18n/translations.js'
 import StructuredLocationCard from '../../components/ui/StructuredLocationCard.jsx'
 import { getCoastalPlaceName } from '../../utils/coastalGeocoder.js'
 
-export default function FishermanMap({ data, loading, error, onRetry, focusPoint, setFocusPoint, onNavigate, setExploredLocation, exploredLocation, onLocationChange }) {
+export default function FishermanMap({ data, loading, error, onRetry, focusPoint, setFocusPoint, onNavigate, setExploredLocation, exploredLocation, onLocationChange, selectedLocation }) {
   const { t } = useTranslation()
   const [locData, setLocData] = useState(null)
   const [locLoading, setLocLoading] = useState(false)
@@ -79,7 +79,7 @@ export default function FishermanMap({ data, loading, error, onRetry, focusPoint
           </button>
           <button
             className="px-3.5 py-1.5 text-xs font-medium rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition flex items-center gap-1.5 shadow-sm cursor-pointer"
-            onClick={() => setFocusPoint({ type: 'location', lat: 9.9312, lng: 76.2673, zoom: 10 })}
+            onClick={() => setFocusPoint({ type: 'location', lat: selectedLocation?.lat || 9.9312, lng: selectedLocation?.lng || 76.2673, zoom: 10 })}
             type="button"
           >
             <svg className="w-3.5 h-3.5" fill="none" height="24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="24">
@@ -89,7 +89,7 @@ export default function FishermanMap({ data, loading, error, onRetry, focusPoint
               <line x1="12" x2="12" y1="19" y2="22"></line>
               <circle cx="12" cy="12" r="7"></circle>
             </svg>
-            {t('Recenter Kochi')}
+            {t('Recenter')} {selectedLocation?.name ? selectedLocation.name.split(',')[0] : t('Location')}
           </button>
         </div>
       </div>
@@ -104,6 +104,7 @@ export default function FishermanMap({ data, loading, error, onRetry, focusPoint
           onNavigate={onNavigate}
           setExploredLocation={setExploredLocation}
           exploredLocation={exploredLocation}
+          selectedLocation={selectedLocation}
         />
 
         {/* Telemetry Card Overlay */}
@@ -114,25 +115,33 @@ export default function FishermanMap({ data, loading, error, onRetry, focusPoint
         </div>
 
         {/* Full Map Legend */}
-        <div className="absolute bottom-4 left-4 z-[400] bg-white/95 backdrop-blur-md p-3.5 rounded-xl border border-slate-200 shadow-lg text-xs space-y-2 pointer-events-auto">
-          <div className="font-bold text-slate-800 text-[11px] uppercase tracking-wider">{t('GIS Layer Legend')}</div>
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-sky-600 ring-2 ring-sky-200"></span>
-            <span className="text-slate-700">{t('Kochi Port Origin (Current Vessel)')}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 ring-2 ring-emerald-200"></span>
-            <span className="text-slate-700">{t('CHILLICKAL 001 PFZ (Target)')}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-red-200"></span>
-            <span className="text-slate-700">{t('Demo Marine Protected Area (Restricted)')}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-5 h-0.5 bg-sky-500 inline-block border-t-2 border-dashed border-sky-600"></span>
-            <span className="text-slate-700">{t('Recommended Route Waypoint Path')}</span>
-          </div>
-        </div>
+        {(() => {
+          const locShortName = selectedLocation?.name ? selectedLocation.name.split(',')[0].trim() : 'Current Port'
+          const isKerala = !selectedLocation?.name || selectedLocation.name.toLowerCase().includes('kerala') || selectedLocation.name.toLowerCase().includes('kochi')
+          return (
+            <div className="absolute bottom-4 left-4 z-[400] bg-white/95 backdrop-blur-md p-3.5 rounded-xl border border-slate-200 shadow-lg text-xs space-y-2 pointer-events-auto">
+              <div className="font-bold text-slate-800 text-[11px] uppercase tracking-wider">{t('GIS Layer Legend')}</div>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-sky-600 ring-2 ring-sky-200"></span>
+                <span className="text-slate-700">{locShortName} ({t('Current Vessel')})</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 ring-2 ring-emerald-200"></span>
+                <span className="text-slate-700">{locShortName} PFZ ({t('Target')})</span>
+              </div>
+              {isKerala && (
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-red-200"></span>
+                  <span className="text-slate-700">{t('Demo Marine Protected Area (Restricted)')}</span>
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-0.5 bg-sky-500 inline-block border-t-2 border-dashed border-sky-600"></span>
+                <span className="text-slate-700">{t('Recommended Route Waypoint Path')}</span>
+              </div>
+            </div>
+          )
+        })()}
       </div>
 
       {/* Exploration modal on map pin click */}

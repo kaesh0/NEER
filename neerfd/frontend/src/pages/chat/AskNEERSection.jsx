@@ -5,9 +5,20 @@ import { useLanguage } from '../../context/LanguageContext.jsx'
 import { decision as mDecision } from '../../data/mock/marineData.js'
 import { getRegionalGreetingInfo } from '../../utils/coastalGeocoder.js'
 
-function getLocalAdvisory(query, location, persona) {
+function getLocalAdvisory(query, location, persona, selectedLocation) {
   const q = (query || '').toLowerCase()
-  const port = location || 'Kochi, Kerala'
+  const port = location || 'Coastal Sector'
+
+  if (selectedLocation?.isCoastal === false) {
+    const distText = selectedLocation.distanceToCoastKm ? `${Math.round(selectedLocation.distanceToCoastKm)} km from the coast` : 'located inland'
+    const nearestPort = selectedLocation.nearestCoastalPlace || 'a coastal port'
+    return {
+      text: `${port} is an inland area (${distText}). Oceanic wave heights, marine swell forecasts, and Potential Fishing Zones (PFZ) do not apply to inland regions. To view live marine telemetry, please switch to ${nearestPort} or another coastal port.`,
+      status: 'caution',
+      calloutTitle: 'Inland Notice:',
+      calloutContent: `Nearest recommended coastal sector is ${nearestPort}. Switch your active location to access real-time INCOIS PFZ bands, sea surface temperatures, and marine hazard warnings.`,
+    }
+  }
 
   if (q.includes('net') || q.includes('cast') || q.includes('protected') || q.includes('mpa') || q.includes('restriction')) {
     return {
@@ -36,11 +47,15 @@ function getLocalAdvisory(query, location, persona) {
   }
 
   if (q.includes('pfz') || q.includes('fish') || q.includes('machli') || q.includes('zone') || q.includes('cluster')) {
+    const pfzLat = selectedLocation?.lat != null ? (selectedLocation.lat - 0.15).toFixed(2) : '9.78'
+    const isEast = (selectedLocation?.lng ?? 76) > 80
+    const pfzLng = selectedLocation?.lng != null ? (selectedLocation.lng + (isEast ? 0.35 : -0.35)).toFixed(2) : '75.92'
+    const exitDir = isEast ? 'ESE' : 'WSW'
     return {
       text: `According to INCOIS Potential Fishing Zone (PFZ) guidance near ${port}, productive thermal front zones are located approximately 14–22 km offshore. Favourable for pelagic schools.`,
       status: 'favourable',
       calloutTitle: 'Target Zone Telemetry:',
-      calloutContent: 'Coordinates: 9.78° N, 75.92° E (18.4 NM WSW). Sea surface temp gradient: 28.4°C. Chlorophyll-a: 0.82 mg/m³.',
+      calloutContent: `Coordinates: ${pfzLat}° N, ${pfzLng}° E (16.4 NM ${exitDir}). Sea surface temp gradient: 28.4°C. Chlorophyll-a: 0.82 mg/m³.`,
     }
   }
 
@@ -413,7 +428,7 @@ export default function AskNEERSection({ persona, locationName, selectedLocation
         isFallback = data.servedFrom === 'fallback_mock' || env?.provenance?.status === 'fallback'
       } else {
         // High quality local fallback ensures zero dead-ends
-        const local = getLocalAdvisory(textToSend, activePort, persona)
+        const local = getLocalAdvisory(textToSend, activePort, persona, selectedLocation)
         textResponse = local.text
         status = local.status
         calloutTitle = local.calloutTitle

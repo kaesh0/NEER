@@ -96,12 +96,34 @@ export default function MarineInteractiveMap({
   exploredLocation,
   showLegend = true,
   showRecenter = true,
+  selectedLocation,
 }) {
   const { t } = useTranslation()
   const mapInstanceRef = useRef(null)
   const [clickedPoint, setClickedPoint] = useState(null)
 
-  const mapCenter = [10.25, 74.45] // mid-route centroid
+  const isKerala = !selectedLocation?.name || selectedLocation.name.toLowerCase().includes('kerala') || selectedLocation.name.toLowerCase().includes('kochi')
+  const originLat = selectedLocation?.lat ?? 9.9312
+  const originLng = selectedLocation?.lng ?? 76.2673
+  const originName = selectedLocation?.name || 'Kochi Port'
+  const originShortName = originName.split(',')[0].trim()
+
+  const isBayOfBengal = originLng > 80
+
+  const routeWaypoints = isKerala ? MARITIME_ROUTE_COORDS : [
+    [originLat, originLng],
+    [originLat + (isBayOfBengal ? -0.15 : -0.12), originLng + (isBayOfBengal ? 0.35 : -0.35)],
+    [originLat + (isBayOfBengal ? -0.35 : -0.28), originLng + (isBayOfBengal ? 0.75 : -0.75)],
+    [originLat + (isBayOfBengal ? -0.60 : -0.45), originLng + (isBayOfBengal ? 1.25 : -1.25)],
+    [originLat + (isBayOfBengal ? -0.85 : -0.65), originLng + (isBayOfBengal ? 1.75 : -1.75)],
+    [originLat + (isBayOfBengal ? -1.15 : -0.88), originLng + (isBayOfBengal ? 2.25 : -2.25)],
+  ]
+
+  const mapCenter = isKerala ? [10.25, 74.45] : routeWaypoints[2]
+  const cautionCenter = isKerala ? [10.25, 74.20] : routeWaypoints[3]
+  const destCoords = isKerala ? [10.56, 72.64] : routeWaypoints[5]
+  const destName = isKerala ? 'Lakshadweep (Kavaratti)' : `${originShortName} Deepwater Fairway`
+
   const activePoint = exploredLocation || clickedPoint
 
   const handleCheckLocation = () => {
@@ -113,7 +135,7 @@ export default function MarineInteractiveMap({
 
   const handleRecenter = () => {
     if (mapInstanceRef.current) {
-      mapInstanceRef.current.flyTo(mapCenter, 7, { animate: true, duration: 0.8 })
+      mapInstanceRef.current.flyTo(mapCenter, isKerala ? 7 : 8, { animate: true, duration: 0.8 })
     }
   }
 
@@ -124,7 +146,7 @@ export default function MarineInteractiveMap({
     >
       <MapContainer
         center={mapCenter}
-        zoom={7}
+        zoom={isKerala ? 7 : 8}
         minZoom={4}
         maxBounds={INDIA_BOUNDS}
         maxBoundsViscosity={1.0}
@@ -150,7 +172,7 @@ export default function MarineInteractiveMap({
 
         {/* Primary Voyage Navigational Fairway Route */}
         <Polyline
-          positions={MARITIME_ROUTE_COORDS}
+          positions={routeWaypoints}
           pathOptions={{
             color: '#0284c7',
             weight: 3.5,
@@ -161,7 +183,7 @@ export default function MarineInteractiveMap({
 
         {/* Segment 3 Swell Caution Zone Area */}
         <Circle
-          center={[10.25, 74.20]}
+          center={cautionCenter}
           radius={28000}
           pathOptions={{
             color: '#f59e0b',
@@ -172,57 +194,57 @@ export default function MarineInteractiveMap({
           }}
         >
           <Popup className="neer-popup">
-            <div className="font-bold text-amber-700 text-xs">Segment 3: Swell Surge Advisory</div>
-            <div className="text-[11px] text-slate-600 mt-1">Wave heights up to 1.9m with 11.4s period</div>
-            <div className="text-[10px] text-amber-800 font-semibold mt-1">Action: Reduce speed to 12 knots</div>
+            <div className="font-bold text-amber-700 text-xs">{t('Segment 3: Swell Surge Advisory')}</div>
+            <div className="text-[11px] text-slate-600 mt-1">{t('Wave heights up to 1.9m with 11.4s period')}</div>
+            <div className="text-[10px] text-amber-800 font-semibold mt-1">{t('Action: Reduce speed to 12 knots')}</div>
           </Popup>
         </Circle>
 
-        {/* Origin: Kochi Port */}
-        <Marker position={[9.9312, 76.2673]} icon={dotIcon('#0284c7', 16)}>
+        {/* Origin Port */}
+        <Marker position={[originLat, originLng]} icon={dotIcon('#0284c7', 16)}>
           <Popup className="neer-popup">
-            <div className="font-bold text-slate-900 text-sm">Origin: Kochi Port</div>
-            <div className="text-xs text-slate-500 font-mono mt-0.5">9.9312° N, 76.2673° E</div>
-            <div className="text-xs text-sky-700 font-semibold mt-1">Departure: 06:00 IST (Berth 4)</div>
+            <div className="font-bold text-slate-900 text-sm">{t('Origin')}: {originName}</div>
+            <div className="text-xs text-slate-500 font-mono mt-0.5">{originLat.toFixed(4)}° N, {originLng.toFixed(4)}° E</div>
+            <div className="text-xs text-sky-700 font-semibold mt-1">{t('Departure: 06:00 IST')} ({originShortName} {t('Berth')})</div>
           </Popup>
         </Marker>
 
         {/* Intermediate Waypoints */}
-        <Marker position={[10.02, 75.85]} icon={dotIcon('#94a3b8', 10)}>
+        <Marker position={routeWaypoints[1]} icon={dotIcon('#94a3b8', 10)}>
           <Popup className="neer-popup">
             <div className="font-bold text-slate-800 text-xs">Waypoint MP-01</div>
             <div className="text-[10px] text-slate-500">Segment 1 Exit (Channel)</div>
           </Popup>
         </Marker>
 
-        <Marker position={[10.12, 75.10]} icon={dotIcon('#94a3b8', 10)}>
+        <Marker position={routeWaypoints[2]} icon={dotIcon('#94a3b8', 10)}>
           <Popup className="neer-popup">
             <div className="font-bold text-slate-800 text-xs">Waypoint MP-02</div>
-            <div className="text-[10px] text-slate-500">Continental Shelf Edge (1,820m depth)</div>
+            <div className="text-[10px] text-slate-500">Continental Shelf Edge</div>
           </Popup>
         </Marker>
 
         {/* Caution Waypoint MP-03 */}
-        <Marker position={[10.25, 74.20]} icon={pulseIcon}>
+        <Marker position={cautionCenter} icon={pulseIcon}>
           <Popup className="neer-popup">
             <div className="font-bold text-amber-700 text-xs">⚠️ Waypoint MP-03 (Segment 3)</div>
             <div className="text-[11px] text-slate-600 mt-0.5">Wave: 1.9m • Swell surge active</div>
           </Popup>
         </Marker>
 
-        <Marker position={[10.42, 73.40]} icon={dotIcon('#94a3b8', 10)}>
+        <Marker position={routeWaypoints[4]} icon={dotIcon('#94a3b8', 10)}>
           <Popup className="neer-popup">
             <div className="font-bold text-slate-800 text-xs">Waypoint MP-04</div>
-            <div className="text-[10px] text-slate-500">Atoll Approach Corridor</div>
+            <div className="text-[10px] text-slate-500">Deepwater Approach Corridor</div>
           </Popup>
         </Marker>
 
-        {/* Destination: Lakshadweep Kavaratti */}
-        <Marker position={[10.56, 72.64]} icon={dotIcon('#10b981', 16)}>
+        {/* Destination */}
+        <Marker position={destCoords} icon={dotIcon('#10b981', 16)}>
           <Popup className="neer-popup">
-            <div className="font-bold text-slate-900 text-sm">Destination: Lakshadweep (Kavaratti)</div>
-            <div className="text-xs text-slate-500 font-mono mt-0.5">10.5600° N, 72.6400° E</div>
-            <div className="text-xs text-emerald-700 font-semibold mt-1">Arrival: 14:30 IST (Island Pier)</div>
+            <div className="font-bold text-slate-900 text-sm">{t('Destination')}: {destName}</div>
+            <div className="text-xs text-slate-500 font-mono mt-0.5">{destCoords[0].toFixed(4)}° N, {destCoords[1].toFixed(4)}° E</div>
+            <div className="text-xs text-emerald-700 font-semibold mt-1">Arrival: 14:30 IST (Fairway Mark)</div>
           </Popup>
         </Marker>
 
@@ -287,11 +309,11 @@ export default function MarineInteractiveMap({
           </span>
           <div className="flex items-center gap-2.5">
             <span className="w-3 h-3 rounded-full bg-sky-600 ring-2 ring-sky-200" />
-            <span className="text-slate-800 font-semibold">{t('Origin (Kochi Port)')}</span>
+            <span className="text-slate-800 font-semibold">{t('Origin')} ({originShortName})</span>
           </div>
           <div className="flex items-center gap-2.5">
             <span className="w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-emerald-200" />
-            <span className="text-slate-800 font-semibold">{t('Destination (Lakshadweep)')}</span>
+            <span className="text-slate-800 font-semibold">{t('Destination')} ({isKerala ? 'Lakshadweep' : `${originShortName} Fairway`})</span>
           </div>
           <div className="flex items-center gap-2.5">
             <span className="w-3 h-3 rounded-full bg-amber-500 ring-2 ring-amber-200" />

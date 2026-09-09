@@ -3,7 +3,7 @@ import { useLanguage } from '../context/LanguageContext.jsx'
 import { useTranslation } from '../i18n/translations.js'
 import { Icon } from '../icons/index.js'
 
-export default function PersonaSelection({ onSelectPersona, onNavigate, hideLanguage = false }) {
+export default function PersonaSelection({ onSelectPersona, onNavigate, hideLanguage = false, selectedLocation }) {
   const { t } = useTranslation()
   const { language, setLanguage } = useLanguage()
   const [langDropdownOpen, setLangDropdownOpen] = useState(false)
@@ -125,11 +125,11 @@ export default function PersonaSelection({ onSelectPersona, onNavigate, hideLang
               )}
             </div>
 
-            {/* Live Telemetry / INCOIS Status */}
+            {/* Live Telemetry / Location Status */}
             <div className="hidden lg:inline-flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-700">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 status-ping"></span>
-              <span className="text-slate-500">Live INCOIS:</span>
-              <span className="font-semibold text-slate-800">Kochi, Kerala</span>
+              <span className={`w-2 h-2 rounded-full ${selectedLocation?.isDetecting ? 'bg-sky-500 animate-pulse' : selectedLocation?.isCoastal === false ? 'bg-amber-500' : 'bg-emerald-500 status-ping'}`}></span>
+              <span className="text-slate-500">{selectedLocation?.isDetecting ? t('GPS / IP:') : selectedLocation?.isCoastal === false ? t('Region:') : t('Sector:')}</span>
+              <span className="font-semibold text-slate-800">{selectedLocation?.isDetecting ? t('Detecting location...') : (selectedLocation?.name || t('Coastal Waters'))}</span>
             </div>
 
             {/* User Profile Avatar / Login Pill */}

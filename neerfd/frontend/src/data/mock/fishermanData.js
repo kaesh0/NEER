@@ -7,15 +7,29 @@
  */
 import fishermanJson from './fisherman_kochi.json' with { type: 'json' }
 
-const resolveEnv = (env) => (env && env.request ? env : fishermanJson)
+const resolveEnv = (env) => {
+  if (!env) return fishermanJson
+  if (env.is_coastal === false) return env
+  return env.request ? env : fishermanJson
+}
 
 // ── Location ──────────────────────────────────────────────────────────────
 export function getLocation(env) {
+  if (env?.is_coastal === false) {
+    return {
+      name: env?.request?.geometry?.label || env?.location?.name || 'Inland Area',
+      lat: env?.location?.lat ?? env?.request?.geometry?.coordinates?.[1] ?? 0,
+      lng: env?.location?.lng ?? env?.request?.geometry?.coordinates?.[0] ?? 0,
+      isCoastal: false,
+      source: 'inland_classifier',
+    }
+  }
   const g = resolveEnv(env)?.request?.geometry
   return {
     name: g?.label || 'Unknown',
     lat: g?.coordinates?.[1] ?? 0,
     lng: g?.coordinates?.[0] ?? 0,
+    isCoastal: true,
     source: g?.source || 'unknown',
   }
 }
@@ -50,6 +64,19 @@ function cond(val, unit, fallback = 'Unavailable') {
 }
 
 export function getConditions(env) {
+  if (env?.is_coastal === false) {
+    return {
+      waveHeight: { value: null, display: 'Unavailable', status: 'unavailable' },
+      wavePeriod: { value: null, display: 'Unavailable', status: 'unavailable' },
+      windSpeed: { value: null, display: 'Unavailable', status: 'unavailable' },
+      windDirection: { value: null, display: 'Unavailable', status: 'unavailable' },
+      swellHeight: { value: null, display: 'Unavailable', status: 'unavailable' },
+      swellPeriod: { value: null, display: 'Unavailable', status: 'unavailable' },
+      currentSpeed: { value: null, display: 'Unavailable', status: 'unavailable' },
+      currentDirection: { value: null, display: 'Unavailable', status: 'unavailable' },
+      seaSurfaceTemperature: { value: null, display: 'Unavailable', status: 'unavailable' },
+    }
+  }
   const c = resolveEnv(env)?.marineSituation?.conditions || {}
   return {
     waveHeight: cond(c.waveHeight, 'm'),
@@ -66,6 +93,7 @@ export function getConditions(env) {
 
 // ── Fishing Zones (PFZ) ──────────────────────────────────────────────────
 export function getFishingZones(env) {
+  if (env?.is_coastal === false) return []
   const zones = resolveEnv(env)?.marineSituation?.fishingZones?.zones || []
   return zones.map((z) => ({
     id: z.id,
@@ -81,6 +109,15 @@ export function getFishingZones(env) {
 }
 
 export function getFishingZoneMeta(env) {
+  if (env?.is_coastal === false) {
+    return {
+      status: 'unavailable',
+      advisoryDate: '',
+      validFrom: '',
+      validUntil: '',
+      source: '',
+    }
+  }
   const fz = resolveEnv(env)?.marineSituation?.fishingZones || {}
   return {
     status: fz.status || 'unavailable',
@@ -93,6 +130,7 @@ export function getFishingZoneMeta(env) {
 
 // ── Hazards ───────────────────────────────────────────────────────────────
 export function getHazards(env) {
+  if (env?.is_coastal === false) return []
   const hazards = resolveEnv(env)?.marineSituation?.hazards || []
   return hazards.map((h) => ({
     id: h.id,
@@ -108,6 +146,18 @@ export function getHazards(env) {
 
 // ── Decision Output ───────────────────────────────────────────────────────
 export function getDecision(env) {
+  if (env?.is_coastal === false) {
+    const d = env?.decisionOutput || {}
+    return {
+      status: 'inland',
+      headline: d.headline || 'Non-Coastal / Inland Location',
+      summary: d.summary || 'Marine and oceanographic data is only available for coastal sectors.',
+      narrative: d.narrative || '',
+      reasons: d.reasons || [],
+      recommendedActions: d.recommendedActions || [],
+      caveats: d.caveats || [],
+    }
+  }
   const d = resolveEnv(env)?.decisionOutput || {}
   return {
     status: d.status || 'unavailable',

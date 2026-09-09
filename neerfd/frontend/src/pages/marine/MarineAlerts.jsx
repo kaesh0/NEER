@@ -1,14 +1,46 @@
 import React, { useState } from 'react'
 import { useTranslation } from '../../i18n/translations.js'
+import InlandLocationNotice from '../../components/ui/InlandLocationNotice.jsx'
 
-export default function MarineAlerts({ onNavigate }) {
+export default function MarineAlerts({ onNavigate, selectedLocation, onLocationChange }) {
   const { t } = useTranslation()
   const [acknowledged, setAcknowledged] = useState(false)
   const [fairwayLocked, setFairwayLocked] = useState(false)
 
+  const isInland = selectedLocation?.isCoastal === false
+
+  if (isInland) {
+    return (
+      <div className="space-y-6 pb-12 animate-fade-in">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/60">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{t('Maritime Alerts & Tactical Advisories')}</span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">0 {t('Active Coastal Notices')}</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mt-1">
+              {t('No Maritime Advisories for Inland Region')}
+            </h1>
+            <p className="text-sm font-medium text-slate-500 mt-1">
+              {selectedLocation?.name || t('This area')} {t('is located inland. Swell surges, geofenced Marine Protected Areas, and hydrographic fairway directives apply exclusively to coastal ports and ocean waters.')}
+            </p>
+          </div>
+        </div>
+
+        <InlandLocationNotice 
+          location={selectedLocation} 
+          onSelectLocation={onLocationChange}
+          onOpenLocationModal={() => onNavigate && onNavigate('map')}
+        />
+      </div>
+    )
+  }
+
+  const baseName = selectedLocation?.name ? selectedLocation.name.split(',')[0] : 'Coastal'
+
   return (
     <div className="space-y-6 pb-12 animate-fade-in">
-      {/* Header matching code.html */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/60">
         <div>
           <div className="flex items-center gap-3">
@@ -20,12 +52,12 @@ export default function MarineAlerts({ onNavigate }) {
             </span>
           </div>
           <p className="text-sm font-medium text-slate-500 mt-1">
-            {t('Real-time ocean state hazards, geofence compliance, and safety broadcasts.')}
+            {t('Real-time ocean state hazards, geofence compliance, and safety broadcasts for')} {baseName}.
           </p>
         </div>
       </div>
 
-      {/* Alert Cards Stream matching code.html */}
+      {/* Alert Cards Stream */}
       <div className="space-y-6 max-w-5xl">
         {/* Alert Card 1 */}
         <div className="bg-white border-2 border-amber-300 rounded-3xl overflow-hidden shadow-xs hover:shadow-md transition-shadow">
@@ -46,7 +78,7 @@ export default function MarineAlerts({ onNavigate }) {
               <div>
                 <div className="flex items-center justify-between gap-2 mb-2">
                   <h3 className="text-xl font-bold text-slate-900">
-                    {t('Elevated Swell & Sea State Advisory (Segment 3)')}
+                    {t('Elevated Swell & Sea State Advisory (Outer Transit)')}
                   </h3>
                   <span className="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-amber-100 text-amber-800">
                     Wave 1.9m • Wind 24 km/h
@@ -54,7 +86,7 @@ export default function MarineAlerts({ onNavigate }) {
                 </div>
                 <p className="text-slate-600 text-sm font-medium leading-relaxed">
                   {t(
-                    'Significant wave height surges up to 1.9 m with cross-quarter swells detected across the outer Arabian Sea passage corridor. Vessels under 45m LOA and fishing craft are advised to exercise elevated situational awareness.'
+                    'Significant wave height surges up to 1.9 m with cross-quarter swells detected across the outer passage corridor. Vessels under 45m LOA and fishing craft are advised to exercise elevated situational awareness.'
                   )}
                 </p>
               </div>
@@ -105,7 +137,7 @@ export default function MarineAlerts({ onNavigate }) {
               <div>
                 <div className="flex items-center justify-between gap-2 mb-2">
                   <h3 className="text-xl font-bold text-slate-900">
-                    {t('Geofenced Demo Marine Protected Area Restricted Zone')}
+                    {t('Geofenced Marine Protected Area Restricted Zone')}
                   </h3>
                   <span className="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-sky-100 text-sky-800">
                     {t('Compliance Mandatory')}
@@ -113,7 +145,7 @@ export default function MarineAlerts({ onNavigate }) {
                 </div>
                 <p className="text-slate-600 text-sm font-medium leading-relaxed">
                   {t(
-                    'Vessel transit is strictly permitted only along designated hydrographic shipping fairways. No dropping anchor, bilge cleaning, or drift fishing allowed within the Cochin Coral Reef buffer coordinate polygon.'
+                    'Vessel transit is strictly permitted only along designated hydrographic shipping fairways. No dropping anchor, bilge cleaning, or drift fishing allowed within protected coastal coral reef buffer coordinates.'
                   )}
                 </p>
               </div>

@@ -7,6 +7,7 @@ import { useTranslation } from '../../i18n/translations.js'
 import { getCoastalPlaceName } from '../../utils/coastalGeocoder.js'
 
 export default function MarineMap({
+  selectedLocation,
   focusPoint,
   setFocusPoint,
   onNavigate,
@@ -69,7 +70,9 @@ export default function MarineMap({
             {t('Nautical Cartography GIS')}
           </h1>
           <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
-            {t('Route Vector: Kochi Outer Anchorage → Lakshadweep Sea Fairway')}
+            {(!selectedLocation?.name || selectedLocation.name.toLowerCase().includes('kerala') || selectedLocation.name.toLowerCase().includes('kochi'))
+              ? t('Route Vector: Kochi Outer Anchorage → Lakshadweep Sea Fairway')
+              : `${t('Route Vector:')} ${selectedLocation.name.split(',')[0]} ${t('Outer Anchorage')} → ${selectedLocation.name.split(',')[0]} ${t('Deepwater Fairway')}`}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -90,6 +93,7 @@ export default function MarineMap({
           onNavigate={onNavigate}
           setExploredLocation={setExploredLocation}
           exploredLocation={exploredLocation}
+          selectedLocation={selectedLocation}
         />
 
         {/* Floating Layer Indicator */}

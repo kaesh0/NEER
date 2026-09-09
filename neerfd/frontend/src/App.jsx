@@ -28,7 +28,7 @@ import Register from './pages/auth/Register.jsx'
 import { useAuth } from './context/AuthContext.jsx'
 import { useMarineAnalysis } from './hooks/useMarineAnalysis.js'
 import { getLocation } from './data/mock/fishermanData.js'
-import { INDIAN_COASTAL_PLACES } from './utils/coastalGeocoder.js'
+import { INDIAN_COASTAL_PLACES, classifyLocation, detectUserCurrentLocation } from './utils/coastalGeocoder.js'
 import { getRequest as getAuthorityRequest } from './data/mock/authorityData.js'
 import LoadingState from './components/ui/LoadingState.jsx'
 import ErrorState from './components/ui/ErrorState.jsx'
@@ -65,9 +65,9 @@ export default function App() {
     try {
       const params = new URLSearchParams(window.location.search)
       const vParam = params.get('view')
-      if (vParam === 'login' || vParam === 'register' || vParam === 'choosing' || vParam === 'landing') return vParam
+      if (vParam === 'login' || vParam === 'register' || vParam === 'choosing' || vParam === 'landing' || vParam === 'workspace') return vParam
     } catch (_) {}
-    return 'workspace'
+    return 'login'
   })
   const [persona, setPersona] = useState(() => {
     try {
@@ -108,33 +108,89 @@ export default function App() {
   // Explored location state for map clicks
   const [exploredLocation, setExploredLocation] = useState(null)
 
-  // Default location: Kochi, Kerala or from URL query (?location=mumbai)
+  // Selected location state: dynamically detected from browser geolocation or saved preference
   const [selectedLocation, setSelectedLocation] = useState(() => {
     if (typeof window !== 'undefined') {
-      const locParam = new URLSearchParams(window.location.search).get('location')
-      if (locParam) {
-        const match = INDIAN_COASTAL_PLACES.find(
-          (p) =>
-            p.name.toLowerCase() === locParam.toLowerCase() ||
-            p.name.toLowerCase().includes(locParam.toLowerCase()) ||
-            locParam.toLowerCase().includes(p.name.toLowerCase())
-        )
-        if (match) {
-          return {
-            name: `${match.name}, ${match.admin}`,
-            lat: match.lat,
-            lng: match.lng,
+      // 1. Check if user already has a saved detected/chosen location
+      try {
+        const saved = localStorage.getItem('neer_user_location')
+        if (saved) {
+          const parsed = JSON.parse(saved)
+          if (parsed && parsed.name && !parsed.isFallback) {
+            return parsed
           }
         }
-        return { name: locParam }
+      } catch (e) {}
+
+      // 2. Check URL search parameters
+      const params = new URLSearchParams(window.location.search)
+      const locParam = params.get('location')
+      const latParam = params.get('lat')
+      const lngParam = params.get('lng')
+      if (latParam && lngParam) {
+        return classifyLocation({ lat: latParam, lng: lngParam, name: locParam })
+      }
+      if (locParam) {
+        return classifyLocation({ name: locParam }) || { name: locParam, isCoastal: false }
       }
     }
     return {
-      name: 'Kochi, Kerala',
-      lat: 9.9312,
-      lng: 76.2673,
+      name: 'Detecting Location...',
+      isDetecting: true,
+      lat: null,
+      lng: null,
+      isCoastal: false,
     }
   })
+
+  // Bootstrap live user device geolocation on initial launch
+  useEffect(() => {
+    let isCancelled = false
+
+    async function initLocation() {
+      // If user has a valid URL parameter, do not override
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('location') || (params.get('lat') && params.get('lng'))) {
+        return
+      }
+
+      // Detect current location via high-accuracy device GPS, then IP geolocation fallback
+      const detected = await detectUserCurrentLocation({ timeoutMs: 6000 })
+      if (isCancelled) return
+
+      if (detected) {
+        setSelectedLocation(detected)
+        try {
+          localStorage.setItem('neer_user_location', JSON.stringify(detected))
+        } catch (e) {}
+      } else {
+        // If neither GPS nor IP succeeded, check if a saved location exists
+        setSelectedLocation((prev) => {
+          if (prev && prev.name && !prev.isDetecting) return prev
+          try {
+            const saved = localStorage.getItem('neer_user_location')
+            if (saved) {
+              const parsed = JSON.parse(saved)
+              if (parsed && parsed.name) return parsed
+            }
+          } catch (e) {}
+          return {
+            name: 'Coastal Waters',
+            lat: 18.9667,
+            lng: 72.8333,
+            isCoastal: true,
+            isFallback: true,
+          }
+        })
+      }
+    }
+
+    initLocation()
+
+    return () => {
+      isCancelled = true
+    }
+  }, [])
 
   // ── Live data hook for fisherman/authority (marine routes use reference coastal model) ──
   const shouldFetch = persona === 'fisherman' || persona === 'authority'
@@ -143,44 +199,31 @@ export default function App() {
 
   // Handle location change across header, map, and analysis
   const handleLocationChange = (newLoc) => {
-    let resolved = newLoc
-    if (resolved.lat == null || resolved.lng == null) {
-      const match = INDIAN_COASTAL_PLACES.find(
-        (p) =>
-          p.name.toLowerCase().includes(resolved.name.toLowerCase()) ||
-          resolved.name.toLowerCase().includes(p.name.toLowerCase())
-      )
-      if (match) {
-        resolved = {
-          name: `${match.name}, ${match.admin}`,
-          lat: match.lat,
-          lng: match.lng,
-        }
-      }
+    const classified = classifyLocation(newLoc) || newLoc
+    setSelectedLocation(classified)
+    try {
+      localStorage.setItem('neer_user_location', JSON.stringify(classified))
+    } catch (e) {}
+    if (classified.lat != null && classified.lng != null) {
+      setMapFocusPoint({ type: 'location', lat: classified.lat, lng: classified.lng, zoom: 10 })
     }
-    setSelectedLocation(resolved)
-    if (resolved.lat != null && resolved.lng != null) {
-      setMapFocusPoint({ type: 'location', lat: resolved.lat, lng: resolved.lng, zoom: 10 })
-    }
-    // Update URL query parameter
-    if (typeof window !== 'undefined') {
-      const url = new URL(window.location.href)
-      const cleanName = (resolved.name || '').split(',')[0].trim().toLowerCase()
-      if (cleanName) {
-        url.searchParams.set('location', cleanName)
-        window.history.replaceState({}, '', url.toString())
-      }
-    }
+    if (exploredLocation) setExploredLocation(null)
   }
 
   // Derive location name for AppHeader based on active persona
   const locationName = useMemo(() => {
-    if (persona === 'marine') return selectedLocation.name || 'Kochi Port · Lakshadweep'
-    if (analysisData) {
-      if (persona === 'fisherman') return getLocation(analysisData).name || selectedLocation.name
-      if (persona === 'authority') return getAuthorityRequest(analysisData)?.geometry?.label || selectedLocation.name
+    if (selectedLocation?.name && !selectedLocation?.isFallback) {
+      return selectedLocation.name
     }
-    return selectedLocation.name
+    if (selectedLocation?.isDetecting) {
+      return 'Detecting Location...'
+    }
+    if (persona === 'marine') return selectedLocation?.name || 'Coastal Port'
+    if (analysisData) {
+      if (persona === 'fisherman' && getLocation(analysisData)?.name) return getLocation(analysisData).name
+      if (persona === 'authority' && getAuthorityRequest(analysisData)?.geometry?.label) return getAuthorityRequest(analysisData).geometry.label
+    }
+    return selectedLocation?.name || 'Coastal Sector'
   }, [analysisData, persona, selectedLocation])
 
   // Center map when live analysis coordinates are resolved
@@ -211,24 +254,26 @@ export default function App() {
 
   const { t } = useTranslation()
 
+  const isSelectedInland = selectedLocation?.isCoastal === false || analysisData?.is_coastal === false
+
   const navItems = persona === 'authority' ? [
     { id: 'home', label: t('Overview'), icon: 'home', active: activeTab === 'home', onClick: () => navigateToTab('home') },
     { id: 'map', label: t('Map'), icon: 'map', active: activeTab === 'map', onClick: () => navigateToTab('map') },
     { id: 'areas', label: t('Areas'), icon: 'target', active: activeTab === 'areas', onClick: () => navigateToTab('areas') },
-    { id: 'alerts', label: t('Alerts'), icon: 'bell', active: activeTab === 'alerts', onClick: () => navigateToTab('alerts'), badge: 1 },
+    { id: 'alerts', label: t('Alerts'), icon: 'bell', active: activeTab === 'alerts', onClick: () => navigateToTab('alerts'), badge: isSelectedInland ? 0 : 1 },
     { id: 'chat', label: t('Ask NEER'), icon: 'messageCircle', active: activeTab === 'chat', onClick: () => navigateToTab('chat') },
   ] : persona === 'marine' ? [
     { id: 'home', label: t('Overview'), icon: 'home', active: activeTab === 'home', onClick: () => navigateToTab('home') },
     { id: 'route', label: t('Route'), icon: 'mapPin', active: activeTab === 'route', onClick: () => navigateToTab('route') },
     { id: 'map', label: t('Map'), icon: 'map', active: activeTab === 'map', onClick: () => navigateToTab('map') },
     { id: 'areas', label: t('Areas'), icon: 'target', active: activeTab === 'areas', onClick: () => navigateToTab('areas') },
-    { id: 'alerts', label: t('Alerts'), icon: 'bell', active: activeTab === 'alerts', onClick: () => navigateToTab('alerts'), badge: 2 },
+    { id: 'alerts', label: t('Alerts'), icon: 'bell', active: activeTab === 'alerts', onClick: () => navigateToTab('alerts'), badge: isSelectedInland ? 0 : 2 },
     { id: 'chat', label: t('Ask NEER'), icon: 'messageCircle', active: activeTab === 'chat', onClick: () => navigateToTab('chat') },
   ] : [
     { id: 'home', label: t('Overview'), icon: 'home', active: activeTab === 'home', onClick: () => navigateToTab('home') },
     { id: 'map', label: t('Map'), icon: 'map', active: activeTab === 'map', onClick: () => navigateToTab('map') },
     { id: 'zones', label: t('Areas'), icon: 'fish', active: activeTab === 'zones', onClick: () => navigateToTab('zones') },
-    { id: 'alerts', label: t('Alerts'), icon: 'bell', active: activeTab === 'alerts', onClick: () => navigateToTab('alerts'), badge: 1 },
+    { id: 'alerts', label: t('Alerts'), icon: 'bell', active: activeTab === 'alerts', onClick: () => navigateToTab('alerts'), badge: isSelectedInland ? 0 : 1 },
     { id: 'chat', label: t('Ask NEER'), icon: 'messageCircle', active: activeTab === 'chat', onClick: () => navigateToTab('chat') },
   ]
 
@@ -242,7 +287,7 @@ export default function App() {
             setPersona(normalized)
           }
           setActiveTab('home')
-          setCurrentView('workspace')
+          setCurrentView('choosing')
         }} 
       />
     )
@@ -258,7 +303,7 @@ export default function App() {
             setPersona(normalized)
           }
           setActiveTab('home')
-          setCurrentView('workspace')
+          setCurrentView('choosing')
         }} 
       />
     )
@@ -267,6 +312,7 @@ export default function App() {
   if (!persona || persona === 'none' || currentView === 'landing' || currentView === 'choosing') {
     return (
       <PersonaSelection 
+        selectedLocation={selectedLocation}
         onSelectPersona={(p) => {
           const chosen = (p === 'maritime_operator' || p === 'marine') ? 'marine' : p
           if (!user) loginAsGuest()
@@ -276,7 +322,9 @@ export default function App() {
           setCurrentView('workspace')
         }}
         onNavigate={(view) => {
-          if (view === 'landing' || view === 'choosing') {
+          if (view === 'login' || view === 'register') {
+            setCurrentView(view)
+          } else if (view === 'landing' || view === 'choosing') {
             setPersona(null)
             setActiveTab('home')
             setCurrentView('choosing')
@@ -338,6 +386,8 @@ export default function App() {
                 exploredLocation={exploredLocation}
                 setExploredLocation={setExploredLocation}
                 focusPoint={mapFocusPoint}
+                selectedLocation={selectedLocation}
+                onLocationChange={handleLocationChange}
               />
             )}
             {activeTab === 'map' && (
@@ -352,10 +402,31 @@ export default function App() {
                 setExploredLocation={setExploredLocation}
                 exploredLocation={exploredLocation}
                 onLocationChange={handleLocationChange}
+                selectedLocation={selectedLocation}
               />
             )}
-            {activeTab === 'zones' && <FishermanZones data={analysisData} loading={analysisLoading} error={analysisError} onRetry={analysisRefetch} onNavigate={navigateToTab} />}
-            {activeTab === 'alerts' && <FishermanAlerts data={analysisData} loading={analysisLoading} error={analysisError} onRetry={analysisRefetch} onNavigate={navigateToTab} />}
+            {activeTab === 'zones' && (
+              <FishermanZones 
+                data={analysisData} 
+                loading={analysisLoading} 
+                error={analysisError} 
+                onRetry={analysisRefetch} 
+                onNavigate={navigateToTab}
+                selectedLocation={selectedLocation}
+                onLocationChange={handleLocationChange}
+              />
+            )}
+            {activeTab === 'alerts' && (
+              <FishermanAlerts 
+                data={analysisData} 
+                loading={analysisLoading} 
+                error={analysisError} 
+                onRetry={analysisRefetch} 
+                onNavigate={navigateToTab}
+                selectedLocation={selectedLocation}
+                onLocationChange={handleLocationChange}
+              />
+            )}
             {activeTab === 'chat' && <AskNEERSection persona={persona} locationName={locationName} selectedLocation={selectedLocation} onNavigate={navigateToTab} />}
           </div>
         </FadeTransition>
@@ -371,6 +442,8 @@ export default function App() {
                 chatOpen={chatOpen} 
                 setChatOpen={setChatOpen} 
                 onNavigate={navigateToTab} 
+                selectedLocation={selectedLocation}
+                onLocationChange={handleLocationChange}
               />
             )}
             {activeTab === 'map' && (
@@ -384,6 +457,7 @@ export default function App() {
                 onNavigate={navigateToTab}
                 exploredLocation={exploredLocation}
                 setExploredLocation={setExploredLocation}
+                selectedLocation={selectedLocation}
                 onLocationChange={handleLocationChange}
               />
             )}
@@ -396,9 +470,21 @@ export default function App() {
                 focusPoint={mapFocusPoint} 
                 setFocusPoint={setMapFocusPoint}
                 onNavigate={navigateToTab} 
+                selectedLocation={selectedLocation}
+                onLocationChange={handleLocationChange}
               />
             )}
-            {activeTab === 'alerts' && <AuthorityAlerts data={analysisData} loading={analysisLoading} error={analysisError} onRetry={analysisRefetch} onNavigate={navigateToTab} />}
+            {activeTab === 'alerts' && (
+              <AuthorityAlerts 
+                data={analysisData} 
+                loading={analysisLoading} 
+                error={analysisError} 
+                onRetry={analysisRefetch} 
+                onNavigate={navigateToTab}
+                selectedLocation={selectedLocation}
+                onLocationChange={handleLocationChange}
+              />
+            )}
             {activeTab === 'chat' && <AskNEERSection persona={persona} locationName={locationName} selectedLocation={selectedLocation} onNavigate={navigateToTab} />}
           </div>
         </FadeTransition>
@@ -410,11 +496,15 @@ export default function App() {
                 chatOpen={chatOpen} 
                 setChatOpen={setChatOpen} 
                 onNavigate={navigateToTab} 
+                selectedLocation={selectedLocation}
+                onLocationChange={handleLocationChange}
               />
             )}
             {activeTab === 'route' && (
               <MarineRoute
                 onNavigate={navigateToTab} 
+                selectedLocation={selectedLocation}
+                onLocationChange={handleLocationChange}
               />
             )}
             {activeTab === 'map' && (
@@ -424,13 +514,24 @@ export default function App() {
                 onNavigate={navigateToTab}
                 exploredLocation={exploredLocation}
                 setExploredLocation={setExploredLocation}
+                selectedLocation={selectedLocation}
                 onLocationChange={handleLocationChange}
               />
             )}
             {activeTab === 'areas' && (
-              <MarineAreas onNavigate={navigateToTab} />
+              <MarineAreas 
+                onNavigate={navigateToTab} 
+                selectedLocation={selectedLocation}
+                onLocationChange={handleLocationChange}
+              />
             )}
-            {activeTab === 'alerts' && <MarineAlerts onNavigate={navigateToTab} />}
+            {activeTab === 'alerts' && (
+              <MarineAlerts 
+                onNavigate={navigateToTab} 
+                selectedLocation={selectedLocation}
+                onLocationChange={handleLocationChange}
+              />
+            )}
             {activeTab === 'chat' && <AskNEERSection persona={persona} locationName={locationName} selectedLocation={selectedLocation} onNavigate={navigateToTab} />}
           </div>
         </FadeTransition>

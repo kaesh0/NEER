@@ -12,6 +12,7 @@ import SectionHeader from '../../components/layout/SectionHeader.jsx'
 import { useTranslation } from '../../i18n/translations.js';
 import LoadingState from '../../components/ui/LoadingState.jsx'
 import ErrorState from '../../components/ui/ErrorState.jsx'
+import InlandLocationNotice from '../../components/ui/InlandLocationNotice.jsx'
 import {
   getLocation,
   getTimeWindow,
@@ -77,7 +78,7 @@ function ConditionCard({ iconSvg, label, value, unit, sub, status, descriptor })
   )
 }
 
-function ZoneCard({ zone, onNavigate }) {
+function ZoneCard({ zone, onNavigate, baseLat = 9.9312, baseLng = 76.2673 }) {
   const { t } = useTranslation()
 
   const compass = directionToCompass(zone.direction)
@@ -101,8 +102,8 @@ function ZoneCard({ zone, onNavigate }) {
             <button 
               onClick={() => {
                 const brgRad = (zone.bearing || 0) * (Math.PI / 180)
-                const zLat = 9.9312 + ((zone.distance / 111) * Math.cos(brgRad))
-                const zLng = 76.2673 + ((zone.distance / 111) * Math.sin(brgRad))
+                const zLat = zone.lat || (baseLat + ((zone.distance / 111) * Math.cos(brgRad)))
+                const zLng = zone.lng || (baseLng + ((zone.distance / 111) * Math.sin(brgRad)))
                 onNavigate && onNavigate('map', { type: 'zone', id: zone.id, lat: zLat, lng: zLng })
               }}
               className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-sky-600 hover:bg-sky-50 transition-colors" aria-label="View zone details">
@@ -116,13 +117,29 @@ function ZoneCard({ zone, onNavigate }) {
   )
 }
 
-export default function FishermanHome({ data, loading, error, onRetry, chatOpen = false, setChatOpen = () => {}, onNavigate, exploredLocation, setExploredLocation, focusPoint }) {
+export default function FishermanHome({ 
+  data, 
+  loading, 
+  error, 
+  onRetry, 
+  chatOpen = false, 
+  setChatOpen = () => {}, 
+  onNavigate, 
+  exploredLocation, 
+  setExploredLocation, 
+  focusPoint,
+  selectedLocation,
+  onLocationChange,
+}) {
   const { t } = useTranslation()
 
   if (loading) return <LoadingState />
   if (error) return <ErrorState message={error} onRetry={onRetry} />
 
   const location = getLocation(data)
+  const activeLoc = selectedLocation || location
+  const isInland = activeLoc?.isCoastal === false || data?.is_coastal === false || data?.decisionOutput?.status === 'inland'
+
   const timeWindow = getTimeWindow(data)
   const vessel = getVessel(data)
   const conditions = getConditions(data)
@@ -146,6 +163,46 @@ export default function FishermanHome({ data, loading, error, onRetry, chatOpen 
     favourable: 'checkCircle',
     caution: 'alertTriangle',
     unfavourable: 'xCircle',
+  }
+
+  if (isInland) {
+    return (
+      <div className="relative animate-fade-in min-h-screen">
+        <MarineAmbience />
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+          <section className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-slate-200/60 pb-5" data-purpose="inland-greeting">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold tracking-widest text-sky-600 uppercase flex items-center gap-1.5">
+                  {t(getGreeting())}
+                  <span className="inline-block transform origin-bottom-right hover:rotate-12 transition cursor-default">👋</span>
+                </span>
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                {t('Inland Region Detected')}
+              </h1>
+              <div className="flex flex-wrap items-center gap-2 pt-1 text-xs sm:text-sm text-slate-500">
+                <span className="flex items-center gap-1 font-medium text-slate-700">
+                  <Icon name="mapPin" size={14} className="text-amber-600" />
+                  {activeLoc.name}
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-amber-800 bg-amber-50 border border-amber-200 px-3.5 py-1.5 rounded-full shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+              <span className="font-semibold">{t('Non-Coastal Sector · No Marine Data')}</span>
+            </div>
+          </section>
+
+          <InlandLocationNotice 
+            location={activeLoc} 
+            onSelectLocation={onLocationChange}
+            onOpenLocationModal={() => onNavigate && onNavigate('map')}
+          />
+        </div>
+      </div>
+    )
   }
 
   // (Early return removed to keep map mounted for animation)
@@ -252,7 +309,7 @@ export default function FishermanHome({ data, loading, error, onRetry, chatOpen 
                   {t('Sea Conditions')}
                 </h2>
                 <span className="text-xs text-slate-500 font-medium">
-                  {t(timeWindow.label)} • {t(location.name)}
+                  {t(timeWindow.label)} • {t(activeLoc.name)}
                 </span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
@@ -369,13 +426,16 @@ export default function FishermanHome({ data, loading, error, onRetry, chatOpen 
                   focusPoint={focusPoint}
                   exploredLocation={exploredLocation}
                   setExploredLocation={setExploredLocation}
+                  selectedLocation={activeLoc}
                 />
                 {/* Floating Legend */}
                 <div className="absolute bottom-3 left-3 z-[400] bg-white/95 backdrop-blur-md p-3 rounded-xl border border-slate-200/80 shadow-lg text-xs space-y-2 pointer-events-auto">
                   <span className="font-bold text-slate-800 text-[10px] tracking-wider uppercase block">{t('Map Legend')}</span>
                   <div className="flex items-center gap-2.5">
                     <span className="w-2.5 h-2.5 rounded-full bg-sky-600 ring-2 ring-sky-200"></span>
-                    <span className="text-slate-700 font-medium">{t('Your Location (Kochi)')}</span>
+                    <span className="text-slate-700 font-medium">
+                      {t('Your Location')} ({activeLoc.name ? activeLoc.name.split(',')[0].trim() : t('Current')})
+                    </span>
                   </div>
                   <div className="flex items-center gap-2.5">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 ring-2 ring-emerald-200"></span>
@@ -389,7 +449,7 @@ export default function FishermanHome({ data, loading, error, onRetry, chatOpen 
                 {/* Center Location Button */}
                 <button
                   className="absolute top-3 right-3 z-[400] bg-white/95 backdrop-blur-sm p-2 rounded-lg border border-slate-200 shadow-md text-slate-700 hover:text-sky-600 hover:border-sky-300 transition pointer-events-auto"
-                  onClick={() => setFocusPoint({ type: 'location', lat: 9.9312, lng: 76.2673, zoom: 11 })}
+                  onClick={() => setFocusPoint({ type: 'location', lat: activeLoc.lat || 9.9312, lng: activeLoc.lng || 76.2673, zoom: 11 })}
                   title="Center Location"
                   type="button"
                 >

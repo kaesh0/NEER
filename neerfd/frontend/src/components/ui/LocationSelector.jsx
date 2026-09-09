@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Icon } from '../../icons/index.js';
 import { useTranslation } from '../../i18n/translations.js';
-import { INDIAN_COASTAL_PLACES, findNearestCoastalPlace } from '../../utils/coastalGeocoder.js';
+import { INDIAN_COASTAL_PLACES, findNearestCoastalPlace, classifyLocation, detectUserCurrentLocation } from '../../utils/coastalGeocoder.js';
 
 export const PRESET_LOCATIONS = [
   { name: 'Kochi, Kerala', lat: 9.9312, lng: 76.2673, label: 'Kochi, Kerala', state: 'Kerala' },
@@ -47,7 +47,7 @@ export default function LocationSelector({
   const dropdownRef = useRef(null);
 
   const isMarine = persona === 'marine' || persona === 'maritime_operator';
-  const displayLocation = locationName || currentLocation?.name || (isMarine ? 'Kochi Port · Lakshadweep' : 'Kochi, Kerala coast');
+  const displayLocation = locationName || currentLocation?.name || (currentLocation?.isDetecting ? t('Detecting Location...') : (isMarine ? t('Coastal Fairway') : t('Select Location')));
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -75,63 +75,26 @@ export default function LocationSelector({
     const query = searchQuery.trim();
     if (!query) return;
 
-    // Try finding matching place in coastal places dataset
-    const match = INDIAN_COASTAL_PLACES.find(
-      (p) =>
-        p.name.toLowerCase().includes(query.toLowerCase()) ||
-        query.toLowerCase().includes(p.name.toLowerCase())
-    );
-
-    if (match) {
-      handleSelectLocation({
-        name: `${match.name}, ${match.admin}`,
-        lat: match.lat,
-        lng: match.lng,
-      });
+    const classified = classifyLocation({ name: query });
+    if (classified) {
+      handleSelectLocation(classified);
     } else {
-      handleSelectLocation({ name: query });
+      handleSelectLocation({ name: query, isCoastal: false });
     }
   };
 
-  const handleUseMyLocation = () => {
-    if (!navigator.geolocation) {
-      setGeoError(t('Browser geolocation is not supported on this device.'));
-      return;
-    }
-
+  const handleUseMyLocation = async () => {
     setGeoLoading(true);
     setGeoError(null);
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setGeoLoading(false);
-        const { latitude, longitude } = position.coords;
-        const nearest = findNearestCoastalPlace(latitude, longitude);
-        const name = nearest
-          ? `${nearest.name}, ${nearest.admin}`
-          : `${latitude.toFixed(4)}° N, ${longitude.toFixed(4)}° E`;
+    const detected = await detectUserCurrentLocation({ timeoutMs: 8000 });
+    setGeoLoading(false);
 
-        handleSelectLocation({
-          name,
-          lat: latitude,
-          lng: longitude,
-          isGps: true,
-        });
-      },
-      (error) => {
-        setGeoLoading(false);
-        let msg = t('Unable to retrieve location.');
-        if (error.code === 1) {
-          msg = t('Location permission was denied. Please allow location access in your browser.');
-        } else if (error.code === 2) {
-          msg = t('Position unavailable. Please pick a location from the list.');
-        } else if (error.code === 3) {
-          msg = t('Location request timed out. Please try again.');
-        }
-        setGeoError(msg);
-      },
-      { timeout: 10000, enableHighAccuracy: true, maximumAge: 60000 }
-    );
+    if (detected) {
+      handleSelectLocation(detected);
+    } else {
+      setGeoError(t('Unable to retrieve your current location. Please choose a location from the list.'));
+    }
   };
 
   const suggestions = isMarine ? MARITIME_CORRIDORS : PRESET_LOCATIONS;

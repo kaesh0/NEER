@@ -63,7 +63,50 @@ export const INDIAN_COASTAL_PLACES = [
   { name: 'Car Nicobar', admin: 'Andaman & Nicobar', lat: 9.1500, lng: 92.8167 },
 ]
 
-function haversineKm(lat1, lon1, lat2, lon2) {
+export const INDIAN_INLAND_PLACES = [
+  { name: 'New Delhi', admin: 'Delhi', lat: 28.6139, lng: 77.2090 },
+  { name: 'Delhi', admin: 'Delhi', lat: 28.7041, lng: 77.1025 },
+  { name: 'Noida', admin: 'Uttar Pradesh', lat: 28.5355, lng: 77.3910 },
+  { name: 'Gurugram', admin: 'Haryana', lat: 28.4595, lng: 77.0266 },
+  { name: 'Faridabad', admin: 'Haryana', lat: 28.4089, lng: 77.3178 },
+  { name: 'Bengaluru', admin: 'Karnataka', lat: 12.9716, lng: 77.5946 },
+  { name: 'Bangalore', admin: 'Karnataka', lat: 12.9716, lng: 77.5946 },
+  { name: 'Hyderabad', admin: 'Telangana', lat: 17.3850, lng: 78.4867 },
+  { name: 'Secunderabad', admin: 'Telangana', lat: 17.4399, lng: 78.4983 },
+  { name: 'Jaipur', admin: 'Rajasthan', lat: 26.9124, lng: 75.7873 },
+  { name: 'Jodhpur', admin: 'Rajasthan', lat: 26.2389, lng: 73.0243 },
+  { name: 'Udaipur', admin: 'Rajasthan', lat: 24.5854, lng: 73.7125 },
+  { name: 'Lucknow', admin: 'Uttar Pradesh', lat: 26.8467, lng: 80.9462 },
+  { name: 'Kanpur', admin: 'Uttar Pradesh', lat: 26.4499, lng: 80.3319 },
+  { name: 'Varanasi', admin: 'Uttar Pradesh', lat: 25.3176, lng: 82.9739 },
+  { name: 'Agra', admin: 'Uttar Pradesh', lat: 27.1767, lng: 78.0081 },
+  { name: 'Prayagraj', admin: 'Uttar Pradesh', lat: 25.4358, lng: 81.8463 },
+  { name: 'Pune', admin: 'Maharashtra', lat: 18.5204, lng: 73.8567 },
+  { name: 'Nagpur', admin: 'Maharashtra', lat: 21.1458, lng: 79.0882 },
+  { name: 'Nashik', admin: 'Maharashtra', lat: 19.9975, lng: 73.7898 },
+  { name: 'Ahmedabad', admin: 'Gujarat', lat: 23.0225, lng: 72.5714 },
+  { name: 'Bhopal', admin: 'Madhya Pradesh', lat: 23.2599, lng: 77.4126 },
+  { name: 'Indore', admin: 'Madhya Pradesh', lat: 22.7196, lng: 75.8577 },
+  { name: 'Gwalior', admin: 'Madhya Pradesh', lat: 26.2183, lng: 78.1828 },
+  { name: 'Jabalpur', admin: 'Madhya Pradesh', lat: 23.1815, lng: 79.9864 },
+  { name: 'Patna', admin: 'Bihar', lat: 25.5941, lng: 85.1376 },
+  { name: 'Gaya', admin: 'Bihar', lat: 24.7914, lng: 85.0002 },
+  { name: 'Ranchi', admin: 'Jharkhand', lat: 23.3441, lng: 85.3096 },
+  { name: 'Jamshedpur', admin: 'Jharkhand', lat: 22.8046, lng: 86.2029 },
+  { name: 'Raipur', admin: 'Chhattisgarh', lat: 21.2514, lng: 81.6296 },
+  { name: 'Bilaspur', admin: 'Chhattisgarh', lat: 22.0797, lng: 82.1409 },
+  { name: 'Chandigarh', admin: 'Chandigarh', lat: 30.7333, lng: 76.7794 },
+  { name: 'Ludhiana', admin: 'Punjab', lat: 30.9010, lng: 75.8573 },
+  { name: 'Amritsar', admin: 'Punjab', lat: 31.6340, lng: 74.8723 },
+  { name: 'Jalandhar', admin: 'Punjab', lat: 31.3260, lng: 75.5762 },
+  { name: 'Dehradun', admin: 'Uttarakhand', lat: 30.3165, lng: 78.0322 },
+  { name: 'Shimla', admin: 'Himachal Pradesh', lat: 31.1048, lng: 77.1734 },
+  { name: 'Srinagar', admin: 'Jammu and Kashmir', lat: 34.0837, lng: 74.7973 },
+  { name: 'Jammu', admin: 'Jammu and Kashmir', lat: 32.7266, lng: 74.8570 },
+  { name: 'Guwahati', admin: 'Assam', lat: 26.1445, lng: 91.7362 },
+]
+
+export function haversineKm(lat1, lon1, lat2, lon2) {
   const R = 6371.0
   const dLat = ((lat2 - lat1) * Math.PI) / 180
   const dLon = ((lon2 - lon1) * Math.PI) / 180
@@ -75,6 +118,116 @@ function haversineKm(lat1, lon1, lat2, lon2) {
       Math.sin(dLon / 2)
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
   return R * c
+}
+
+export function classifyLocation({ lat, lng, name }) {
+  if (lat != null && lng != null) {
+    const latNum = Number(lat)
+    const lngNum = Number(lng)
+
+    let nearestCoast = null
+    let minCoastDist = Infinity
+    for (const place of INDIAN_COASTAL_PLACES) {
+      const d = haversineKm(latNum, lngNum, place.lat, place.lng)
+      if (d < minCoastDist) {
+        minCoastDist = d
+        nearestCoast = place
+      }
+    }
+
+    let nearestInland = null
+    let minInlandDist = Infinity
+    for (const place of INDIAN_INLAND_PLACES) {
+      const d = haversineKm(latNum, lngNum, place.lat, place.lng)
+      if (d < minInlandDist) {
+        minInlandDist = d
+        nearestInland = place
+      }
+    }
+
+    // Coastal threshold: 50 km from closest coastal port/marker
+    const isCoastal = minCoastDist <= 50.0
+
+    if (isCoastal) {
+      return {
+        isCoastal: true,
+        name: name || `${nearestCoast.name}, ${nearestCoast.admin}`,
+        lat: latNum,
+        lng: lngNum,
+        distanceToCoastKm: Math.round(minCoastDist),
+        nearestPort: nearestCoast,
+      }
+    } else {
+      let resolvedName = name
+      if (!resolvedName) {
+        if (minInlandDist <= 60.0 && nearestInland) {
+          resolvedName = `${nearestInland.name}, ${nearestInland.admin}`
+        } else {
+          resolvedName = `${latNum.toFixed(2)}° N, ${lngNum.toFixed(2)}° E`
+        }
+      }
+      return {
+        isCoastal: false,
+        name: resolvedName,
+        lat: latNum,
+        lng: lngNum,
+        distanceToCoastKm: Math.round(minCoastDist),
+        nearestPort: nearestCoast,
+      }
+    }
+  }
+
+  if (name) {
+    const clean = name.trim().toLowerCase()
+    const coastalMatch = INDIAN_COASTAL_PLACES.find(
+      (p) => clean.includes(p.name.toLowerCase()) || p.name.toLowerCase().includes(clean)
+    )
+    if (coastalMatch) {
+      return {
+        isCoastal: true,
+        name: `${coastalMatch.name}, ${coastalMatch.admin}`,
+        lat: coastalMatch.lat,
+        lng: coastalMatch.lng,
+        distanceToCoastKm: 0,
+        nearestPort: coastalMatch,
+      }
+    }
+
+    const inlandMatch = INDIAN_INLAND_PLACES.find(
+      (p) => clean.includes(p.name.toLowerCase()) || p.name.toLowerCase().includes(clean)
+    )
+    if (inlandMatch) {
+      let nearestCoast = null
+      let minCoastDist = Infinity
+      for (const place of INDIAN_COASTAL_PLACES) {
+        const d = haversineKm(inlandMatch.lat, inlandMatch.lng, place.lat, place.lng)
+        if (d < minCoastDist) {
+          minCoastDist = d
+          nearestCoast = place
+        }
+      }
+      return {
+        isCoastal: false,
+        name: `${inlandMatch.name}, ${inlandMatch.admin}`,
+        lat: inlandMatch.lat,
+        lng: inlandMatch.lng,
+        distanceToCoastKm: Math.round(minCoastDist),
+        nearestPort: nearestCoast,
+      }
+    }
+
+    // Default unknown name
+    return {
+      isCoastal: false,
+      name: name.trim(),
+      lat: null,
+      lng: null,
+      distanceToCoastKm: null,
+      nearestPort: null,
+    }
+  }
+
+  return null
 }
 
 export function findNearestCoastalPlace(lat, lng) {
@@ -280,3 +433,81 @@ export function getRegionalGreetingInfo(locationInput, lat, lng) {
   }
 }
 
+/**
+ * Detect the user's real physical location automatically:
+ * 1. Attempts device GPS via navigator.geolocation.getCurrentPosition (high accuracy)
+ * 2. If GPS is denied, unavailable, or times out, attempts fast IP-based geolocation (city & coordinates)
+ * 3. Classifies whether the detected point is coastal or inland
+ */
+export async function detectUserCurrentLocation(options = {}) {
+  const { timeoutMs = 6000 } = options
+
+  // 1. Try Browser Geolocation API
+  if (typeof navigator !== 'undefined' && navigator.geolocation) {
+    try {
+      const pos = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          timeout: timeoutMs,
+          enableHighAccuracy: true,
+          maximumAge: 30000,
+        })
+      })
+
+      if (pos && pos.coords) {
+        const { latitude, longitude } = pos.coords
+        const classified = classifyLocation({ lat: latitude, lng: longitude })
+        if (classified) {
+          return { ...classified, isGps: true }
+        }
+        return {
+          name: `${latitude.toFixed(4)}° N, ${longitude.toFixed(4)}° E`,
+          lat: latitude,
+          lng: longitude,
+          isCoastal: false,
+          isGps: true,
+        }
+      }
+    } catch (gpsErr) {
+      console.info('Browser Geolocation declined or timed out, trying IP detection:', gpsErr?.message)
+    }
+  }
+
+  // 2. Try IP-based Geolocation fallbacks
+  try {
+    const res = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(3500) })
+    if (res.ok) {
+      const data = await res.json()
+      if (data && data.latitude != null && data.longitude != null) {
+        const placeName = data.city ? `${data.city}, ${data.region || data.country_name || ''}` : undefined
+        const classified = classifyLocation({
+          lat: data.latitude,
+          lng: data.longitude,
+          name: placeName,
+        })
+        if (classified) {
+          return { ...classified, isIp: true }
+        }
+      }
+    }
+  } catch (e) {}
+
+  try {
+    const res = await fetch('https://freeipapi.com/api/json', { signal: AbortSignal.timeout(3500) })
+    if (res.ok) {
+      const data = await res.json()
+      if (data && data.latitude != null && data.longitude != null) {
+        const placeName = data.cityName ? `${data.cityName}, ${data.regionName || ''}` : undefined
+        const classified = classifyLocation({
+          lat: data.latitude,
+          lng: data.longitude,
+          name: placeName,
+        })
+        if (classified) {
+          return { ...classified, isIp: true }
+        }
+      }
+    }
+  } catch (e) {}
+
+  return null
+}

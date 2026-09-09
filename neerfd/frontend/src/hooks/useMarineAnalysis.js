@@ -23,6 +23,12 @@ export function useMarineAnalysis(persona, locationParams = null) {
       return;
     }
 
+    // Wait until location detection finishes so we don't query dummy "Locating..."
+    if (locationParams && (locationParams.isDetecting || locationParams.name === 'Detecting Location...' || locationParams.name === 'Locating...')) {
+      setLoading(true);
+      return;
+    }
+
     const cacheKey = `${persona}:${locationKey}`;
     // Return cached data if available for this persona and location
     if (cache.current[cacheKey]) {

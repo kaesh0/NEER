@@ -1,8 +1,43 @@
 import React from 'react'
 import { useTranslation } from '../../i18n/translations.js'
+import InlandLocationNotice from '../../components/ui/InlandLocationNotice.jsx'
 
-export default function MarineRoute({ onNavigate }) {
+export default function MarineRoute({ onNavigate, selectedLocation, onLocationChange }) {
   const { t } = useTranslation()
+
+  const isInland = selectedLocation?.isCoastal === false
+
+  if (isInland) {
+    return (
+      <div className="space-y-6 pb-12 animate-fade-in">
+        <div className="flex flex-col items-center justify-center text-center pb-2 border-b border-slate-200/60">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-bold text-amber-600 uppercase tracking-widest">{t('Transit Routing')}</span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800">{t('Inland Origin')}</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-2">
+            {t('Ocean Transit Routing Inactive')}
+          </h1>
+          <p className="text-sm font-medium text-slate-500 max-w-xl">
+            {selectedLocation?.name || t('This area')} {t('is located inland. Nautical passage planning, waypoint corridors, and bathymetric segment routing require a coastal port of departure.')}
+          </p>
+        </div>
+
+        <InlandLocationNotice 
+          location={selectedLocation} 
+          onSelectLocation={onLocationChange}
+          onOpenLocationModal={() => onNavigate && onNavigate('map')}
+        />
+      </div>
+    )
+  }
+
+  const isKerala = !selectedLocation?.name || selectedLocation.name.toLowerCase().includes('kerala') || selectedLocation.name.toLowerCase().includes('kochi')
+  const originName = selectedLocation?.name || 'Kochi Port'
+  const originShortName = originName.split(',')[0].trim()
+  const originLat = (selectedLocation?.lat ?? 9.9312).toFixed(2)
+  const originLng = (selectedLocation?.lng ?? 76.2673).toFixed(2)
+  const destName = isKerala ? 'Lakshadweep Kavaratti (10.56° N, 72.64° E)' : `${originShortName} Deepwater Fairway`
 
   return (
     <div className="space-y-6 pb-12 animate-fade-in">
@@ -12,11 +47,11 @@ export default function MarineRoute({ onNavigate }) {
           {t('Route Plan & Segment Analysis')}
         </h1>
         <div className="inline-flex flex-wrap items-center justify-center gap-3 px-5 py-2 rounded-full bg-white border border-slate-200 shadow-2xs font-semibold text-xs sm:text-sm text-slate-900">
-          <span className="text-sky-700">Kochi Port (9.93° N, 76.26° E)</span>
+          <span className="text-sky-700">{originShortName} ({originLat}° N, {originLng}° E)</span>
           <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path d="M17 8l4 4m0 0l-4 4m4-4H3" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
           </svg>
-          <span className="text-emerald-700">Lakshadweep Kavaratti (10.56° N, 72.64° E)</span>
+          <span className="text-emerald-700">{destName}</span>
         </div>
       </div>
 
@@ -243,7 +278,7 @@ export default function MarineRoute({ onNavigate }) {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-sky-500 font-bold">•</span>
-                  <span>{t('Broadcast route notice to Kochi VTS and Kavaratti Port Radio on VHF Ch 16.')}</span>
+                  <span>{isKerala ? t('Broadcast route notice to Kochi VTS and Kavaratti Port Radio on VHF Ch 16.') : `${t('Broadcast route notice to')} ${originShortName} ${t('VTS and Port Radio on VHF Ch 16.')}`}</span>
                 </li>
               </ul>
             </div>

@@ -1,10 +1,42 @@
 import React from 'react'
 import MarineInteractiveMap from '../../components/marine/MarineInteractiveMap.jsx'
+import InlandLocationNotice from '../../components/ui/InlandLocationNotice.jsx'
 import { context, routeRecommendation, segments, formatTime, overallConditions } from '../../data/mock/marineData.js'
 import { useTranslation } from '../../i18n/translations.js'
 
-export default function MarineHome({ onNavigate }) {
+export default function MarineHome({ onNavigate, selectedLocation, onLocationChange }) {
   const { t } = useTranslation()
+
+  const isInland = selectedLocation?.isCoastal === false
+
+  if (isInland) {
+    return (
+      <div className="space-y-6 pb-12 animate-fade-in">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/60">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+              {selectedLocation.name}
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
+              {t('Inland Sector · Commercial Fairways Inactive')}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+              {t('Non-Coastal Area')}
+            </span>
+          </div>
+        </div>
+
+        <InlandLocationNotice 
+          location={selectedLocation} 
+          onSelectLocation={onLocationChange}
+          onOpenLocationModal={() => onNavigate && onNavigate('map')}
+        />
+      </div>
+    )
+  }
 
   const isCaution = routeRecommendation.routeStatus === 'caution'
   const segment3 = segments.find((s) => s.id === 'segment-3') || {
@@ -19,6 +51,13 @@ export default function MarineHome({ onNavigate }) {
     current: '1.2 kts NW',
   }
 
+  const isKerala = !selectedLocation?.name || selectedLocation.name.toLowerCase().includes('kerala') || selectedLocation.name.toLowerCase().includes('kochi')
+  const activeOrigin = selectedLocation?.name || context.origin.label || 'Kochi Port'
+  const originShortName = activeOrigin.split(',')[0].trim()
+  const activeDest = isKerala ? (context.destination.label || 'Lakshadweep (Kavaratti)') : `${originShortName} Deepwater Fairway`
+  const activeBerth = isKerala ? 'Kochi Harbour Berth 4' : `${originShortName} Berth 1`
+  const activeArrivalPier = isKerala ? 'Kavaratti Island Pier' : `${originShortName} Fairway Buoy`
+
   return (
     <div className="space-y-6 pb-12 animate-fade-in">
       {/* Top Header matching code.html */}
@@ -28,12 +67,12 @@ export default function MarineHome({ onNavigate }) {
             {t('Voyage Overview')}
           </h1>
           <div className="flex items-center gap-2 text-slate-600 font-medium mt-1 text-sm">
-            <span className="font-semibold text-slate-900">{t(context.origin.label || 'Kochi Port')}</span>
+            <span className="font-semibold text-slate-900">{t(activeOrigin)}</span>
             <svg className="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path d="M14 5l7 7m0 0l-7 7m7-7H3" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
             </svg>
             <span className="font-semibold text-slate-900">
-              {t(context.destination.label || 'Lakshadweep (Kavaratti)')}
+              {t(activeDest)}
             </span>
           </div>
         </div>
@@ -84,13 +123,13 @@ export default function MarineHome({ onNavigate }) {
             <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
               <span className="text-xs text-slate-500 font-medium block mb-1">{t('Departure')}</span>
               <div className="font-mono font-bold text-slate-900 text-lg">06:00 IST</div>
-              <span className="text-[11px] text-slate-400 font-mono mt-0.5 block">{t('Kochi Harbour Berth 4')}</span>
+              <span className="text-[11px] text-slate-400 font-mono mt-0.5 block">{t(activeBerth)}</span>
             </div>
 
             <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
               <span className="text-xs text-slate-500 font-medium block mb-1">{t('Estimated Arrival')}</span>
               <div className="font-mono font-bold text-slate-900 text-lg">14:30 IST</div>
-              <span className="text-[11px] text-slate-400 font-mono mt-0.5 block">{t('Kavaratti Island Pier')}</span>
+              <span className="text-[11px] text-slate-400 font-mono mt-0.5 block">{t(activeArrivalPier)}</span>
             </div>
 
             <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
@@ -221,7 +260,7 @@ export default function MarineHome({ onNavigate }) {
             </div>
 
             <div className="relative h-48 rounded-xl overflow-hidden border border-slate-200">
-              <MarineInteractiveMap height="100%" onNavigate={onNavigate} />
+              <MarineInteractiveMap height="100%" onNavigate={onNavigate} selectedLocation={selectedLocation} />
             </div>
 
             <div className="mt-3 text-center">

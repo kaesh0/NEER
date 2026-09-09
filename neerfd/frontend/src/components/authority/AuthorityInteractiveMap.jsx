@@ -119,6 +119,7 @@ export default function AuthorityInteractiveMap({
   setExploredLocation,
   showLegend = true,
   showRecenter = true,
+  selectedLocation,
 }) {
   const { t } = useTranslation()
   const [clickedPoint, setClickedPoint] = useState(null)
@@ -130,17 +131,17 @@ export default function AuthorityInteractiveMap({
   const areaPriorities = getAreaPriorities(data)
   const hazards = getHazards(data)
 
-  // Center coordinate: Kochi [9.9312, 76.2673]
-  const mapCenter = [
-    mapData?.viewport?.center?.[1] || 9.9312,
-    mapData?.viewport?.center?.[0] || 76.2673,
-  ]
+  const isKeralaRegion = !selectedLocation?.name || selectedLocation.name.toLowerCase().includes('kerala') || selectedLocation.name.toLowerCase().includes('kochi')
 
-  const areaCoords = {
+  const baseLat = selectedLocation?.lat ?? (mapData?.viewport?.center?.[1] || 9.9312)
+  const baseLng = selectedLocation?.lng ?? (mapData?.viewport?.center?.[0] || 76.2673)
+  const mapCenter = [baseLat, baseLng]
+
+  const areaCoords = isKeralaRegion ? {
     'ernakulam-coast': [9.9312, 76.2673],
     'alappuzha-coast': [9.4981, 76.3388],
     'thrissur-coast': [10.5276, 76.2144],
-  }
+  } : {}
 
   const handleInspectLocation = () => {
     if (clickedPoint && setExploredLocation) {
@@ -186,39 +187,47 @@ export default function AuthorityInteractiveMap({
         <MapFocusController focusPoint={focusPoint} center={mapCenter} mapRef={mapInstanceRef} />
         <MapInteractionHandler onMapClick={setClickedPoint} />
 
-        {/* Coastal Maritime EEZ Boundary */}
-        <Polyline
-          positions={KERALA_COASTAL_BOUNDARY}
-          pathOptions={{
-            color: '#0369a1',
-            weight: 3,
-            opacity: 0.7,
-            dashArray: '8, 8',
-          }}
-        />
+        {/* Coastal Maritime EEZ Boundary (Kerala region only) */}
+        {isKeralaRegion && (
+          <Polyline
+            positions={KERALA_COASTAL_BOUNDARY}
+            pathOptions={{
+              color: '#0369a1',
+              weight: 3,
+              opacity: 0.7,
+              dashArray: '8, 8',
+            }}
+          />
+        )}
 
-        {/* Protected Zone Geofence */}
-        <Polygon
-          positions={PROTECTED_ZONE}
-          pathOptions={{
-            color: '#d97706',
-            fillColor: '#f59e0b',
-            fillOpacity: 0.15,
-            weight: 2,
-            dashArray: '4, 4',
-          }}
-        >
-          <Popup className="neer-popup">
-            <div className="font-bold text-amber-800 text-xs">Demo Marine Protected Area</div>
-            <div className="text-[11px] text-slate-600 mt-0.5">Commercial fishing prohibited inside boundary</div>
-          </Popup>
-        </Polygon>
+        {/* Protected Zone Geofence (Kerala MPA only) */}
+        {isKeralaRegion && (
+          <Polygon
+            positions={PROTECTED_ZONE}
+            pathOptions={{
+              color: '#d97706',
+              fillColor: '#f59e0b',
+              fillOpacity: 0.15,
+              weight: 2,
+              dashArray: '4, 4',
+            }}
+          >
+            <Popup className="neer-popup">
+              <div className="font-bold text-amber-800 text-xs">Demo Marine Protected Area</div>
+              <div className="text-[11px] text-slate-600 mt-0.5">Commercial fishing prohibited inside boundary</div>
+            </Popup>
+          </Polygon>
+        )}
 
-        {/* Pulsing Radar Marker at Kochi */}
+        {/* Pulsing Radar Marker */}
         <Marker position={mapCenter} icon={pulsingRadarIcon}>
           <Popup className="neer-popup">
-            <div className="font-bold text-slate-900 text-xs">Priority Area: Kochi, Kerala coast</div>
-            <div className="text-[11px] text-amber-700 font-medium mt-0.5">Status: Caution · 2 Risk Factors</div>
+            <div className="font-bold text-slate-900 text-xs">
+              {t('Priority Area:')} {selectedLocation?.name || 'Coastal Sector'}
+            </div>
+            <div className="text-[11px] text-slate-600 font-medium mt-0.5">
+              {selectedLocation?.isCoastal === false ? t('Inland Monitoring Zone') : t('Active Telemetry')}
+            </div>
           </Popup>
         </Marker>
 
@@ -244,9 +253,11 @@ export default function AuthorityInteractiveMap({
         )}
 
         {/* Priority Areas Markers */}
-        {areaPriorities.map((area) => {
-          const coords = areaCoords[area.areaId]
-          if (!coords) return null
+        {areaPriorities.map((area, idx) => {
+          const coords = areaCoords[area.areaId] || [
+            baseLat + (idx === 0 ? 0 : idx === 1 ? -0.15 : 0.15),
+            baseLng + (idx === 0 ? 0 : idx === 1 ? -0.12 : 0.12),
+          ]
 
           return (
             <Marker key={area.areaId} position={coords} icon={authorityIcon(getPriorityColor(area.priority))}>
@@ -272,10 +283,12 @@ export default function AuthorityInteractiveMap({
         })}
 
         {/* Hazards */}
-        {hazards.map((h) => {
-          let hCoords = mapCenter
-          if (h.id.includes('ernakulam')) hCoords = [10.0, 75.9]
-          if (h.id.includes('alappuzha')) hCoords = [9.5, 76.0]
+        {hazards.map((h, hIdx) => {
+          let hCoords = [baseLat + (hIdx * 0.05), baseLng + (hIdx * 0.05)]
+          if (isKeralaRegion) {
+            if (h.id.includes('ernakulam')) hCoords = [10.0, 75.9]
+            if (h.id.includes('alappuzha')) hCoords = [9.5, 76.0]
+          }
 
           return (
             <Circle
@@ -305,7 +318,7 @@ export default function AuthorityInteractiveMap({
         <button
           onClick={handleRecenter}
           className="absolute top-3 right-3 z-[1000] bg-white/95 backdrop-blur hover:bg-slate-100 p-2 rounded-lg border border-slate-200 shadow-sm text-slate-700 transition"
-          title={t('Recenter on Kochi')}
+          title={t('Recenter Map')}
           type="button"
         >
           <svg className="w-4 h-4 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">

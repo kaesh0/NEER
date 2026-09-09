@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import LoadingState from '../../components/ui/LoadingState.jsx'
 import ErrorState from '../../components/ui/ErrorState.jsx'
+import InlandLocationNotice from '../../components/ui/InlandLocationNotice.jsx'
 import { getAreaPriorities, getRegions, getStatusColor, getStatusBg } from '../../data/mock/authorityData.js'
 import { useTranslation } from '../../i18n/translations.js'
 
-export default function AuthorityAreas({ data, loading, error, onRetry, focusPoint, setFocusPoint, onNavigate }) {
+export default function AuthorityAreas({ data, loading, error, onRetry, focusPoint, setFocusPoint, onNavigate, selectedLocation, onLocationChange }) {
   const { t } = useTranslation()
   const [selectedAreaId, setSelectedAreaId] = useState(null)
 
@@ -17,20 +18,44 @@ export default function AuthorityAreas({ data, loading, error, onRetry, focusPoi
   if (loading) return <LoadingState />
   if (error) return <ErrorState message={error} onRetry={onRetry} />
 
+  const isInland = selectedLocation?.isCoastal === false || data?.is_coastal === false || data?.decisionOutput?.status === 'inland'
+
+  if (isInland) {
+    return (
+      <div className="space-y-6 pb-12 animate-fade-in">
+        <div className="space-y-1 pb-2 border-b border-slate-200/60">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-amber-600 uppercase tracking-widest">{t('Regional Priority Analysis')}</span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800">{t('Inland Administrative Sector')}</span>
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+            {t('Coastal Priority Index Inactive')}
+          </h1>
+          <p className="text-sm font-medium text-slate-500">
+            {selectedLocation?.name || t('This area')} {t('is located inland. Coastal patrol corridors and harbour safety indexes are inactive for inland zones.')}
+          </p>
+        </div>
+
+        <InlandLocationNotice 
+          location={selectedLocation} 
+          onSelectLocation={onLocationChange}
+          onOpenLocationModal={() => onNavigate && onNavigate('map')}
+        />
+      </div>
+    )
+  }
+
   const areaPriorities = getAreaPriorities(data)
   const regions = getRegions(data)
-  const currentAreaId = selectedAreaId || (areaPriorities.length > 0 ? areaPriorities[0].areaId : 'ernakulam-coast')
+  const currentAreaId = selectedAreaId || (areaPriorities.length > 0 ? areaPriorities[0].areaId : 'coastal-sector')
 
   const selectedArea = areaPriorities.find((a) => a.areaId === currentAreaId) || areaPriorities[0] || {
-    areaId: 'ernakulam-coast',
-    label: 'Kochi, Kerala coast',
-    status: 'caution',
+    areaId: 'coastal-sector',
+    label: selectedLocation?.name || 'Coastal Sector',
+    status: 'favourable',
     priority: 'medium',
-    reasons: [
-      'Location is inside Demo Marine Protected Area; commercial fishing is prohibited inside the boundary.',
-      'All marine parameters (wave 0.98m, wind 14.7 km/h) are within favourable operating limits for small fishing boat.',
-    ],
-    hazardIds: ['hazard-ernakulam-mpa'],
+    reasons: ['Regional coastal telemetry is active.'],
+    hazardIds: [],
   }
 
   const regionDetails = regions.find((r) => r.id === currentAreaId) || {

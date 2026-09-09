@@ -37,9 +37,8 @@ export default function Login({ onNavigate, onLoginSuccess }) {
   }
 
   const handleGuest = () => {
-    const targetRole = role === 'operator' ? 'marine' : role
     loginAsGuest()
-    onLoginSuccess && onLoginSuccess(targetRole)
+    onLoginSuccess && onLoginSuccess(null)
   }
 
   return (
@@ -88,7 +87,7 @@ export default function Login({ onNavigate, onLoginSuccess }) {
         <footer className="relative z-10 flex items-center justify-between pt-6 border-t border-white/15 text-xs text-sky-200/75">
           <div className="flex items-center gap-2">
             <Icon name="mapPin" size={14} className="text-sky-300" />
-            <span className="tracking-wide">Kochi, Kerala coast</span>
+            <span className="tracking-wide">Indian Ocean & Maritime Waters</span>
           </div>
           <div className="flex items-center gap-2.5 text-sky-200/60 font-medium">
             <span>English</span>
@@ -106,22 +105,22 @@ export default function Login({ onNavigate, onLoginSuccess }) {
       <section className="w-full lg:w-[52%] xl:w-[50%] flex items-center justify-center p-6 sm:p-12 lg:p-16 bg-slate-50" data-purpose="auth-content-container">
         {/* Elevated Auth Card with smooth fade-in */}
         <div className="w-full max-w-[480px] bg-white rounded-3xl p-8 sm:p-10 shadow-[0_12px_40px_-12px_rgba(11,25,46,0.08)] border border-slate-100 animate-fade-in-up">
-          {/* Back to Home Link */}
-          <div className="mb-7">
+          {/* Continue as guest top shortcut */}
+          <div className="mb-7 flex items-center justify-between">
             <button 
               type="button"
-              onClick={() => onNavigate && onNavigate('landing')}
-              className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors group cursor-pointer"
+              onClick={handleGuest}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors group cursor-pointer"
             >
-              <Icon name="arrowLeft" size={16} className="transition-transform group-hover:-translate-x-1 text-slate-400 group-hover:text-slate-800" />
-              <span>Back to home</span>
+              <span>Continue as guest</span>
+              <Icon name="arrowRight" size={14} className="transition-transform group-hover:translate-x-0.5 text-slate-400 group-hover:text-slate-800" />
             </button>
           </div>
 
           {/* Heading & Greeting */}
           <div className="mb-7">
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 font-heading tracking-tight mb-2">Welcome back</h2>
-            <p className="text-slate-500 text-sm">Access your workspace</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 font-heading tracking-tight mb-2">Welcome</h2>
+            <p className="text-slate-500 text-sm">Sign in to access your marine intelligence workspace</p>
           </div>
 
           {/* BEGIN: Sign In Form */}

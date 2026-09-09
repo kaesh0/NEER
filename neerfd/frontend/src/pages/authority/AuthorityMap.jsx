@@ -19,6 +19,7 @@ export default function AuthorityMap({
   exploredLocation,
   setExploredLocation,
   onLocationChange,
+  selectedLocation,
 }) {
   const { t } = useTranslation()
   const [locData, setLocData] = useState(null)
@@ -86,7 +87,7 @@ export default function AuthorityMap({
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs font-medium text-slate-600 bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm">
-            {t('Bounding Box: Kerala Maritime Zone (EEZ)')}
+            {t('Bounding Box:')} {selectedLocation?.name ? `${selectedLocation.name.split(',')[0]} Sector` : t('Maritime Zone (EEZ)')}
           </span>
         </div>
       </div>
@@ -99,6 +100,7 @@ export default function AuthorityMap({
           onNavigate={onNavigate}
           setExploredLocation={setExploredLocation}
           data={data}
+          selectedLocation={selectedLocation}
         />
 
         {/* Explored Location Overlay */}

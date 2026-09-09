@@ -2,6 +2,7 @@ import React from 'react'
 import { useTranslation } from '../../i18n/translations.js'
 import LoadingState from '../../components/ui/LoadingState.jsx'
 import ErrorState from '../../components/ui/ErrorState.jsx'
+import InlandLocationNotice from '../../components/ui/InlandLocationNotice.jsx'
 import AuthorityInteractiveMap from '../../components/authority/AuthorityInteractiveMap.jsx'
 import {
   getRequest,
@@ -12,7 +13,7 @@ import {
   getProvenance,
 } from '../../data/mock/authorityData.js'
 
-export default function AuthorityHome({ data, loading, error, onRetry, onNavigate }) {
+export default function AuthorityHome({ data, loading, error, onRetry, onNavigate, selectedLocation, onLocationChange }) {
   const { t } = useTranslation()
 
   if (loading) return <LoadingState />
@@ -23,6 +24,41 @@ export default function AuthorityHome({ data, loading, error, onRetry, onNavigat
   const decision = getDecision(data)
   const explainability = getExplainability(data)
   const provenance = getProvenance(data)
+
+  const activeLoc = selectedLocation || { name: request?.geometry?.label || 'Kochi, Kerala coast' }
+  const isInland = activeLoc?.isCoastal === false || data?.is_coastal === false || decision?.status === 'inland'
+
+  if (isInland) {
+    return (
+      <div className="space-y-6 pb-12 animate-fade-in">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/60">
+          <div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-amber-600 mb-1 block">
+              {t('Regional Risk & Coastal Monitoring')}
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+              {activeLoc.name}
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
+              {t('Inland Sector · Marine & Port Monitoring Inactive')}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+              {t('Non-Coastal Area')}
+            </span>
+          </div>
+        </div>
+
+        <InlandLocationNotice 
+          location={activeLoc} 
+          onSelectLocation={onLocationChange}
+          onOpenLocationModal={() => onNavigate && onNavigate('map')}
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6 pb-12 animate-fade-in">
@@ -36,7 +72,7 @@ export default function AuthorityHome({ data, loading, error, onRetry, onNavigat
             {t('Regional Overview')}
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-            {t(request?.geometry?.label || 'Kochi, Kerala coast')} · {t(timeWindow?.label || 'next available forecast window')}
+            {t(activeLoc.name)} · {t(timeWindow?.label || 'next available forecast window')}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -63,10 +99,10 @@ export default function AuthorityHome({ data, loading, error, onRetry, onNavigat
               </span>
             </div>
             <h2 className="text-xl font-bold text-slate-900 leading-snug">
-              {t(decision?.headline || 'Kochi, Kerala coast is the priority area for next available forecast window.')}
+              {t(decision?.headline || `${activeLoc.name} is the priority area for next available forecast window.`)}
             </h2>
             <p className="text-sm text-slate-600 leading-relaxed">
-              {t(decision?.summary || 'Regional assessment status: caution. Location is inside Demo Marine Protected Area; commercial fishing is prohibited inside the boundary. All marine parameters (wave 0.98m, wind 14.7 km/h) are within favourable operating limits for small fishing boat.')}
+              {t(decision?.summary || `Regional assessment status for ${activeLoc.name}: favourable. All marine parameters are within standard operating limits.`)}
             </p>
           </div>
         </div>
@@ -106,7 +142,7 @@ export default function AuthorityHome({ data, loading, error, onRetry, onNavigat
               <h3 className="text-base font-bold text-slate-900">{t('Why this assessment?')}</h3>
             </div>
             <p className="text-sm text-slate-600 leading-relaxed">
-              {t(explainability?.summary || 'For Kochi, Kerala (forecast for next window), the marine assessment is caution: proceed only with caution and check official local advisories. Current sea conditions indicate a wave height of 0.98 m, wind speeds of 14.7 km/h, and a swell period of 8.8 s. Warning: your location is inside the Demo Marine Protected Area, where fishing is restricted.')}
+              {t(explainability?.summary || `For ${activeLoc.name} (forecast for next window), the marine assessment is caution: proceed only with caution and check official local advisories. Current coastal telemetry indicates conditions require vigilance. Small fishing vessels and coastal operators are advised to review local port authority notices before departure.`)}
             </p>
             {/* Risk Rule Triggered Box */}
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs space-y-2 mt-4">
@@ -115,7 +151,7 @@ export default function AuthorityHome({ data, loading, error, onRetry, onNavigat
                 <span className="font-semibold text-slate-700">{t('Observation:')}</span>
                 <span className="text-slate-600">
                   {' '}
-                  {t(explainability?.findings?.[0]?.observation || 'Location is inside Demo Marine Protected Area; commercial fishing is prohibited inside the boundary.')}
+                  {t(explainability?.findings?.[0]?.observation || 'Coastal sector alert telemetry active for selected jurisdiction.')}
                 </span>
               </div>
               <div>
@@ -144,7 +180,7 @@ export default function AuthorityHome({ data, loading, error, onRetry, onNavigat
               </button>
             </div>
             <div className="relative h-[320px] w-full bg-slate-100">
-              <AuthorityInteractiveMap data={data} height="320px" onNavigate={onNavigate} />
+              <AuthorityInteractiveMap data={data} height="320px" onNavigate={onNavigate} selectedLocation={activeLoc} />
             </div>
           </div>
 

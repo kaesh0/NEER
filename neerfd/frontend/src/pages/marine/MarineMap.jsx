@@ -62,14 +62,14 @@ export default function MarineMap({
   }, [exploredLocation?.lat, exploredLocation?.lng])
 
   return (
-    <div className="space-y-4 pb-12 animate-fade-in">
+    <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 pb-12 animate-fade-in">
       {/* Map Header matching code.html */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200/60">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
             {t('Nautical Cartography GIS')}
           </h1>
-          <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
+          <p className="text-xs sm:text-sm font-medium text-slate-500 mt-2">
             {(!selectedLocation?.name || selectedLocation.name.toLowerCase().includes('kerala') || selectedLocation.name.toLowerCase().includes('kochi'))
               ? t('Route Vector: Kochi Outer Anchorage → Lakshadweep Sea Fairway')
               : `${t('Route Vector:')} ${selectedLocation.name.split(',')[0]} ${t('Outer Anchorage')} → ${selectedLocation.name.split(',')[0]} ${t('Deepwater Fairway')}`}
@@ -133,7 +133,7 @@ export default function MarineMap({
                           locData?.marineSituation?.spatialAnalysis?.pointSummary?.label ||
                           getCoastalPlaceName(exploredLocation.lat, exploredLocation.lng)}
                       </h3>
-                      <p className="text-xs text-slate-500 font-mono mt-0.5">
+                      <p className="text-xs text-slate-500 font-mono mt-2">
                         {exploredLocation.lat.toFixed(4)}° N, {exploredLocation.lng.toFixed(4)}° E
                       </p>
                     </div>

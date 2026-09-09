@@ -23,7 +23,7 @@ export default function PersonaSelection({ onSelectPersona, onNavigate, hideLang
     <div className="min-h-full font-sans bg-ocean-waves text-slate-800 antialiased flex flex-col relative selection:bg-marine-100 selection:text-marine-800">
       {/* BEGIN: TopNavigationBar */}
       <header className="w-full bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Brand Logo & Platform Label */}
           <div className="flex items-center space-x-3.5" data-purpose="branding">
             <button 
@@ -43,7 +43,7 @@ export default function PersonaSelection({ onSelectPersona, onNavigate, hideLang
                 <div className="text-[9.5px] font-bold tracking-[0.14em] uppercase text-marine-600 leading-tight">
                   Marine Intelligence Platform
                 </div>
-                <div className="text-lg font-extrabold tracking-tight text-slate-900 leading-none mt-0.5">
+                <div className="text-lg font-extrabold tracking-tight text-slate-900 leading-none mt-2">
                   NEER
                 </div>
               </div>
@@ -149,7 +149,7 @@ export default function PersonaSelection({ onSelectPersona, onNavigate, hideLang
       {/* END: TopNavigationBar */}
 
       {/* BEGIN: MainContent */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 flex flex-col justify-between wave-line-pattern">
+      <main className="flex-1 max-w-screen-2xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 flex flex-col justify-between wave-line-pattern">
         {/* Hero / Workspace Header */}
         <div className="text-center pt-4 pb-8 max-w-3xl mx-auto" data-purpose="hero-section">
           {/* Floating Emblem */}
@@ -194,7 +194,7 @@ export default function PersonaSelection({ onSelectPersona, onNavigate, hideLang
               <h2 className="text-2xl font-bold text-slate-900 group-hover:text-marine-700 transition-colors">
                 Fisherman
               </h2>
-              <p className="text-sm font-medium text-slate-500 mt-0.5 mb-3">
+              <p className="text-sm font-medium text-slate-500 mt-2 mb-3">
                 मछुआरा
               </p>
               {/* Description */}
@@ -249,7 +249,7 @@ export default function PersonaSelection({ onSelectPersona, onNavigate, hideLang
               <h2 className="text-2xl font-bold text-slate-900 group-hover:text-marine-700 transition-colors">
                 Marine
               </h2>
-              <p className="text-sm font-medium text-slate-500 mt-0.5 mb-3">
+              <p className="text-sm font-medium text-slate-500 mt-2 mb-3">
                 मरीन / समुद्री संचालन
               </p>
               {/* Description */}
@@ -298,7 +298,7 @@ export default function PersonaSelection({ onSelectPersona, onNavigate, hideLang
               <h2 className="text-2xl font-bold text-slate-900 group-hover:text-marine-700 transition-colors">
                 Authority
               </h2>
-              <p className="text-sm font-medium text-slate-500 mt-0.5 mb-3">
+              <p className="text-sm font-medium text-slate-500 mt-2 mb-3">
                 प्राधिकरण
               </p>
               {/* Description */}
@@ -379,7 +379,7 @@ export default function PersonaSelection({ onSelectPersona, onNavigate, hideLang
 
       {/* BEGIN: SiteFooter */}
       <footer className="w-full border-t border-slate-200/80 bg-white/70 backdrop-blur-sm py-4 text-center text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div className="max-w-screen-2xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <div>© 2025 NEER Marine Intelligence Platform. Ministry of Earth Sciences &amp; INCOIS data integration.</div>
           <div className="flex items-center space-x-4">
             <span className="hover:text-slate-700 underline underline-offset-2 cursor-pointer">Coastal Safety Index</span>

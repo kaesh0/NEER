@@ -9,17 +9,17 @@ export default function MarineAreas({ onNavigate, selectedLocation, onLocationCh
 
   if (isInland) {
     return (
-      <div className="space-y-6 pb-12 animate-fade-in">
+      <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 space-y-8 pb-12 animate-fade-in">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200/60">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-amber-600 uppercase tracking-widest">{t('Maritime Corridors')}</span>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800">{t('Inland Non-Maritime')}</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mt-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mt-2">
               {t('Maritime Transit Corridors Inactive')}
             </h1>
-            <p className="text-sm font-medium text-slate-500 mt-1">
+            <p className="text-sm font-medium text-slate-500 mt-2">
               {selectedLocation?.name || t('This area')} {t('is located inland. Oceanic transit corridors, shelf drop-offs, and fairway bathymetry apply exclusively to coastal ports and maritime corridors.')}
             </p>
           </div>
@@ -82,14 +82,14 @@ export default function MarineAreas({ onNavigate, selectedLocation, onLocationCh
   ]
 
   return (
-    <div className="space-y-6 pb-12 animate-fade-in">
+    <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 space-y-8 pb-12 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200/60">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
             {t('Regional Operational Sectors & Maritime Corridors')}
           </h1>
-          <p className="text-sm font-medium text-slate-500 mt-1">
+          <p className="text-sm font-medium text-slate-500 mt-2">
             {t('Detailed bathymetric, traffic density, and environmental risk analysis for')} {baseName}.
           </p>
         </div>
@@ -124,7 +124,7 @@ export default function MarineAreas({ onNavigate, selectedLocation, onLocationCh
                 </span>
               </div>
               <h2 className="text-lg font-bold text-slate-900">{t(sector.name)}</h2>
-              <p className="text-xs text-slate-500 font-medium mt-1">{t(sector.description)}</p>
+              <p className="text-xs text-slate-500 font-medium mt-2">{t(sector.description)}</p>
 
               <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-slate-100 text-xs">
                 <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">

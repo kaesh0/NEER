@@ -213,7 +213,7 @@ export default function Register({ onNavigate, onRegisterSuccess }) {
 
             {error && (
               <div className="p-3 mt-4 bg-neer-unfavourable/10 border border-neer-unfavourable/20 rounded-lg flex items-start gap-2">
-                <Icon name="alertTriangle" size={16} className="text-neer-unfavourable mt-0.5 flex-shrink-0" />
+                <Icon name="alertTriangle" size={16} className="text-neer-unfavourable mt-2 flex-shrink-0" />
                 <span className="text-sm text-neer-unfavourable font-medium">{error}</span>
               </div>
             )}

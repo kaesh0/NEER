@@ -11,17 +11,17 @@ export default function MarineAlerts({ onNavigate, selectedLocation, onLocationC
 
   if (isInland) {
     return (
-      <div className="space-y-6 pb-12 animate-fade-in">
+      <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 space-y-8 pb-12 animate-fade-in">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/60">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{t('Maritime Alerts & Tactical Advisories')}</span>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">0 {t('Active Coastal Notices')}</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mt-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mt-2">
               {t('No Maritime Advisories for Inland Region')}
             </h1>
-            <p className="text-sm font-medium text-slate-500 mt-1">
+            <p className="text-sm font-medium text-slate-500 mt-2">
               {selectedLocation?.name || t('This area')} {t('is located inland. Swell surges, geofenced Marine Protected Areas, and hydrographic fairway directives apply exclusively to coastal ports and ocean waters.')}
             </p>
           </div>
@@ -39,7 +39,7 @@ export default function MarineAlerts({ onNavigate, selectedLocation, onLocationC
   const baseName = selectedLocation?.name ? selectedLocation.name.split(',')[0] : 'Coastal'
 
   return (
-    <div className="space-y-6 pb-12 animate-fade-in">
+    <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 space-y-8 pb-12 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/60">
         <div>
@@ -51,7 +51,7 @@ export default function MarineAlerts({ onNavigate, selectedLocation, onLocationC
               {t('2 Active Notices')}
             </span>
           </div>
-          <p className="text-sm font-medium text-slate-500 mt-1">
+          <p className="text-sm font-medium text-slate-500 mt-2">
             {t('Real-time ocean state hazards, geofence compliance, and safety broadcasts for')} {baseName}.
           </p>
         </div>
@@ -71,7 +71,7 @@ export default function MarineAlerts({ onNavigate, selectedLocation, onLocationC
               <span className="font-extrabold text-amber-900 tracking-wider text-sm">
                 {t('CAUTION SWELL')}
               </span>
-              <span className="text-xs font-mono font-semibold text-amber-700 mt-1">10:00 – 12:00 IST</span>
+              <span className="text-xs font-mono font-semibold text-amber-700 mt-2">10:00 – 12:00 IST</span>
             </div>
 
             <div className="p-6 md:p-7 flex-1 flex flex-col justify-between">
@@ -130,7 +130,7 @@ export default function MarineAlerts({ onNavigate, selectedLocation, onLocationC
               <span className="font-extrabold text-sky-900 tracking-wider text-sm">
                 {t('GEOFENCE MPA')}
               </span>
-              <span className="text-xs font-mono font-semibold text-sky-700 mt-1">Zone Active 24/7</span>
+              <span className="text-xs font-mono font-semibold text-sky-700 mt-2">Zone Active 24/7</span>
             </div>
 
             <div className="p-6 md:p-7 flex-1 flex flex-col justify-between">

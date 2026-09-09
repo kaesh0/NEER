@@ -25,7 +25,7 @@ export default function Card({
   const pads = {
     none: '',
     sm: 'p-3',
-    md: 'p-5',
+    md: 'p-5 sm:p-6',
   }
 
   const accents = {
@@ -54,7 +54,7 @@ export default function Card({
   return (
     <Tag className={classes} {...rest}>
       {hasHeader && (
-        <div className="flex items-start justify-between gap-3 px-5 pt-5">
+        <div className="flex items-start justify-between gap-3 px-5 sm:px-6 pt-5 sm:pt-6">
           <div>
             {title && <div className="text-neer-md font-semibold text-neer-ink">{title}</div>}
             {subtitle && <div className="text-neer-sm text-neer-ink-secondary mt-1">{subtitle}</div>}

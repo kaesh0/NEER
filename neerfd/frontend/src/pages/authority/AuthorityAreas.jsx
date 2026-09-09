@@ -22,7 +22,7 @@ export default function AuthorityAreas({ data, loading, error, onRetry, focusPoi
 
   if (isInland) {
     return (
-      <div className="space-y-6 pb-12 animate-fade-in">
+      <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 space-y-8 pb-12 animate-fade-in">
         <div className="space-y-1 pb-2 border-b border-slate-200/60">
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-amber-600 uppercase tracking-widest">{t('Regional Priority Analysis')}</span>
@@ -66,7 +66,7 @@ export default function AuthorityAreas({ data, loading, error, onRetry, focusPoi
   }
 
   return (
-    <div className="space-y-6 pb-12 animate-fade-in">
+    <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 space-y-8 pb-12 animate-fade-in">
       {/* Section Header matching code.html */}
       <div className="space-y-1 pb-2 border-b border-slate-200/60">
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
@@ -136,7 +136,7 @@ export default function AuthorityAreas({ data, loading, error, onRetry, focusPoi
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
             <div>
               <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{t(selectedArea.label)}</h2>
-              <div className="flex items-center gap-2 mt-1.5">
+              <div className="flex items-center gap-2 mt-2.5">
                 <span
                   className={`text-xs font-bold uppercase tracking-wider ${
                     selectedArea.priority === 'high'
@@ -211,7 +211,7 @@ export default function AuthorityAreas({ data, loading, error, onRetry, focusPoi
             <div className="space-y-2.5">
               {(selectedArea.reasons || []).map((r, i) => (
                 <div key={i} className="flex items-start gap-3 p-3.5 bg-amber-50/60 border border-amber-200/70 rounded-xl text-xs sm:text-sm text-slate-700">
-                  <svg className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-amber-600 flex-shrink-0 mt-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
                   </svg>
                   <span>{t(r)}</span>

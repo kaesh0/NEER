@@ -11,13 +11,13 @@ export default function MarineHome({ onNavigate, selectedLocation, onLocationCha
 
   if (isInland) {
     return (
-      <div className="space-y-6 pb-12 animate-fade-in">
+      <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 space-y-8 pb-12 animate-fade-in">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/60">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
               {selectedLocation.name}
             </h1>
-            <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
+            <p className="text-xs sm:text-sm text-slate-500 font-medium mt-2">
               {t('Inland Sector · Commercial Fairways Inactive')}
             </p>
           </div>
@@ -59,14 +59,14 @@ export default function MarineHome({ onNavigate, selectedLocation, onLocationCha
   const activeArrivalPier = isKerala ? 'Kavaratti Island Pier' : `${originShortName} Fairway Buoy`
 
   return (
-    <div className="space-y-6 pb-12 animate-fade-in">
+    <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 space-y-8 pb-12 animate-fade-in">
       {/* Top Header matching code.html */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/60">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
             {t('Voyage Overview')}
           </h1>
-          <div className="flex items-center gap-2 text-slate-600 font-medium mt-1 text-sm">
+          <div className="flex items-center gap-2 text-slate-600 font-medium mt-2 text-sm">
             <span className="font-semibold text-slate-900">{t(activeOrigin)}</span>
             <svg className="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path d="M14 5l7 7m0 0l-7 7m7-7H3" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
@@ -89,7 +89,7 @@ export default function MarineHome({ onNavigate, selectedLocation, onLocationCha
         <div className="lg:col-span-8 space-y-6">
           {/* Caution Banner matching code.html */}
           <div className="bg-amber-50/95 border-2 border-amber-300 rounded-2xl p-5 flex items-start gap-4 shadow-xs">
-            <div className="w-12 h-12 rounded-xl bg-amber-100 border border-amber-300 flex items-center justify-center text-amber-700 flex-shrink-0 mt-0.5">
+            <div className="w-12 h-12 rounded-xl bg-amber-100 border border-amber-300 flex items-center justify-center text-amber-700 flex-shrink-0 mt-2">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
               </svg>
@@ -123,25 +123,25 @@ export default function MarineHome({ onNavigate, selectedLocation, onLocationCha
             <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
               <span className="text-xs text-slate-500 font-medium block mb-1">{t('Departure')}</span>
               <div className="font-mono font-bold text-slate-900 text-lg">06:00 IST</div>
-              <span className="text-[11px] text-slate-400 font-mono mt-0.5 block">{t(activeBerth)}</span>
+              <span className="text-[11px] text-slate-400 font-mono mt-2 block">{t(activeBerth)}</span>
             </div>
 
             <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
               <span className="text-xs text-slate-500 font-medium block mb-1">{t('Estimated Arrival')}</span>
               <div className="font-mono font-bold text-slate-900 text-lg">14:30 IST</div>
-              <span className="text-[11px] text-slate-400 font-mono mt-0.5 block">{t(activeArrivalPier)}</span>
+              <span className="text-[11px] text-slate-400 font-mono mt-2 block">{t(activeArrivalPier)}</span>
             </div>
 
             <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
               <span className="text-xs text-slate-500 font-medium block mb-1">{t('Max Wave Height')}</span>
               <div className="font-mono font-bold text-amber-600 text-lg">1.9 m</div>
-              <span className="text-[11px] text-slate-400 font-mono mt-0.5 block">{t('Peak in Segment 3')}</span>
+              <span className="text-[11px] text-slate-400 font-mono mt-2 block">{t('Peak in Segment 3')}</span>
             </div>
 
             <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
               <span className="text-xs text-slate-500 font-medium block mb-1">{t('Fuel Burn Estimate')}</span>
               <div className="font-mono font-bold text-slate-900 text-lg">1,280 L</div>
-              <span className="text-[11px] text-slate-400 font-mono mt-0.5 block">{t('Optimal trim at 14 kts')}</span>
+              <span className="text-[11px] text-slate-400 font-mono mt-2 block">{t('Optimal trim at 14 kts')}</span>
             </div>
           </div>
 
@@ -196,7 +196,7 @@ export default function MarineHome({ onNavigate, selectedLocation, onLocationCha
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="font-bold text-slate-900 text-lg">Segment 3 (Offshore Transit Corridor)</h4>
-                  <p className="text-xs text-slate-500 font-mono mt-0.5">Coords: 10.12° N, 74.88° E • Transit: 10:00 – 12:00</p>
+                  <p className="text-xs text-slate-500 font-mono mt-2">Coords: 10.12° N, 74.88° E • Transit: 10:00 – 12:00</p>
                 </div>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-300">
                   <svg className="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -15,13 +15,13 @@ export default function FishermanZones({ data, loading, error, onRetry, onNaviga
 
   if (isInland) {
     return (
-      <div className="tab-view-content flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 view-transition-wrapper" id="view-zones">
+      <div className="tab-view-content flex-1 max-w-screen-2xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 space-y-8 view-transition-wrapper" id="view-zones">
         <div className="border-b border-slate-200 pb-4">
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-amber-600 uppercase tracking-widest">{t('Regional Priority & Fishing Zones')}</span>
             <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800">{t('Non-Coastal Sector')}</span>
           </div>
-          <h1 className="text-2xl font-black text-slate-900 mt-1">{t('Potential Fishing Zones (PFZ) Inactive')}</h1>
+          <h1 className="text-2xl font-black text-slate-900 mt-2">{t('Potential Fishing Zones (PFZ) Inactive')}</h1>
           <p className="text-sm text-slate-500">
             {selectedLocation?.name || t('This area')} {t('is located inland. Oceanic chlorophyll-a and sea surface temperature (SST) divergence zones apply exclusively to coastal and maritime waters.')}
           </p>
@@ -43,7 +43,7 @@ export default function FishermanZones({ data, loading, error, onRetry, onNaviga
   // If no zones available and not inland
   if (fishingZones.length === 0) {
     return (
-      <div className="tab-view-content flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 view-transition-wrapper" id="view-zones">
+      <div className="tab-view-content flex-1 max-w-screen-2xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 space-y-8 view-transition-wrapper" id="view-zones">
         <div className="border-b border-slate-200 pb-4">
           <h1 className="text-2xl font-black text-slate-900">{t('Potential Fishing Zones (PFZ)')}</h1>
           <p className="text-sm text-slate-500">{t('No active PFZ advisories available for this sector.')}</p>
@@ -61,14 +61,14 @@ export default function FishermanZones({ data, loading, error, onRetry, onNaviga
   const displayZones = fishingZones.slice(0, 3)
 
   return (
-    <div className="tab-view-content flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 view-transition-wrapper" id="view-zones">
+    <div className="tab-view-content flex-1 max-w-screen-2xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 space-y-8 view-transition-wrapper" id="view-zones">
       {/* Header */}
       <div className="border-b border-slate-200 pb-4">
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold text-sky-600 uppercase tracking-widest">{t('Regional Priority & Fishing Zones')}</span>
           <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800">{t('INCOIS Live Feed Active')}</span>
         </div>
-        <h1 className="text-2xl font-black text-slate-900 mt-1">{t('Regional Priority & Potential Fishing Zones (PFZ)')}</h1>
+        <h1 className="text-2xl font-black text-slate-900 mt-2">{t('Regional Priority & Potential Fishing Zones (PFZ)')}</h1>
         <p className="text-sm text-slate-500">{t('Real-time chlorophyll frontal analysis and ocean sea surface temperature divergence bands around')} {selectedLocation?.name || t('coastal waters')}.</p>
       </div>
 
@@ -76,29 +76,29 @@ export default function FishermanZones({ data, loading, error, onRetry, onNaviga
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
           <div className="text-xs text-slate-400 font-semibold uppercase">{t('Regional Priority')}</div>
-          <div className="text-xl font-bold text-slate-900 mt-1 flex items-center gap-2">
+          <div className="text-xl font-bold text-slate-900 mt-2 flex items-center gap-2">
             <span>{selectedLocation?.name ? selectedLocation.name.split(',')[0] : t('Coastal Sector')}</span>
             <span className="px-2 py-0.5 rounded text-xs bg-amber-100 text-amber-800 font-semibold">{t('Active')}</span>
           </div>
-          <p className="text-xs text-slate-500 mt-1">{selectedLocation?.lat ? `${selectedLocation.lat.toFixed(4)}° N, ${selectedLocation.lng.toFixed(4)}° E` : ''}</p>
+          <p className="text-xs text-slate-500 mt-2">{selectedLocation?.lat ? `${selectedLocation.lat.toFixed(4)}° N, ${selectedLocation.lng.toFixed(4)}° E` : ''}</p>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
           <div className="text-xs text-slate-400 font-semibold uppercase">{t('Safety Index Score')}</div>
-          <div className="text-xl font-bold text-emerald-600 mt-1">88 / 100</div>
-          <p className="text-xs text-slate-500 mt-1">{t('Calm nearshore, swells offshore')}</p>
+          <div className="text-xl font-bold text-emerald-600 mt-2">88 / 100</div>
+          <p className="text-xs text-slate-500 mt-2">{t('Calm nearshore, swells offshore')}</p>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
           <div className="text-xs text-slate-400 font-semibold uppercase">{t('Active Marine Zones')}</div>
-          <div className="text-xl font-bold text-sky-600 mt-1">{displayZones.length} {t('Identified')}</div>
-          <p className="text-xs text-slate-500 mt-1">{displayZones.filter(z => z.status === 'favourable').length} {t('Favourable')}, {displayZones.filter(z => z.status !== 'favourable').length} {t('Moderate')}</p>
+          <div className="text-xl font-bold text-sky-600 mt-2">{displayZones.length} {t('Identified')}</div>
+          <p className="text-xs text-slate-500 mt-2">{displayZones.filter(z => z.status === 'favourable').length} {t('Favourable')}, {displayZones.filter(z => z.status !== 'favourable').length} {t('Moderate')}</p>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
           <div className="text-xs text-slate-400 font-semibold uppercase">{t('Advisory Status')}</div>
-          <div className="text-xl font-bold text-emerald-600 mt-1">{t('Active')}</div>
-          <p className="text-xs text-slate-500 mt-1">{t('Live coastal telemetry')}</p>
+          <div className="text-xl font-bold text-emerald-600 mt-2">{t('Active')}</div>
+          <p className="text-xs text-slate-500 mt-2">{t('Live coastal telemetry')}</p>
         </div>
       </div>
 

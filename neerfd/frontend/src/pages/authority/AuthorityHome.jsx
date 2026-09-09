@@ -30,7 +30,7 @@ export default function AuthorityHome({ data, loading, error, onRetry, onNavigat
 
   if (isInland) {
     return (
-      <div className="space-y-6 pb-12 animate-fade-in">
+      <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 space-y-8 pb-12 animate-fade-in">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/60">
           <div>
             <span className="text-[11px] font-bold uppercase tracking-wider text-amber-600 mb-1 block">
@@ -39,7 +39,7 @@ export default function AuthorityHome({ data, loading, error, onRetry, onNavigat
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
               {activeLoc.name}
             </h1>
-            <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
+            <p className="text-xs sm:text-sm text-slate-500 font-medium mt-2">
               {t('Inland Sector · Marine & Port Monitoring Inactive')}
             </p>
           </div>
@@ -61,7 +61,7 @@ export default function AuthorityHome({ data, loading, error, onRetry, onNavigat
   }
 
   return (
-    <div className="space-y-6 pb-12 animate-fade-in">
+    <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 space-y-8 pb-12 animate-fade-in">
       {/* Overview Header matching code.html */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/60">
         <div>
@@ -71,7 +71,7 @@ export default function AuthorityHome({ data, loading, error, onRetry, onNavigat
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
             {t('Regional Overview')}
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
+          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-2">
             {t(activeLoc.name)} · {t(timeWindow?.label || 'next available forecast window')}
           </p>
         </div>
@@ -126,7 +126,7 @@ export default function AuthorityHome({ data, loading, error, onRetry, onNavigat
                 'Review the generated warning draft below before any dissemination decision.',
               ]).map((action, i) => (
                 <li key={i} className="flex items-start gap-2.5">
-                  <span className="text-slate-400 mt-0.5">→</span>
+                  <span className="text-slate-400 mt-2">→</span>
                   <span>{t(action)}</span>
                 </li>
               ))}

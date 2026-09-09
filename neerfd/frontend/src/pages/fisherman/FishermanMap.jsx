@@ -54,7 +54,7 @@ export default function FishermanMap({ data, loading, error, onRetry, focusPoint
   const mapData = getMapData(data)
 
   return (
-    <div className="tab-view-content flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-5 view-transition-wrapper" id="view-map">
+    <div className="tab-view-content flex-1 max-w-screen-2xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-5 view-transition-wrapper" id="view-map">
       {/* Header matching code.html */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200">
         <div>
@@ -162,7 +162,7 @@ export default function FishermanMap({ data, loading, error, onRetry, focusPoint
                        locData?.marineSituation?.spatialAnalysis?.pointSummary?.label ||
                        getCoastalPlaceName(exploredLocation.lat, exploredLocation.lng)}
                     </h3>
-                    <p className="text-xs text-slate-500 font-mono mt-0.5">
+                    <p className="text-xs text-slate-500 font-mono mt-2">
                       {exploredLocation.lat.toFixed(4)}° N, {exploredLocation.lng.toFixed(4)}° E
                     </p>
                   </div>

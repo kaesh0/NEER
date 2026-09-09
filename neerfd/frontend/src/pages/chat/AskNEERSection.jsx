@@ -560,7 +560,7 @@ export default function AskNEERSection({ persona, locationName, selectedLocation
                 {isAuthority ? t('INCOIS & AIS Live Synced') : isMarine ? t('Active Telemetric Reasoning') : t('Active Reasoning')}
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+            <p className="text-xs sm:text-sm text-slate-500 mt-2">
               {isAuthority
                 ? t('Autonomous coastal intelligence, vessel alert queries, and INCOIS compliance workflow')
                 : isMarine

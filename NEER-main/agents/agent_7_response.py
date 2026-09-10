@@ -9,7 +9,7 @@ from urllib.error import URLError
 from urllib.request import Request, urlopen
 
 from services.payload_builder import build_orca_payload
-from services.sarvam_service import ENGLISH, translate_final_response, sarvam_chat_completion
+from services.sarvam_service import ENGLISH, LANGUAGE_NAMES, translate_final_response, sarvam_chat_completion
 
 import re
 
@@ -43,10 +43,10 @@ def _clean_sarvam_narrative(text: str) -> str | None:
     if valid_quotes:
         return valid_quotes[-1]  # The latest revision / final draft
 
-    # 3. Devanagari extraction: if reasoning is in English and the answer in Hindi
-    devanagari_blocks = re.findall(r'[\u0900-\u097F][\u0900-\u097F\s\d.,/!?:;\\\'"()\-।॥]{20,}', text)
-    if devanagari_blocks:
-        longest = max(devanagari_blocks, key=len).strip().strip('"\'' ' ')
+    # 3. Indic script extraction: if reasoning is in English and the answer in Hindi/Tamil/Telugu/Bengali/Malayalam
+    indic_blocks = re.findall(r'[\u0900-\u0D7F][\u0900-\u0D7F\s\d.,/!?:;\\\'"()\-।॥]{20,}', text)
+    if indic_blocks:
+        longest = max(indic_blocks, key=len).strip().strip('"\'' ' ')
         if len(longest) > 30 and is_clean(longest):
             return longest
 
@@ -96,6 +96,10 @@ def _clean_sarvam_narrative(text: str) -> str | None:
 def _sarvam_response(payload: dict) -> str | None:
     intent = payload.get("intent") or {}
     narrow_topic = intent.get("narrow_topic")
+    query_type = intent.get("query_type", "marine_conditions")
+    language = intent.get("language") or {}
+    reply_lang_code = language.get("reply_language_code", ENGLISH)
+    lang_name = LANGUAGE_NAMES.get(reply_lang_code, "English")
 
     if narrow_topic:
         system_prompt = (
@@ -107,15 +111,32 @@ def _sarvam_response(payload: dict) -> str | None:
             "Enclose your final narrative strictly between <narrative> and </narrative> tags. "
             "Do NOT include any reasoning, thought process, scratchpad notes, or analysis inside <narrative>...</narrative>."
         )
+    elif query_type == "safety":
+        system_prompt = (
+            "You are a marine-assistance response writer for Indian coastal communities. "
+            "The user asked a direct safety or permission question (e.g. 'can I go fishing', 'is it safe to fish'). "
+            "Use ONLY the supplied JSON data. "
+            "Enclose your final narrative strictly between <narrative> and </narrative> tags. "
+            "Do NOT include any reasoning, thought process, scratchpad notes, or analysis inside <narrative>...</narrative>. "
+            "The VERY FIRST sentence of your response must be a direct verdict: start directly with 'Yes, you can go...', 'Proceed with caution...', or 'No, it is not safe to go...'. "
+            "Follow with 1-2 short sentences giving the supporting wave/wind conditions and safety advice. "
+            "Keep the entire response to 2-3 clear sentences."
+        )
     else:
         system_prompt = (
             "You are a marine-assistance response writer for Indian coastal communities. "
             "Use ONLY the supplied JSON data. "
-            "Output ONLY the final conversational narrative directly to the user in 2-4 clear sentences. "
+            "Output ONLY the final conversational narrative directly to the user in 2-3 clear sentences. "
             "Enclose your final narrative strictly between <narrative> and </narrative> tags. "
             "Do NOT include any reasoning, thought process, scratchpad notes, or analysis inside <narrative>...</narrative>. "
             "State clearly the risk status using favourable, caution, or unfavourable language (never use the word SAFE as a status label), "
             "current conditions (wave height, wind speed, ocean currents), and safety advice."
+        )
+
+    if reply_lang_code != ENGLISH:
+        system_prompt += (
+            f"\n\nIMPORTANT LANGUAGE REQUIREMENT: You MUST write your entire narrative response directly in {lang_name} ({reply_lang_code}), "
+            f"the language the user asked in. Do NOT write in English."
         )
 
     messages = [
@@ -361,27 +382,36 @@ def _fallback_narrative(intent: dict, weather: dict, ocean: dict, risk: dict, ge
     # INTENT-DRIVEN GENERALIZED NARRATIVE SYNTHESIS
     # ──────────────────────────────────────────────────────────────────────────
 
-    # CASE A: Safety / Decision query ("is it safe to fish?", "can I go out?", "should I launch?")
+    # CASE A: Safety / Decision query ("is it safe to fish?", "can I go out?", "should I launch?", "can I go fishing?")
     if query_type == "safety":
         if risk_status == "SAFE":
-            advice = f"Yes, marine conditions are favourable for going to sea near {location_name}."
+            if inside_mpa:
+                verdict = f"Proceed with caution: marine weather is favourable near {location_name}, but your location is inside {mpa_name} where commercial fishing is prohibited."
+            else:
+                verdict = f"Yes, you can go out to sea near {location_name}."
         elif risk_status == "CAUTION":
             if inside_mpa and not reason_summary:
-                advice = f"Proceed with caution near {location_name}."
+                verdict = f"Proceed with caution near {location_name} — your location is inside {mpa_name} where commercial fishing is prohibited."
             elif reason_summary:
-                advice = f"Proceed only with caution near {location_name}: {reason_summary}."
+                verdict = f"Proceed with caution near {location_name} — {reason_summary}."
             else:
-                advice = f"Proceed only with caution near {location_name}: conditions require vigilance."
+                verdict = f"Proceed with caution near {location_name}."
         else:
             if reason_summary:
-                advice = f"It is not safe for small fishing craft to venture out near {location_name}: {reason_summary}."
+                verdict = f"No, it is not safe to venture out near {location_name} — {reason_summary}."
             else:
-                advice = f"It is not safe for small fishing craft to venture out near {location_name}."
+                verdict = f"No, it is not safe to venture out near {location_name}."
 
         conditions_sentence = f"Current sea conditions show a {weather_str}."
-        safety_advice = "Standard safety equipment and VHF radio monitoring are advised." if risk_status != "UNSAFE" else "Small vessels should remain in harbor until conditions improve."
 
-        return f"{advice} {conditions_sentence}{mpa_warning} {safety_advice}".strip()
+        if inside_mpa and risk_status == "CAUTION" and "prohibited" not in verdict.lower():
+            safety_advice = f"Commercial fishing is strictly prohibited inside {mpa_name}. Standard safety gear is advised."
+        elif risk_status == "UNSAFE":
+            safety_advice = "Small fishing craft should remain in harbor until conditions improve."
+        else:
+            safety_advice = "Carry standard safety equipment and monitor VHF radio advisories."
+
+        return f"{verdict} {conditions_sentence} {safety_advice}".strip()
 
     # CASE B: Fishing Spot / Opportunity query ("where should I fish?", "best fishing areas", "pfz")
     if query_type == "fishing":
@@ -434,9 +464,17 @@ def _translate_payload(payload: dict, language: dict) -> dict:
     if language.get("status") != "ok" or language.get("reply_language_code", ENGLISH) == ENGLISH:
         return payload
     decision = payload.get("decisionOutput", {})
-    for key in ("headline", "summary", "narrative"):
+    for key in ("headline", "summary"):
         if isinstance(decision.get(key), str) and decision[key]:
             decision[key] = translate_final_response(decision[key], language)
+
+    narrative = decision.get("narrative")
+    if isinstance(narrative, str) and narrative:
+        # If narrative is not already in Indic script (e.g. generated via fallback), translate it
+        has_indic = bool(re.search(r"[\u0900-\u0D7F]", narrative))
+        if not has_indic:
+            decision["narrative"] = translate_final_response(narrative, language)
+
     return payload
 
 
@@ -455,6 +493,12 @@ def agent_7_response(
         payload["decisionOutput"]["status"] = "unavailable"
         payload["decisionOutput"]["headline"] = intent["clarifying_question"]
         payload["decisionOutput"]["narrative"] = intent["clarifying_question"]
+        payload["intentSummary"] = {
+            "persona": intent.get("persona"),
+            "domain": intent.get("query_type"),
+            "topic": intent.get("narrow_topic"),
+            "location": (intent.get("location") or {}).get("name"),
+        }
         return _translate_payload(payload, language)
 
     if intent.get("is_coastal") is False:
@@ -466,6 +510,12 @@ def agent_7_response(
         payload["decisionOutput"]["narrative"] = msg
         if "explainability" in payload and isinstance(payload["explainability"], dict):
             payload["explainability"]["summary"] = msg
+        payload["intentSummary"] = {
+            "persona": intent.get("persona"),
+            "domain": intent.get("query_type"),
+            "topic": intent.get("narrow_topic"),
+            "location": (intent.get("location") or {}).get("name"),
+        }
         return _translate_payload(payload, language)
 
     narrative = _sarvam_response({
@@ -480,4 +530,10 @@ def agent_7_response(
     payload = build_orca_payload(intent, weather, ocean, risk, geofence, route, narrative=narrative)
     if "decisionOutput" in payload and isinstance(payload["decisionOutput"], dict):
         payload["decisionOutput"]["narrative"] = narrative
+    payload["intentSummary"] = {
+        "persona": intent.get("persona"),
+        "domain": intent.get("query_type"),
+        "topic": intent.get("narrow_topic"),
+        "location": (intent.get("location") or {}).get("name"),
+    }
     return _translate_payload(payload, language)

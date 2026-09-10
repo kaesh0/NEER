@@ -148,13 +148,13 @@ INLAND_GAZETTEER: dict[str, dict] = {
 _INTENT_SYSTEM_PROMPT = """\
 You are a marine query intent extractor for the NEER system serving Indian coastal fishermen and maritime authorities.
 
-Extract intent from the user query (may be English, Hindi, or Hinglish) and return ONLY a valid JSON object:
+Extract intent from the user query (may be English, Hindi, Hinglish, Malayalam, Tamil, Telugu, Bengali, Marathi, or other Indian coastal languages) and return ONLY a valid JSON object:
 
 {
   "location_name": "<full place name as mentioned; preserve multi-word names like 'Andhra Pradesh', 'Port Blair'; empty string if no location>",
   "persona": "fisherman" | "authority",
   "query_type": "safety" | "fishing" | "marine_conditions",
-  "narrow_topic": "wind_speed" | "wave_height" | "swell" | "pfz" | "geofence" | "score" | "sea_surface_temperature" | "chlorophyll" | null,
+  "narrow_topic": "weather" | "wind_speed" | "wave_height" | "swell" | "pfz" | "geofence" | "hazards" | "route" | "score" | "sea_surface_temperature" | "chlorophyll" | "timing" | null,
   "time_window": "today" | "tomorrow" | "next available forecast hour",
   "vessel_type": "small fishing boat" | "medium trawler" | "large cargo vessel"
 }
@@ -162,10 +162,10 @@ Extract intent from the user query (may be English, Hindi, or Hinglish) and retu
 Rules:
 - persona=authority: for government officials, coast guard, disaster management, district officers, regional advisories, or warning generation.
 - persona=fisherman: for individual fishermen asking about their own trips.
-- query_type=safety: asking if it is safe/dangerous/risky to go out to sea.
-- query_type=fishing: asking about best fishing spots, PFZ zones, or catch potential.
-- query_type=marine_conditions: general sea/weather/conditions questions.
-- narrow_topic: set ONLY if the user is asking specifically and narrowly about ONE topic ("wind_speed", "wave_height", "swell", "pfz", "geofence", "score", "sea_surface_temperature", "chlorophyll"). Set to null for broad or open-ended questions like "is it safe to fish", "how are conditions", or general assessments.
+- query_type=safety: ANY question about whether it is safe/permitted/advisable to go out to sea, sail, launch, venture out, or fish — including phrasings like "can I go fishing at X", "can I go to X to fish", "is it okay to fish there", "can I venture out", "Kya me waha fishing ke liye jaa sakta hu", "kya me fishing ke liye jaa sakta hu", "എനിക്ക് അവിടെ മീൻ പിടിക്കാൻ പോകാമോ", "நான் அங்கு மீன்பிடிக்க செல்லலாமா", "నేను అక్కడ చేపల వేటకు వెళ్ళవచ్చా", "আমি কি সেখানে মাছ ধরতে যেতে পারি" — even though the word "fishing" appears, the intent is permission/safety/risk, not discovering fish locations.
+- query_type=fishing: ONLY when the question is specifically asking WHERE to fish, for potential fishing zones (PFZ), or catch potential/abundance with no go/venture/permission framing (e.g. "where's the nearest PFZ zone", "best spot to catch fish today", "machhli kahan milegi").
+- query_type=marine_conditions: general sea/weather/conditions overview or parameter queries (e.g. "how are conditions", "wave height in Kochi", "weather near Mumbai").
+- narrow_topic: set ONLY if the user is asking specifically and narrowly about ONE topic ("weather", "wind_speed", "wave_height", "swell", "pfz", "geofence", "hazards", "route", "score", "sea_surface_temperature", "chlorophyll", "timing"). Set to null for broad or open-ended questions like "is it safe to fish", "how are conditions", or general assessments.
 - vessel_type defaults to "small fishing boat" unless cargo ship or trawler is explicitly mentioned.
 - Preserve the FULL location name (e.g. "Andhra Pradesh coast" -> "Andhra Pradesh").
 
@@ -178,6 +178,17 @@ Few-shot examples:
 {"query": "where is the nearest PFZ zone", "output": {"location_name": "", "persona": "fisherman", "query_type": "fishing", "narrow_topic": "pfz", "time_window": "today", "vessel_type": "small fishing boat"}}
 {"query": "Regional risk assessment for Andhra Pradesh coast", "output": {"location_name": "Andhra Pradesh", "persona": "authority", "query_type": "marine_conditions", "narrow_topic": null, "time_window": "next available forecast hour", "vessel_type": "small fishing boat"}}
 {"query": "Kochi ke paas fishing safe hai kya aaj?", "output": {"location_name": "Kochi", "persona": "fisherman", "query_type": "safety", "narrow_topic": null, "time_window": "today", "vessel_type": "small fishing boat"}}
+{"query": "what time should I go fishing near Kochi", "output": {"location_name": "Kochi", "persona": "fisherman", "query_type": "fishing", "narrow_topic": "timing", "time_window": "today", "vessel_type": "small fishing boat"}}
+{"query": "any hazards near Chennai", "output": {"location_name": "Chennai", "persona": "fisherman", "query_type": "safety", "narrow_topic": "hazards", "time_window": "today", "vessel_type": "small fishing boat"}}
+{"query": "which route is safe near Mangalore", "output": {"location_name": "Mangalore", "persona": "fisherman", "query_type": "safety", "narrow_topic": "route", "time_window": "today", "vessel_type": "small fishing boat"}}
+{"query": "how is the weather near Mumbai today", "output": {"location_name": "Mumbai", "persona": "fisherman", "query_type": "marine_conditions", "narrow_topic": "weather", "time_window": "today", "vessel_type": "small fishing boat"}}
+{"query": "Kya me kavaratti me fishing ke liye jaa sakta hu?", "output": {"location_name": "Kavaratti", "persona": "fisherman", "query_type": "safety", "narrow_topic": null, "time_window": "today", "vessel_type": "small fishing boat"}}
+{"query": "can I go fishing near Mangalore today", "output": {"location_name": "Mangalore", "persona": "fisherman", "query_type": "safety", "narrow_topic": null, "time_window": "today", "vessel_type": "small fishing boat"}}
+{"query": "Kya me waha fishing ke liye jaa sakta hu?", "output": {"location_name": "", "persona": "fisherman", "query_type": "safety", "narrow_topic": null, "time_window": "today", "vessel_type": "small fishing boat"}}
+{"query": "എനിക്ക് അവിടെ മീൻ പിടിക്കാൻ പോകാമോ?", "output": {"location_name": "", "persona": "fisherman", "query_type": "safety", "narrow_topic": null, "time_window": "today", "vessel_type": "small fishing boat"}}
+{"query": "நான் அங்கு மீன்பிடிக்க செல்லலாமா?", "output": {"location_name": "", "persona": "fisherman", "query_type": "safety", "narrow_topic": null, "time_window": "today", "vessel_type": "small fishing boat"}}
+{"query": "నేను అక్కడ చేపల వేటకు వెళ్ళవచ్చా?", "output": {"location_name": "", "persona": "fisherman", "query_type": "safety", "narrow_topic": null, "time_window": "today", "vessel_type": "small fishing boat"}}
+{"query": "আমি কি সেখানে মাছ ধরতে যেতে পারি?", "output": {"location_name": "", "persona": "fisherman", "query_type": "safety", "narrow_topic": null, "time_window": "today", "vessel_type": "small fishing boat"}}
 """
 
 _VALID_PERSONAS      = {"fisherman", "authority"}
@@ -215,6 +226,9 @@ def detect_narrow_topic(text: str) -> str | None:
         r"\bjaana theek\b",
         r"\bja sakte\b",
         r"\bja sakta\b",
+        r"\bjaa sakte\b",
+        r"\bjaa sakta\b",
+        r"\bfishing\s*ke\s*liye\b",
         r"\boverall\b",
     ]
     for pattern in broad_indicators:
@@ -338,9 +352,23 @@ def check_is_coastal(location: dict | None) -> tuple[bool, str | None]:
     return True, None
 
 
-def _llm_extract_intent(query: str, agent_query: str) -> dict | None:
+def _llm_extract_intent(query: str, agent_query: str, conversation_context: dict | None = None) -> dict | None:
     """Call Sarvam AI (sarvam-105b) to extract structured intent. Returns validated dict or None."""
     combined = f"Original: {query}\nTranslated: {agent_query}" if query != agent_query else query
+
+    if conversation_context and conversation_context.get("recent_turns"):
+        recent = conversation_context["recent_turns"]
+        if recent:
+            last_turn = recent[-1]
+            last_q = last_turn.get("query", "")
+            last_loc = conversation_context.get("last_location")
+            last_loc_name = (last_loc.get("name") if isinstance(last_loc, dict) else last_loc) or ""
+            if last_loc_name:
+                context_prefix = f'Previous turn: user asked "{last_q}", location resolved to "{last_loc_name}".\nCurrent query: '
+            else:
+                context_prefix = f'Previous turn: user asked "{last_q}".\nCurrent query: '
+            combined = f"{context_prefix}{combined}"
+
     messages = [
         {"role": "system", "content": _INTENT_SYSTEM_PROMPT},
         {"role": "user", "content": combined},
@@ -397,8 +425,20 @@ def _regex_extract_intent(searchable_text: str) -> dict:
         "can i sail", "can we sail", "should i sail",
         "can i venture", "venture out", "go out", "go fishing",
         "launch my boat", "launch boat", "leave harbor", "leave port",
-        "is it okay", "is it good",
-        "jaana", "ja sakte", "ja sakta", "safe hai", "theek hai",
+        "is it okay", "is it good", "is it safe",
+        "jaana", "ja sakte", "ja sakta", "jaa sakta", "jaa sakte",
+        "jaa sakta hu", "jaa sakte hain", "ja sakta hu", "ja sakte hain",
+        "jaana chahiye", "jaana theek", "fishing ke liye ja",
+        "safe hai", "theek hai", "kaisa rahega",
+        # Malayalam permission & safety phrases
+        "പോകാമോ", "പോകാൻ പറ്റുമോ", "പോകാനാവുമോ", "മീൻ പിടിക്കാൻ പോകാമോ", "മീൻപിടിക്കാൻ പോകാമോ",
+        "മീൻ പിടിക്കാൻ", "മീൻപിടിക്കാൻ", "സുരക്ഷിതമാണോ",
+        # Tamil permission & safety phrases
+        "போகலாமா", "செல்லலாமா", "மீன்பிடிக்க செல்லலாமா", "மீன்பிடிக்க போகலாமா", "பாதுகாப்பானதா",
+        # Telugu permission & safety phrases
+        "వెళ్ళవచ్చా", "వెళ్లవచ్చా", "చేపల వేటకు వెళ్ళవచ్చా", "చేపల వేటకు వెళ్లవచ్చా", "సురక్షితమేనా",
+        # Bengali permission & safety phrases
+        "যেতে পারি", "মাছ ধরতে যেতে পারি", "নিরাপদ কি",
     )
     fishing_markers = (
         "where to fish", "where should i fish", "where can i fish",
@@ -406,10 +446,11 @@ def _regex_extract_intent(searchable_text: str) -> dict:
         "pfz", "potential fishing zone", "catch fish", "find fish",
         "machhli kahan", "machli zone", "machli kahan",
     )
-    if any(w in searchable_text for w in fishing_markers):
-        query_type = "fishing"
-    elif any(w in searchable_text for w in safety_markers):
+    # Check safety_markers with higher priority than fishing_markers
+    if any(w in searchable_text for w in safety_markers):
         query_type = "safety"
+    elif any(w in searchable_text for w in fishing_markers):
+        query_type = "fishing"
     else:
         query_type = "marine_conditions"
 
@@ -559,17 +600,26 @@ def _regex_location_candidates(agent_query: str, original_query: str) -> list[st
         "aaj", "afternoon", "day", "days", "evening", "hour", "hours", "kal", "kl",
         "month", "morning", "night", "now", "subah", "dopahar", "shaam", "raat",
         "today", "tomorrow", "tonight", "week", "yesterday",
-        # Hindi / Hinglish conversational
+        # Hindi / Hinglish conversational & location pronouns
         "apne", "baare", "baat", "batao", "bataiye", "batana", "bhi", "bhai", "chahiye",
         "dekho", "dekhna", "gaye", "gaya", "hoga", "hogi", "honge", "hai", "hain", "ho", "hua", "hui",
+        "hoon", "hu", "hum",
         "ja", "jaa", "jaana", "jaane", "jana", "jane", "jaaye", "jaate", "jaata",
         "ka", "ke", "ki", "ko", "kar", "kare", "karein", "karna", "karne", "kr", "kya", "kyu", "kyun",
         "kaisa", "kaise", "kaisi", "kitna", "kitne", "kitni", "le", "liye",
-        "machhli", "machli", "mein", "mera", "meri", "mere",
+        "machhli", "machli", "main", "mein", "mera", "meri", "mere",
         "paas", "pass", "pakad", "pakada", "pakadna", "pakadne", "pani", "paani", "par",
         "raha", "rahe", "rahi", "rahega", "rahegi", "rahenge",
         "saath", "sakta", "sakte", "sakti", "sakenge", "sakunga", "samundar", "samundari",
         "se", "sir", "tha", "the", "thi",
+        "waha", "wahan", "vahan", "vaha", "wahin", "vahin", "there", "that place", "same place", "jagah",
+        # Regional pronouns and particles
+        "enikku", "njan", "avide", "naan", "angu", "ange", "nenu", "akkada", "ami", "sekhane",
+        "എനിക്ക്", "അവിടെ", "ഞാൻ", "പോകാമോ",
+        "நான்", "அங்கு", "அங்கே", "போகலாமா",
+        "నేను", "అక్కడ", "వెళ్ళవచ్చా",
+        "আমি", "সেখানে", "যেতে",
+        "मैं", "वहाँ", "वहा", "हूँ", "हूं",
     }
 
     def _extract(text: str) -> list[str]:
@@ -671,7 +721,12 @@ def _reverse_geocode_coastal(lat: float, lon: float) -> str:
 # Main agent entry point
 # ---------------------------------------------------------------------------
 
-def agent_1_intent(query: str, fallback_location: str | None = None, fallback_persona: str | None = None) -> dict:
+def agent_1_intent(
+    query: str,
+    fallback_location: str | None = None,
+    fallback_persona: str | None = None,
+    conversation_context: dict | None = None,
+) -> dict:
     agent_query, language = prepare_for_agent_1(query)
     searchable_text = f"{agent_query.lower()}\n{query.lower()}"
 
@@ -697,7 +752,7 @@ def agent_1_intent(query: str, fallback_location: str | None = None, fallback_pe
         llm_location_name = ""
 
     # ── 2. LLM intent extraction (falls back gracefully) ────────────────────
-    llm = _llm_extract_intent(query, agent_query)
+    llm = _llm_extract_intent(query, agent_query, conversation_context=conversation_context)
 
     if llm:
         persona    = llm["persona"]
@@ -715,38 +770,117 @@ def agent_1_intent(query: str, fallback_location: str | None = None, fallback_pe
         time_window = extracted["time_window"]
         vessel     = extracted["vessel_type"]
 
-    if fallback_persona and fallback_persona in ("fisherman", "authority", "marine"):
-        # If user is in authority/marine mode in frontend, apply fallback_persona unless query was explicitly contradictory
-        if persona in ("general", "fisherman") and fallback_persona != "fisherman":
-            persona = fallback_persona
+    effective_fallback_persona = fallback_persona
+    if not effective_fallback_persona and conversation_context and conversation_context.get("last_persona"):
+        effective_fallback_persona = conversation_context["last_persona"]
+
+    if effective_fallback_persona and effective_fallback_persona in ("fisherman", "authority", "marine"):
+        # If user is in authority/marine mode in frontend or previous turn, apply unless query was explicitly contradictory
+        if persona in ("general", "fisherman") and effective_fallback_persona != "fisherman":
+            persona = effective_fallback_persona
+
+    # Vessel fallback: if current query didn't mention a vessel, carry over last_vessel_type
+    vessel_mentioned = any(x in searchable_text for x in ("cargo", "ship", "trawler", "boat", "vessel", "catamaran", "canoe", "dinghy", "dhow", "nau", "kisti", "jahaz"))
+    if not vessel_mentioned and conversation_context and conversation_context.get("last_vessel_type"):
+        last_vessel = conversation_context["last_vessel_type"]
+        if last_vessel in _VALID_VESSELS:
+            vessel = last_vessel
 
     # Fallback / verification for narrow single-topic classification
     if not narrow_topic or narrow_topic not in NARROW_TOPICS:
         narrow_topic = detect_narrow_topic(searchable_text)
 
+    # Permission / Safety safeguard:
+    # "Can I go [fishing]", "is it safe to go/fish", or regional permission phrases ("പോകാമോ", "போகலாமா", etc.)
+    # are structurally safety/risk permission questions (CASE A) and must never be classified as
+    # generic marine_conditions (CASE C) or fishing location discovery.
+    _PERMISSION_SAFETY_PATTERNS = [
+        r"\bcan\s+(?:i|we)\s+(?:go|fish|sail|venture)\b",
+        r"\b(?:go|going)\s+fishing\b",
+        r"\bshould\s+(?:i|we)\s+(?:go|fish|sail)\b",
+        r"\bis\s+it\s+(?:safe|okay|permitted|advisable)\b",
+        r"\bja+a?\s+sakta\b",
+        r"\bja+a?\s+sakte\b",
+        r"\bപോകാമോ\b",
+        r"\bപോകാൻ\s*പറ്റുമോ\b",
+        r"\bപോകാനാവുമോ\b",
+        r"\bസുരക്ഷിതമാണോ\b",
+        r"\bபோகலாமா\b",
+        r"\bசெல்லலாமா\b",
+        r"\bபாதுகாப்பானதா\b",
+        r"\bవెళ్ళవచ్చా\b",
+        r"\bవెళ్లవచ్చా\b",
+        r"\bసురక్షితమేనా\b",
+        r"\bযেতে\s*পারি\b",
+        r"\bনিরাপদ\s*কি\b",
+    ]
+    is_timing = bool(re.search(r"\b(what\s+time|when|best\s+time|which\s+time|timing|kab|kis\s+samay|eppol|eppozhum|eppo)\b", searchable_text, re.IGNORECASE))
+    if not is_timing and any(re.search(pat, searchable_text, re.IGNORECASE) for pat in _PERMISSION_SAFETY_PATTERNS):
+        query_type = "safety"
+        narrow_topic = None
+
     # ── 3. Geocoding (deterministic) ────────────────────────────────────────
     if location is None:
-        if llm_location_name:
-            candidates = [llm_location_name] + _regex_location_candidates(agent_query, query)
-        else:
-            candidates = _regex_location_candidates(agent_query, query)
+        _LOCATION_PRONOUN_PATTERNS = [
+            r"\b(waha|wahan|vahan|vaha|wahin|vahin)\b",
+            r"\b(us|uss|wahi|vahi)\s+jagah\b",
+            r"\b(there|that\s+place|same\s+place|that\s+spot|same\s+spot)\b",
+            r"\b(അവിടെ|അവിടേക്ക്|ആ\s+സ്ഥലം)\b",
+            r"\b(அங்கு|அங்கே|அந்த\s+இடம்)\b",
+            r"\b(அక్కడ|అక్కడికి|ఆ\s+ప్రదేశం)\b",
+            r"\b(সেখানে|ওই\s+জায়গা)\b",
+            r"\b(वहाँ|वहा|उधर|उस\s+जगह)\b",
+        ]
+        _LOCATION_PRONOUN_WORDS = {
+            "waha", "wahan", "vahan", "vaha", "wahin", "vahin",
+            "us jagah", "uss jagah", "wahi jagah", "vahi jagah",
+            "there", "that place", "same place", "place", "spot",
+            "അവിടെ", "അവിടേക്ക്", "ആ സ്ഥലം",
+            "அங்கு", "அங்கே", "அந்த இடம்",
+            "అక్కడ", "అక్కడికి", "ఆ ప్రదేశం",
+            "সেখানে", "ওই জায়গা",
+            "वहाँ", "वहा", "उधर", "उस जगह",
+        }
+        has_pronoun = any(re.search(p, searchable_text) for p in _LOCATION_PRONOUN_PATTERNS)
+        last_loc = conversation_context.get("last_location") if conversation_context else None
 
-        # If fallback_location is provided, add it as a candidate if not already present
-        if fallback_location and fallback_location.strip():
-            fb = fallback_location.strip()
-            if not candidates:
-                candidates = [fb]
-            elif fb not in candidates:
-                candidates.append(fb)
+        # Gather candidate place names ONLY from the current query
+        raw_candidates = []
+        if llm_location_name and llm_location_name.strip().lower() not in _LOCATION_PRONOUN_WORDS:
+            raw_candidates.append(llm_location_name.strip())
+        for c in _regex_location_candidates(agent_query, query):
+            c_strip = c.strip()
+            if c_strip and c_strip.lower() not in _LOCATION_PRONOUN_WORDS and c_strip not in raw_candidates:
+                raw_candidates.append(c_strip)
 
-        location, clarification = _geocode_with_candidates(candidates)
+        # (a) Explicit location in current query wins always
+        if raw_candidates:
+            loc, _ = _geocode_with_candidates(raw_candidates)
+            if loc:
+                location = loc
+                clarification = None
 
-        # If geocoding failed with extracted candidates, try fallback_location directly
+        # (b) Pronoun / reference match ("waha", "there", etc.) OR no explicit location mentioned
+        #     If conversation_context has last_location, use it before falling back to UI default
+        if location is None and last_loc:
+            if isinstance(last_loc, dict) and last_loc.get("latitude") is not None:
+                location = last_loc
+                clarification = None
+            elif isinstance(last_loc, str) and last_loc.strip():
+                loc, _ = _geocode_with_candidates([last_loc.strip()])
+                if loc:
+                    location = loc
+                    clarification = None
+
+        # (c) Otherwise fall back to fallback_location (UI static default, e.g. Kochi)
         if location is None and fallback_location and fallback_location.strip():
             fb_loc, _ = _geocode_with_candidates([fallback_location.strip()])
             if fb_loc:
                 location = fb_loc
                 clarification = None
+
+        if location is None:
+            clarification = "I could not resolve the Indian coastal location. Please try a more specific place name or enter coordinates (e.g. 10.5, 72.6 for Lakshadweep)."
 
     # ── 4. Coastal location check (early pipeline gate) ──────────────────────
     is_coastal, non_coastal_msg = check_is_coastal(location)

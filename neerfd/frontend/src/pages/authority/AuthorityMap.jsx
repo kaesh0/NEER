@@ -105,7 +105,7 @@ export default function AuthorityMap({
 
         {/* Explored Location Overlay */}
         {exploredLocation && (
-          <div className="absolute top-4 left-4 z-[1000] w-[340px] bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden animate-fade-in">
+          <div className="absolute top-4 left-14 sm:left-16 z-[1000] w-[340px] bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden animate-fade-in">
             <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-start justify-between">
               <div>
                 <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">

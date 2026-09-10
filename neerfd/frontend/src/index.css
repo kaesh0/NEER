@@ -270,3 +270,17 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ==========================================================================
+   MAP OVERLAY SAFE AREA
+   ========================================================================== */
+/* Ensures Leaflet attribution doesn't overlap the fixed Ask NEER button at bottom-right */
+.leaflet-bottom.leaflet-right {
+  bottom: 84px !important;
+  transition: bottom 0.3s ease;
+}
+@media (min-width: 768px) {
+  .leaflet-bottom.leaflet-right {
+    bottom: 96px !important;
+  }
+}

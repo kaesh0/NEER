@@ -97,7 +97,7 @@ export default function MarineMap({
         />
 
         {/* Floating Layer Indicator */}
-        <div className="absolute top-4 left-4 z-[1000] bg-white/95 backdrop-blur-md border border-slate-200 rounded-xl p-3 shadow-md flex flex-col gap-1.5 pointer-events-auto">
+        <div className="absolute top-4 left-14 sm:left-16 z-[1000] bg-white/95 backdrop-blur-md border border-slate-200 rounded-xl p-3 shadow-md flex flex-col gap-1.5 pointer-events-auto">
           <span className="text-[10px] font-mono font-bold text-slate-500 uppercase">{t('Map Layers')}</span>
           <label className="flex items-center gap-2 text-xs font-medium text-slate-800 cursor-pointer">
             <input checked readOnly className="rounded text-sky-600 focus:ring-sky-500 w-3.5 h-3.5" type="checkbox" />

@@ -227,9 +227,9 @@ export default function PersonaSelection({ onSelectPersona, onNavigate, hideLang
           {/* CARD 2: Marine Operator (Featured / Default Focus) */}
           <div 
             onClick={() => onSelectPersona('marine')}
-            className="group relative bg-white rounded-2xl p-7 border-2 border-marine-300 shadow-card-hover hover:border-marine-500 transition-all duration-300 flex flex-col justify-between overflow-hidden cursor-pointer text-left"
+            className="group relative bg-white rounded-2xl p-7 border border-slate-200/90 shadow-subtle hover:shadow-card-hover hover:border-sky-300 transition-all duration-300 flex flex-col justify-between overflow-hidden cursor-pointer text-left"
           >
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 to-sky-600"></div>
+            <div className="absolute top-0 left-0 right-0 h-1 bg-transparent group-hover:bg-gradient-to-r from-sky-400 to-cyan-500 transition-all duration-300"></div>
             <div className="absolute top-3.5 right-3.5">
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-sky-100 text-marine-700 border border-sky-200">
                 Commercial

@@ -10,7 +10,7 @@ export default function Login({ onNavigate, onLoginSuccess }) {
   
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [role, setRole] = useState('fisherman') // 'fisherman', 'operator', 'authority'
+  const [role, setRole] = useState('') // 'fisherman', 'operator', 'authority'
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -105,17 +105,7 @@ export default function Login({ onNavigate, onLoginSuccess }) {
       <section className="w-full lg:w-[52%] xl:w-[50%] flex items-center justify-center p-6 sm:p-12 lg:p-16 bg-slate-50" data-purpose="auth-content-container">
         {/* Elevated Auth Card with smooth fade-in */}
         <div className="w-full max-w-[480px] bg-white rounded-3xl p-8 sm:p-10 shadow-[0_12px_40px_-12px_rgba(11,25,46,0.08)] border border-slate-100 animate-fade-in-up">
-          {/* Continue as guest top shortcut */}
-          <div className="mb-7 flex items-center justify-between">
-            <button 
-              type="button"
-              onClick={handleGuest}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors group cursor-pointer"
-            >
-              <span>Continue as guest</span>
-              <Icon name="arrowRight" size={14} className="transition-transform group-hover:translate-x-0.5 text-slate-400 group-hover:text-slate-800" />
-            </button>
-          </div>
+          {/* Continue as guest top shortcut removed */}
 
           {/* Heading & Greeting */}
           <div className="mb-7">
@@ -135,13 +125,13 @@ export default function Login({ onNavigate, onLoginSuccess }) {
                 <button
                   type="button"
                   onClick={() => setRole('fisherman')}
-                  className={`flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border text-xs font-medium transition-all text-center gap-1.5 select-none cursor-pointer ${
+                  className={`flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border text-xs font-medium transition-all text-center gap-1.5 select-none cursor-pointer group ${
                     role === 'fisherman'
                       ? 'border-[#0284c7] bg-[#f0f9ff] text-[#0369a1] shadow-sm font-semibold'
-                      : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                      : 'border-slate-200 bg-white text-slate-700 hover:border-[#0284c7] hover:bg-[#f0f9ff] hover:text-[#0369a1]'
                   }`}
                 >
-                  <Icon name="fish" size={16} className={role === 'fisherman' ? 'text-[#0284c7]' : 'text-slate-500'} />
+                  <Icon name="fish" size={16} className={role === 'fisherman' ? 'text-[#0284c7]' : 'text-slate-500 group-hover:text-[#0284c7] transition-colors'} />
                   <span>Fisherman</span>
                 </button>
 
@@ -149,13 +139,13 @@ export default function Login({ onNavigate, onLoginSuccess }) {
                 <button
                   type="button"
                   onClick={() => setRole('operator')}
-                  className={`flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border text-xs font-medium transition-all text-center gap-1.5 select-none cursor-pointer ${
+                  className={`flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border text-xs font-medium transition-all text-center gap-1.5 select-none cursor-pointer group ${
                     role === 'operator'
                       ? 'border-[#0284c7] bg-[#f0f9ff] text-[#0369a1] shadow-sm font-semibold'
-                      : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                      : 'border-slate-200 bg-white text-slate-700 hover:border-[#0284c7] hover:bg-[#f0f9ff] hover:text-[#0369a1]'
                   }`}
                 >
-                  <Icon name="ship" size={16} className={role === 'operator' ? 'text-[#0284c7]' : 'text-slate-500'} />
+                  <Icon name="boat" size={16} className={role === 'operator' ? 'text-[#0284c7]' : 'text-slate-500 group-hover:text-[#0284c7] transition-colors'} />
                   <span>Operator</span>
                 </button>
 
@@ -163,13 +153,13 @@ export default function Login({ onNavigate, onLoginSuccess }) {
                 <button
                   type="button"
                   onClick={() => setRole('authority')}
-                  className={`flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border text-xs font-medium transition-all text-center gap-1.5 select-none cursor-pointer ${
+                  className={`flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border text-xs font-medium transition-all text-center gap-1.5 select-none cursor-pointer group ${
                     role === 'authority'
                       ? 'border-[#0284c7] bg-[#f0f9ff] text-[#0369a1] shadow-sm font-semibold'
-                      : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                      : 'border-slate-200 bg-white text-slate-700 hover:border-[#0284c7] hover:bg-[#f0f9ff] hover:text-[#0369a1]'
                   }`}
                 >
-                  <Icon name="shield" size={16} className={role === 'authority' ? 'text-[#0284c7]' : 'text-slate-500'} />
+                  <Icon name="shield" size={16} className={role === 'authority' ? 'text-[#0284c7]' : 'text-slate-500 group-hover:text-[#0284c7] transition-colors'} />
                   <span>Authority</span>
                 </button>
               </div>

@@ -567,7 +567,7 @@ export default function App() {
       )}
 
       {/* Global FAB Button that ignores route transitions/scaling to stay fixed to viewport */}
-      {activeTab !== 'chat' && <AskNEERButton onClick={() => setChatOpen(true)} />}
+      {activeTab !== 'chat' && !chatOpen && <AskNEERButton onClick={() => setChatOpen(true)} />}
 
       {chatOpen && (
         <AskNEERModal 

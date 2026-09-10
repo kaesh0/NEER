@@ -330,7 +330,7 @@ export default function AuthorityInteractiveMap({
 
       {/* Floating Regional Priority Legend */}
       {showLegend && (
-        <div className="absolute bottom-3 right-3 bg-white/95 backdrop-blur border border-slate-200/90 rounded-lg p-3 text-[11px] shadow-md z-[1000] pointer-events-none space-y-1.5">
+        <div className="absolute bottom-28 right-4 md:bottom-32 md:right-6 bg-white/95 backdrop-blur border border-slate-200/90 rounded-lg p-3 text-[11px] shadow-md z-[1000] pointer-events-none space-y-1.5 transition-all">
           <div className="font-bold uppercase tracking-wider text-slate-500 text-[9px] mb-1">{t('Regional Priority')}</div>
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />

@@ -303,7 +303,7 @@ export default function MarineInteractiveMap({
 
       {/* Cartography Legend matching code.html */}
       {showLegend && (
-        <div className="absolute bottom-3 right-3 bg-white/95 backdrop-blur-md border border-slate-200 p-3.5 rounded-xl shadow-lg w-64 text-xs font-medium z-[1000] pointer-events-none space-y-2">
+        <div className="absolute bottom-28 right-4 md:bottom-32 md:right-6 bg-white/95 backdrop-blur-md border border-slate-200 p-3.5 rounded-xl shadow-lg w-64 text-xs font-medium z-[1000] pointer-events-none space-y-2 transition-all">
           <span className="text-[10px] uppercase font-mono tracking-wider font-bold text-slate-500 block mb-1">
             {t('Cartography Legend')}
           </span>

@@ -108,7 +108,7 @@ export default function FishermanMap({ data, loading, error, onRetry, focusPoint
         />
 
         {/* Telemetry Card Overlay */}
-        <div className="absolute top-4 left-4 z-[400] bg-white/95 backdrop-blur-md px-4 py-3 rounded-xl border border-slate-200 shadow-lg text-xs space-y-1 pointer-events-auto">
+        <div className="absolute top-4 left-14 sm:left-16 z-[400] bg-white/95 backdrop-blur-md px-4 py-3 rounded-xl border border-slate-200 shadow-lg text-xs space-y-1 pointer-events-auto max-w-[calc(100%-4.5rem)] sm:max-w-sm">
           <div className="font-bold text-slate-800">{t('Fairway Vessel Telemetry')}</div>
           <div className="text-slate-500">{t('Bearing')}: <span className="font-semibold text-slate-800">242° WSW</span> • {t('Depth')}: <span className="font-semibold text-slate-800">22.4 m</span></div>
           <div className="text-emerald-700 font-medium">{t('Optimal Surface Temperature: 28.3°C')}</div>
@@ -119,7 +119,7 @@ export default function FishermanMap({ data, loading, error, onRetry, focusPoint
           const locShortName = selectedLocation?.name ? selectedLocation.name.split(',')[0].trim() : 'Current Port'
           const isKerala = !selectedLocation?.name || selectedLocation.name.toLowerCase().includes('kerala') || selectedLocation.name.toLowerCase().includes('kochi')
           return (
-            <div className="absolute bottom-4 left-4 z-[400] bg-white/95 backdrop-blur-md p-3.5 rounded-xl border border-slate-200 shadow-lg text-xs space-y-2 pointer-events-auto">
+            <div className="absolute bottom-28 right-4 md:bottom-32 md:right-6 z-[400] bg-white/95 backdrop-blur-md p-3.5 rounded-xl border border-slate-200 shadow-lg text-xs space-y-2 pointer-events-auto max-w-[calc(100%-2rem)] sm:max-w-sm transition-all">
               <div className="font-bold text-slate-800 text-[11px] uppercase tracking-wider">{t('GIS Layer Legend')}</div>
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-sky-600 ring-2 ring-sky-200"></span>

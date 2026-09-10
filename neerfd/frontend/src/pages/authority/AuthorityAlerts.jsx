@@ -15,7 +15,7 @@ export default function AuthorityAlerts({ data, loading, error, onRetry, onNavig
 
   if (isInland) {
     return (
-      <div className="space-y-6 pb-12 animate-fade-in">
+      <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 space-y-8 pb-12 animate-fade-in">
         <div className="space-y-1 pb-2 border-b border-slate-200/60">
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-amber-600 uppercase tracking-widest">{t('Maritime Warning & Response')}</span>
@@ -54,7 +54,7 @@ export default function AuthorityAlerts({ data, loading, error, onRetry, onNavig
   }
 
   return (
-    <div className="space-y-6 pb-12 animate-fade-in">
+    <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 space-y-8 pb-12 animate-fade-in">
       {/* Section Header */}
       <div className="space-y-1 pb-2 border-b border-slate-200/60">
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
@@ -102,13 +102,13 @@ export default function AuthorityAlerts({ data, loading, error, onRetry, onNavig
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="bg-slate-50/70 border border-slate-200 rounded-xl p-3.5">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t('Valid From')}</p>
-                <p className="text-sm font-semibold text-slate-800 mt-0.5">
+                <p className="text-sm font-semibold text-slate-800 mt-2">
                   {draftWarning.validFrom ? new Date(draftWarning.validFrom).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'Current period'}
                 </p>
               </div>
               <div className="bg-slate-50/70 border border-slate-200 rounded-xl p-3.5">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t('Valid Until')}</p>
-                <p className="text-sm font-semibold text-slate-800 mt-0.5">
+                <p className="text-sm font-semibold text-slate-800 mt-2">
                   {draftWarning.validUntil ? new Date(draftWarning.validUntil).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'Next 24 hours'}
                 </p>
               </div>
@@ -131,7 +131,7 @@ export default function AuthorityAlerts({ data, loading, error, onRetry, onNavig
 
             {/* Legal/Workflow Disclaimer */}
             <div className="flex items-start gap-3 p-4 bg-sky-50/60 border border-sky-100 rounded-xl text-xs text-sky-800">
-              <svg className="w-4 h-4 text-sky-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 text-sky-600 flex-shrink-0 mt-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
               </svg>
               <span>{t(draftWarning.disclaimer)}</span>
@@ -166,7 +166,7 @@ export default function AuthorityAlerts({ data, loading, error, onRetry, onNavig
                   </svg>
                 </div>
                 <h4 className="text-sm font-bold text-slate-900">{t('No Active Marine Hazards')}</h4>
-                <p className="text-xs text-slate-500 mt-1">{t('No active navigation hazards or geofence violations detected in this sector.')}</p>
+                <p className="text-xs text-slate-500 mt-2">{t('No active navigation hazards or geofence violations detected in this sector.')}</p>
               </div>
             ) : (
               hazards.map((h) => (

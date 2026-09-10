@@ -17,14 +17,14 @@ export default function FishermanAlerts({ data, loading, error, onRetry, onNavig
 
   if (isInland) {
     return (
-      <div className="tab-view-content flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 view-transition-wrapper" id="view-alerts">
+      <div className="tab-view-content flex-1 max-w-screen-2xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 space-y-8 view-transition-wrapper" id="view-alerts">
         <div className="border-b border-slate-200 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{t('Maritime Alerts & Hazards')}</span>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">0 {t('Active Coastal Notices')}</span>
             </div>
-            <h1 className="text-2xl font-black text-slate-900 mt-1">{t('No Marine Advisories for Inland Region')}</h1>
+            <h1 className="text-2xl font-black text-slate-900 mt-2">{t('No Marine Advisories for Inland Region')}</h1>
             <p className="text-sm text-slate-500">
               {selectedLocation?.name || t('This area')} {t('is located inland. High wave surges, MPA sanctuary restrictions, and storm alerts apply only to maritime sectors.')}
             </p>
@@ -45,7 +45,7 @@ export default function FishermanAlerts({ data, loading, error, onRetry, onNavig
   const mapData = getMapData(data)
 
   return (
-    <div className="tab-view-content flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 view-transition-wrapper" id="view-alerts">
+    <div className="tab-view-content flex-1 max-w-screen-2xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 space-y-8 view-transition-wrapper" id="view-alerts">
       {/* Header */}
       <div className="border-b border-slate-200 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
@@ -57,7 +57,7 @@ export default function FishermanAlerts({ data, loading, error, onRetry, onNavig
               {hazards.length} {hazards.length > 0 ? t('Active Notices') : t('All Clear')}
             </span>
           </div>
-          <h1 className="text-2xl font-black text-slate-900 mt-1">{t('Maritime Alerts & Hazard Directives')}</h1>
+          <h1 className="text-2xl font-black text-slate-900 mt-2">{t('Maritime Alerts & Hazard Directives')}</h1>
           <p className="text-sm text-slate-500">
             {selectedLocation?.name ? `${t('Monitoring')} ${selectedLocation.name} · ` : ''}
             {t('Government maritime notices, protected sanctuary perimeters, and oceanographic weather warnings.')}

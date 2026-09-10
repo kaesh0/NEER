@@ -235,7 +235,7 @@ export default function Login({ onNavigate, onLoginSuccess }) {
 
             {error && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2 text-xs text-red-700">
-                <Icon name="alertTriangle" size={16} className="text-red-500 mt-0.5 flex-shrink-0" />
+                <Icon name="alertTriangle" size={16} className="text-red-500 mt-2 flex-shrink-0" />
                 <span>{error}</span>
               </div>
             )}

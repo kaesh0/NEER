@@ -56,7 +56,7 @@ function ConditionCard({ iconSvg, label, value, unit, sub, status, descriptor })
         <div className={`text-2xl font-black text-slate-900 tracking-tight ${isUnavailable ? 'text-slate-400' : ''}`}>
           {value || 'Unavailable'} {unit && <span className="text-sm font-semibold text-slate-500">{unit}</span>}
         </div>
-        {sub && <p className="text-[11px] text-slate-500 mt-0.5">{sub}</p>}
+        {sub && <p className="text-[11px] text-slate-500 mt-2">{sub}</p>}
       </div>
       <div className="flex flex-wrap gap-1.5 pt-1">
         {status && (
@@ -91,7 +91,7 @@ function ZoneCard({ zone, onNavigate, baseLat = 9.9312, baseLng = 76.2673 }) {
         <div className="flex items-start justify-between gap-2">
           <div>
             <div className="text-base font-semibold text-slate-900">{t(zone.name)}</div>
-            <div className="flex items-center gap-1.5 mt-0.5 text-xs text-slate-500 font-mono">
+            <div className="flex items-center gap-1.5 mt-2 text-xs text-slate-500 font-mono">
               <span>~{zone.distance} km</span>
               <span>·</span>
               <span>{t(compass)}</span>
@@ -111,7 +111,7 @@ function ZoneCard({ zone, onNavigate, baseLat = 9.9312, baseLng = 76.2673 }) {
             </button>
           </div>
         </div>
-        <p className="text-xs text-slate-400 mt-1.5">{zone.source}</p>
+        <p className="text-xs text-slate-400 mt-2.5">{zone.source}</p>
       </div>
     </div>
   )
@@ -169,7 +169,7 @@ export default function FishermanHome({
     return (
       <div className="relative animate-fade-in min-h-screen">
         <MarineAmbience />
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        <div className="relative z-10 w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 space-y-8">
           <section className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-slate-200/60 pb-5" data-purpose="inland-greeting">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
@@ -212,7 +212,7 @@ export default function FishermanHome({
       {/* ── Marine background ── */}
       <MarineAmbience />
 
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <div className="relative z-10 w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 space-y-8">
         {/* ═══ 1. Greeting & Status Header ═══ */}
         <section className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-slate-200/60 pb-5" data-purpose="dashboard-greeting">
           <div className="space-y-1">
@@ -291,7 +291,7 @@ export default function FishermanHome({
                     <ul className="text-xs sm:text-sm text-slate-600 space-y-2">
                       {decision.recommendedActions.map((action, i) => (
                         <li key={i} className="flex items-start gap-2">
-                          <span className="text-amber-600 mt-0.5">→</span>
+                          <span className="text-amber-600 mt-2">→</span>
                           <span>{t(action)}</span>
                         </li>
                       ))}
@@ -491,12 +491,12 @@ export default function FishermanHome({
               <div className="bg-slate-50 rounded-xl p-4 flex flex-col justify-center border border-slate-100">
                 <div className="text-xs text-slate-400 font-medium mb-1">{t(tideSchedule.high.label)}</div>
                 <div className="text-2xl font-bold font-mono text-slate-900 tabular-nums">{formatTime(tideSchedule.high.time)}</div>
-                <div className="text-xs text-sky-600 font-semibold mt-1">{t(tideSchedule.high.trend)}</div>
+                <div className="text-xs text-sky-600 font-semibold mt-2">{t(tideSchedule.high.trend)}</div>
               </div>
               <div className="bg-slate-50 rounded-xl p-4 flex flex-col justify-center border border-slate-100">
                 <div className="text-xs text-slate-400 font-medium mb-1">{t(tideSchedule.low.label)}</div>
                 <div className="text-2xl font-bold font-mono text-slate-900 tabular-nums">{formatTime(tideSchedule.low.time)}</div>
-                <div className="text-xs text-amber-600 font-semibold mt-1">{t(tideSchedule.low.trend)}</div>
+                <div className="text-xs text-amber-600 font-semibold mt-2">{t(tideSchedule.low.trend)}</div>
               </div>
             </div>
           </Card>
@@ -515,7 +515,7 @@ export default function FishermanHome({
                 <ul className="space-y-1.5">
                   {decision.caveats.map((c, i) => (
                     <li key={i} className="text-xs text-slate-500 flex items-start gap-1.5">
-                      <span className="text-slate-400 mt-0.5">•</span>
+                      <span className="text-slate-400 mt-2">•</span>
                       <span>{t(c)}</span>
                     </li>
                   ))}

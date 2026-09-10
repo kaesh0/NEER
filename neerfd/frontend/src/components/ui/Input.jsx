@@ -25,7 +25,7 @@ export default function Input({
   const { className: restClassName, ...restProps } = rest
 
   const inputClasses = [
-    'w-full h-11 px-3 text-neer-base text-neer-ink bg-white border border-neer-border-strong rounded-[0.625rem] outline-none transition-all duration-neer-base ease-neer-out placeholder:text-neer-ink-muted',
+    'w-full h-11 px-3.5 text-neer-base text-neer-ink bg-white border border-neer-border-strong rounded-[0.625rem] outline-none transition-all duration-neer-base ease-neer-out placeholder:text-neer-ink-muted',
     icon && 'pl-11',
     error && 'border-neer-unfavourable focus:shadow-[0_0_0_3px_rgba(179,38,30,0.18)]',
     !error && 'focus:border-neer-ocean-500 focus:shadow-neer-focus',
@@ -39,7 +39,7 @@ export default function Input({
   const FieldTag = multiline ? 'textarea' : 'input'
 
   return (
-    <div className="flex flex-col gap-1 w-full">
+    <div className="flex flex-col gap-1.5 w-full">
       {label && (
         <label htmlFor={id} className="text-neer-sm font-medium text-neer-ink">
           {label}

@@ -74,14 +74,14 @@ export default function AuthorityMap({
   const mapData = getMapData(data)
 
   return (
-    <div className="space-y-4 pb-12 animate-fade-in">
+    <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 pb-12 animate-fade-in">
       {/* Map Header matching code.html */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200/60">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
             {t('Regional Geospatial Intelligence')}
           </h1>
-          <p className="text-xs font-medium text-slate-500 mt-0.5">
+          <p className="text-xs font-medium text-slate-500 mt-2">
             {mapData?.layers?.length || 2} {t('layers available · live coastal telemetry')}
           </p>
         </div>
@@ -117,7 +117,7 @@ export default function AuthorityMap({
                     locData?.marineSituation?.spatialAnalysis?.pointSummary?.label ||
                     getCoastalPlaceName(exploredLocation.lat, exploredLocation.lng)}
                 </div>
-                <div className="text-xs font-mono text-slate-500 mt-0.5">
+                <div className="text-xs font-mono text-slate-500 mt-2">
                   {exploredLocation.lat.toFixed(4)}° N, {exploredLocation.lng.toFixed(4)}° E
                 </div>
               </div>

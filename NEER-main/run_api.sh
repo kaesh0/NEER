@@ -5,4 +5,4 @@
 # fails silently at import time with no useful error.
 export PYTHONUNBUFFERED=1
 cd "$(dirname "$0")"
-.venv/bin/python -u -m uvicorn api:app --host 127.0.0.1 --port 8000
+.venv/bin/python -u -m uvicorn api:app --host 127.0.0.1 --port 8000 --reload

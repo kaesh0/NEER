@@ -59,11 +59,111 @@ def _save_turn(session_dir: Path, seq: int, turn_trace: dict) -> Path:
     return turn_file
 
 
+_SESSION_STATES: dict[str, dict] = {}
+
+
+def get_session_state(session_id: str | None) -> dict:
+    """Retrieve or reconstruct the conversation context for a session."""
+    if not session_id:
+        return {
+            "last_location": None,
+            "last_persona": None,
+            "last_vessel_type": None,
+            "last_query_type": None,
+            "last_narrow_topic": None,
+            "recent_turns": [],
+        }
+
+    if session_id in _SESSION_STATES:
+        return _SESSION_STATES[session_id]
+
+    session_dir = CONVERSATIONS_DIR / Path(session_id).name
+    state_file = session_dir / "conversation_state.json"
+    if state_file.exists():
+        try:
+            state = json.loads(state_file.read_text(encoding="utf-8"))
+            _SESSION_STATES[session_id] = state
+            return state
+        except Exception:
+            pass
+
+    state = {
+        "last_location": None,
+        "last_persona": None,
+        "last_vessel_type": None,
+        "last_query_type": None,
+        "last_narrow_topic": None,
+        "recent_turns": [],
+    }
+
+    if session_dir.exists():
+        turns = sorted(session_dir.glob("[0-9][0-9][0-9]_*.json"))
+        recent = []
+        for tf in turns[-2:]:
+            try:
+                turn_data = json.loads(tf.read_text(encoding="utf-8"))
+                t_intent = turn_data.get("agents", {}).get("intent", {})
+                if t_intent.get("location"):
+                    state["last_location"] = t_intent["location"]
+                if t_intent.get("persona"):
+                    state["last_persona"] = t_intent["persona"]
+                if t_intent.get("vessel_type"):
+                    state["last_vessel_type"] = t_intent["vessel_type"]
+                state["last_query_type"] = t_intent.get("query_type")
+                state["last_narrow_topic"] = t_intent.get("narrow_topic")
+
+                q = turn_data.get("query", "")
+                narrative = (turn_data.get("final_output", {}).get("decisionOutput", {}) or {}).get("narrative", "")
+                recent.append({"query": q, "narrative": narrative})
+            except Exception:
+                pass
+        state["recent_turns"] = recent
+
+    _SESSION_STATES[session_id] = state
+    return state
+
+
+def update_session_state(
+    session_id: str,
+    intent: dict,
+    query: str,
+    narrative: str,
+) -> dict:
+    """Update and persist conversation state after a turn."""
+    state = get_session_state(session_id)
+
+    if intent.get("location"):
+        state["last_location"] = intent["location"]
+    if intent.get("persona"):
+        state["last_persona"] = intent["persona"]
+    if intent.get("vessel_type"):
+        state["last_vessel_type"] = intent["vessel_type"]
+    state["last_query_type"] = intent.get("query_type")
+    state["last_narrow_topic"] = intent.get("narrow_topic")
+
+    recent = state.get("recent_turns", [])
+    recent.append({"query": query, "narrative": narrative})
+    state["recent_turns"] = recent[-2:]
+
+    _SESSION_STATES[session_id] = state
+
+    try:
+        session_dir = CONVERSATIONS_DIR / Path(session_id).name
+        session_dir.mkdir(parents=True, exist_ok=True)
+        state_file = session_dir / "conversation_state.json"
+        state_file.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+    except Exception:
+        pass
+
+    return state
+
+
 def run_pipeline(
     query: str,
     context_location: str | None = None,
     context_persona: str | None = None,
     session_id: str | None = None,
+    conversation_context: dict | None = None,
 ) -> dict:
     """Run the complete agent sequence for a single user query (one turn).
 
@@ -72,24 +172,18 @@ def run_pipeline(
     agents: {intent, weather, ocean, geofence, route, risk}, final_output} —
     so callers can print it stage by stage or persist it with _save_turn().
     """
-    # If no context_location is provided, check if previous turn in this session resolved a location
-    if not context_location and session_id:
-        session_dir = CONVERSATIONS_DIR / Path(session_id).name
-        if session_dir.exists():
-            turns = sorted(session_dir.glob("[0-9][0-9][0-9]_*.json"))
-            if turns:
-                try:
-                    last_turn = json.loads(turns[-1].read_text(encoding="utf-8"))
-                    prev_loc = (last_turn.get("agents", {}).get("intent", {}).get("location") or {}).get("name")
-                    if prev_loc:
-                        context_location = prev_loc
-                except Exception:
-                    pass
+    if conversation_context is None and session_id:
+        conversation_context = get_session_state(session_id)
 
     turn_trace = {"timestamp": datetime.datetime.now().isoformat(), "query": query, "agents": {}}
 
     # Agent 1: Intent
-    intent = agent_1_intent(query, fallback_location=context_location, fallback_persona=context_persona)
+    intent = agent_1_intent(
+        query,
+        fallback_location=context_location,
+        fallback_persona=context_persona,
+        conversation_context=conversation_context,
+    )
     turn_trace["agents"]["intent"] = intent
 
     if intent.get("clarifying_question") or not intent.get("is_coastal", True):
@@ -120,4 +214,9 @@ def run_pipeline(
         final_output = agent_7_response(intent, weather, ocean, risk, geofence, route)
 
     turn_trace["final_output"] = final_output
+
+    if session_id:
+        narrative = (final_output.get("decisionOutput", {}) or {}).get("narrative", "")
+        update_session_state(session_id, intent, query, narrative)
+
     return turn_trace

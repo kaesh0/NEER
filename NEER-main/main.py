@@ -59,7 +59,7 @@ def main() -> None:
             continue
 
         seq += 1
-        turn_trace = run_pipeline(query)
+        turn_trace = run_pipeline(query, session_id=session_dir.name)
 
         for key, header in AGENT_HEADERS:
             if key in turn_trace["agents"]:

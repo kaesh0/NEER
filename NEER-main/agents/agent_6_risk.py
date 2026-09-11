@@ -51,7 +51,7 @@ VESSEL_THRESHOLDS = {
 
 
 def agent_6_risk(weather: dict, ocean: dict, vessel_type: str = DEFAULT_VESSEL, geofence: dict | None = None) -> dict:
-    if weather.get("status") != "ok":
+    if weather.get("status") not in ("ok", "cached", "fallback"):
         return {
             "agent": "risk",
             "status": "UNKNOWN",

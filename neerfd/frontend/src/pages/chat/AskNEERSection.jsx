@@ -106,6 +106,43 @@ export default function AskNEERSection({ persona, locationName, selectedLocation
   const coordinatesStr = greetingInfo.coordinatesStr
 
   const getInitialGreeting = (info = greetingInfo) => {
+    if (info.isCoastal === false) {
+      if (isAuthority) {
+        if (language === 'hi') {
+          return {
+            text: `नमस्ते अधिकारी महोदय। ${info.placeLabel} (${info.admin}) एक अंतर्देशीय स्थान है। तटीय प्राधिकरण और समुद्री संरक्षित क्षेत्र (MPA) नीतियां तटीय क्षेत्रों पर लागू होती हैं।`,
+            tag: 'NEER प्राधिकरण मोड (अंतर्देशीय)',
+            feed: 'IMD / INCOIS सिंक',
+          }
+        }
+        return {
+          text: `Hello Officer. ${info.placeLabel} (${info.admin}) is an inland location (~${info.distanceToCoastKm || 'several hundred'} km from the coast). Marine protected areas and coastal telemetry apply to maritime zones.`,
+          tag: 'NEER Authority Mode (Inland)',
+          feed: 'IMD / INCOIS Synced',
+        }
+      }
+      if (isMarine) {
+        return {
+          text: `Welcome Operator. Selected location ${info.placeLabel} is inland (${info.coordinatesStr}). Ocean passage planning and INCOIS OSF wave telemetry apply to coastal waters. Select a coastal port or ask for nearest maritime routes.`,
+          tag: 'NEER Navigation Copilot',
+          feed: 'INCOIS OSF Synced',
+          dispersionMatrix: false,
+        }
+      }
+      if (language === 'hi') {
+        return {
+          text: `${info.salutationHi} मैं नीर् (NEER) हूँ, आपका समुद्री सहायक। चयनित स्थान ${info.placeLabel} (${info.coordinatesStr}) अंतर्देशीय क्षेत्र है (तट से ~${info.distanceToCoastKm || 500} किमी दूर)। समुद्री टेलीमेट्री और PFZ तटीय क्षेत्रों पर लागू होते हैं। आप तटीय परिस्थितियों, मौसम या निकटतम बंदरगाहों के बारे में पूछ सकते हैं।`,
+          tag: 'नीर् अंतर्देशीय मोड',
+          feed: 'IMD / INCOIS सिंक',
+        }
+      }
+      return {
+        text: `${info.salutation} I am NEER, your marine assistant. Selected location ${info.placeLabel} (${info.coordinatesStr}) is an inland location (~${info.distanceToCoastKm || 500} km from the coast). Marine advisories and wave telemetry apply to coastal zones. Ask about coastal weather, safe routes, or nearest ports.`,
+        tag: 'NEER Inland Mode',
+        feed: 'IMD / INCOIS Synced',
+      }
+    }
+
     if (isAuthority) {
       if (language === 'hi') {
         return {
@@ -344,10 +381,14 @@ export default function AskNEERSection({ persona, locationName, selectedLocation
 
     // Call /api/chat with location context, with proxy fallback
     try {
+      const locContext = (selectedLocation?.lat && selectedLocation?.lng)
+        ? `${activePort} (${selectedLocation.lat}, ${selectedLocation.lng})`
+        : activePort
+
       const payload = {
         message: textToSend,
         persona: isAuthority ? 'authority' : 'fisherman',
-        location: activePort,
+        location: locContext,
         sessionId: sessionIdRef.current || undefined,
       }
 
@@ -444,6 +485,19 @@ export default function AskNEERSection({ persona, locationName, selectedLocation
         calloutContent = 'Steer 240° WSW for 6.2 NM to reach uninhibited waters before lowering commercial gear. Expected sea state along exit corridor: smooth (0.94 m wave height).'
       }
 
+      const envObj = data?.response || data
+      const isMpaOrProhibited = Boolean(
+        envObj?.geofence?.inside_restricted_zone ||
+        (Array.isArray(envObj?.decisionOutput?.reasons) && envObj.decisionOutput.reasons.some(r => typeof r === 'string' && (r.toLowerCase().includes('restricted') || r.toLowerCase().includes('protected') || r.toLowerCase().includes('prohibited')))) ||
+        (typeof textResponse === 'string' && (
+          textResponse.toLowerCase().includes('prohibited') ||
+          textResponse.toLowerCase().includes('protected area') ||
+          textResponse.toLowerCase().includes('restricted zone') ||
+          textResponse.toLowerCase().includes('प्रतिबंधित') ||
+          textResponse.toLowerCase().includes('संरक्षित')
+        ))
+      )
+
       setMessages((prev) => [
         ...prev,
         {
@@ -451,6 +505,7 @@ export default function AskNEERSection({ persona, locationName, selectedLocation
           role: 'assistant',
           text: textResponse,
           status,
+          isRestricted: isMpaOrProhibited,
           calloutTitle,
           calloutContent,
           isFallback,
@@ -577,7 +632,7 @@ export default function AskNEERSection({ persona, locationName, selectedLocation
               <circle cx="12" cy="12" r="10"></circle>
               <path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"></path>
             </svg>
-            <span>{greetingInfo.placeLabel} • {greetingInfo.coordinatesStr}</span>
+            <span>{greetingInfo.placeLabel}{greetingInfo.isCoastal === false ? ' (Inland)' : ''} • {greetingInfo.coordinatesStr}</span>
           </span>
           <button
             className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition shadow-sm cursor-pointer"
@@ -630,7 +685,15 @@ export default function AskNEERSection({ persona, locationName, selectedLocation
             )
           }
 
-          const isCaution = m.status === 'caution' || m.status === 'danger'
+          const isDanger = m.status === 'danger' || m.status === 'unfavourable'
+          const isCaution = m.status === 'caution' || m.status === 'cautionary'
+          const isRestricted = m.isRestricted || (typeof m.text === 'string' && (
+            m.text.toLowerCase().includes('prohibited') ||
+            m.text.toLowerCase().includes('protected area') ||
+            m.text.toLowerCase().includes('restricted zone') ||
+            m.text.toLowerCase().includes('प्रतिबंधित') ||
+            m.text.toLowerCase().includes('संरक्षित')
+          ))
 
           return (
             <div key={m.id} className="flex items-start gap-3.5 max-w-2xl animate-message-in">
@@ -654,16 +717,25 @@ export default function AskNEERSection({ persona, locationName, selectedLocation
                 </div>
 
                 {/* Status Indicator */}
-                {isCaution && (
+                {isDanger ? (
+                  <div className="flex items-center gap-1.5 text-rose-700 font-bold text-xs">
+                    <svg className="w-4 h-4" fill="none" height="24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="24">
+                      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path>
+                      <path d="M12 9v4"></path>
+                      <path d="M12 17h.01"></path>
+                    </svg>
+                    <span>Warning: Hazardous Conditions</span>
+                  </div>
+                ) : isCaution ? (
                   <div className="flex items-center gap-1.5 text-amber-700 font-bold text-xs">
                     <svg className="w-4 h-4" fill="none" height="24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="24">
                       <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path>
                       <path d="M12 9v4"></path>
                       <path d="M12 17h.01"></path>
                     </svg>
-                    <span>Caution: Restricted Perimeter</span>
+                    <span>{isRestricted ? 'Caution: Marine Protected Area (Prohibited Zone)' : 'Caution: Marine Advisory Active'}</span>
                   </div>
-                )}
+                ) : null}
 
                 {/* Main Message Text */}
                 <div className="text-slate-800 whitespace-pre-line leading-relaxed">

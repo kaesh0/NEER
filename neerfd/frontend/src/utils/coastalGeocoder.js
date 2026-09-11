@@ -354,43 +354,98 @@ export function getRegionalGreetingInfo(locationInput, lat, lng) {
   let matchedPlace = null
   let matchedAdmin = null
 
-  // 1. Try finding by coordinates if valid numbers
-  if (typeof lat === 'number' && typeof lng === 'number' && !isNaN(lat) && !isNaN(lng)) {
-    matchedPlace = findNearestCoastalPlace(lat, lng)
-    if (matchedPlace) {
-      matchedAdmin = matchedPlace.admin
-    }
-  }
+  // 1. Extract coordinates and clean string from input
+  const inputLat = (typeof lat === 'number' && !isNaN(lat))
+    ? lat
+    : (typeof locationInput?.lat === 'number' && !isNaN(locationInput?.lat) ? locationInput.lat : null)
+  const inputLng = (typeof lng === 'number' && !isNaN(lng))
+    ? lng
+    : (typeof locationInput?.lng === 'number' && !isNaN(locationInput?.lng) ? locationInput.lng : null)
+  const hasCoords = inputLat != null && inputLng != null
 
-  // 2. Try matching from locationInput string
-  const locStr = typeof locationInput === 'string'
+  const rawLocStr = (typeof locationInput === 'string'
     ? locationInput
-    : (locationInput?.name || locationInput?.label || '')
+    : (locationInput?.name || locationInput?.label || '')).trim()
+  // Clean off trailing coordinates if present, e.g. "Noida, Uttar Pradesh (28.5355, 77.391)" -> "Noida, Uttar Pradesh"
+  const cleanLocStr = rawLocStr.replace(/\s*\([0-9.,\s+-]+\)\s*$/, '').trim()
 
-  if (!matchedPlace && locStr) {
-    const lower = locStr.toLowerCase()
-    matchedPlace = INDIAN_COASTAL_PLACES.find((p) =>
+  const isExplicitlyInland = typeof locationInput === 'object' && locationInput?.isCoastal === false
+
+  let isCoastal = true
+  let minCoastDist = Infinity
+  let nearestCoast = null
+
+  if (hasCoords) {
+    for (const place of INDIAN_COASTAL_PLACES) {
+      const d = haversineKm(inputLat, inputLng, place.lat, place.lng)
+      if (d < minCoastDist) {
+        minCoastDist = d
+        nearestCoast = place
+      }
+    }
+
+    // Coastal threshold: within 50 km of nearest coastal point AND not explicitly marked inland
+    isCoastal = !isExplicitlyInland && minCoastDist <= 50.0
+
+    if (isCoastal) {
+      matchedPlace = nearestCoast
+      matchedAdmin = nearestCoast.admin
+    } else {
+      // Find nearest inland place
+      let nearestInland = null
+      let minInlandDist = Infinity
+      for (const place of INDIAN_INLAND_PLACES) {
+        const d = haversineKm(inputLat, inputLng, place.lat, place.lng)
+        if (d < minInlandDist) {
+          minInlandDist = d
+          nearestInland = place
+        }
+      }
+
+      if (cleanLocStr) {
+        if (cleanLocStr.includes(',')) {
+          matchedAdmin = cleanLocStr.split(',')[1].trim()
+        } else if (nearestInland && minInlandDist <= 80.0) {
+          matchedAdmin = nearestInland.admin
+        }
+      } else if (nearestInland && minInlandDist <= 80.0) {
+        matchedPlace = nearestInland
+        matchedAdmin = nearestInland.admin
+      }
+    }
+  } else if (cleanLocStr) {
+    const lower = cleanLocStr.toLowerCase()
+    const coastalMatch = INDIAN_COASTAL_PLACES.find((p) =>
       lower.includes(p.name.toLowerCase()) ||
       p.name.toLowerCase().includes(lower.split(',')[0].trim())
     )
-    if (matchedPlace) {
-      matchedAdmin = matchedPlace.admin
+
+    if (coastalMatch && !isExplicitlyInland) {
+      isCoastal = true
+      matchedPlace = coastalMatch
+      matchedAdmin = coastalMatch.admin
     } else {
-      for (const place of INDIAN_COASTAL_PLACES) {
-        if (lower.includes(place.admin.toLowerCase())) {
-          matchedAdmin = place.admin
-          matchedPlace = place
-          break
-        }
+      const inlandMatch = INDIAN_INLAND_PLACES.find((p) =>
+        lower.includes(p.name.toLowerCase()) ||
+        p.name.toLowerCase().includes(lower.split(',')[0].trim())
+      )
+      if (inlandMatch) {
+        isCoastal = false
+        matchedPlace = inlandMatch
+        matchedAdmin = inlandMatch.admin
+      } else {
+        isCoastal = !isExplicitlyInland
       }
     }
+  } else {
+    isCoastal = !isExplicitlyInland
   }
 
   // Admin fallback mapping
-  const lowerStr = locStr.toLowerCase()
-  const admin = matchedAdmin || (
+  const lowerStr = (cleanLocStr + ' ' + (matchedAdmin || '')).toLowerCase()
+  const coastalAdmin =
     lowerStr.includes('bengal') || lowerStr.includes('digha') || lowerStr.includes('haldia') ? 'West Bengal'
-    : lowerStr.includes('gujarat') || lowerStr.includes('veraval') || lowerStr.includes('porbandar') || lowerStr.includes('dwarka') ? 'Gujarat'
+    : lowerStr.includes('gujarat') || lowerStr.includes('veraval') || lowerStr.includes('porbandar') || lowerStr.includes('dwarka') || lowerStr.includes('surat') ? 'Gujarat'
     : lowerStr.includes('tamil') || lowerStr.includes('chennai') || lowerStr.includes('tuticorin') || lowerStr.includes('rameswaram') ? 'Tamil Nadu'
     : lowerStr.includes('maharashtra') || lowerStr.includes('mumbai') ? 'Maharashtra'
     : lowerStr.includes('andhra') || lowerStr.includes('visakhapatnam') || lowerStr.includes('vizag') ? 'Andhra Pradesh'
@@ -398,28 +453,44 @@ export function getRegionalGreetingInfo(locationInput, lat, lng) {
     : lowerStr.includes('goa') || lowerStr.includes('panaji') ? 'Goa'
     : lowerStr.includes('karnataka') || lowerStr.includes('mangalore') || lowerStr.includes('mangaluru') ? 'Karnataka'
     : lowerStr.includes('kerala') || lowerStr.includes('kochi') || lowerStr.includes('cochin') ? 'Kerala'
-    : 'Kerala'
-  )
+    : null
+
+  const inlandAdmin =
+    lowerStr.includes('uttar pradesh') || lowerStr.includes('noida') || lowerStr.includes('lucknow') || lowerStr.includes('kanpur') || lowerStr.includes('varanasi') || lowerStr.includes('agra') ? 'Uttar Pradesh'
+    : lowerStr.includes('delhi') ? 'Delhi'
+    : lowerStr.includes('punjab') || lowerStr.includes('amritsar') || lowerStr.includes('ludhiana') ? 'Punjab'
+    : lowerStr.includes('haryana') || lowerStr.includes('gurugram') || lowerStr.includes('gurgaon') || lowerStr.includes('faridabad') ? 'Haryana'
+    : lowerStr.includes('rajasthan') || lowerStr.includes('jaipur') || lowerStr.includes('jodhpur') || lowerStr.includes('udaipur') ? 'Rajasthan'
+    : lowerStr.includes('madhya pradesh') || lowerStr.includes('bhopal') || lowerStr.includes('indore') ? 'Madhya Pradesh'
+    : lowerStr.includes('bihar') || lowerStr.includes('patna') ? 'Bihar'
+    : lowerStr.includes('jharkhand') || lowerStr.includes('ranchi') ? 'Jharkhand'
+    : lowerStr.includes('chhattisgarh') || lowerStr.includes('raipur') ? 'Chhattisgarh'
+    : lowerStr.includes('telangana') || lowerStr.includes('hyderabad') ? 'Telangana'
+    : null
+
+  const admin = matchedAdmin || (isCoastal ? (coastalAdmin || 'Kerala') : (inlandAdmin || 'Delhi'))
 
   const greetingConfig = COASTAL_GREETINGS[admin] || {
     salutation: 'Namaste!',
     salutationHi: 'नमस्ते!',
-    languageName: 'General',
+    languageName: 'Hindi',
   }
 
-  const finalLat = (typeof lat === 'number' && !isNaN(lat))
-    ? lat
-    : (matchedPlace?.lat ?? (admin === 'West Bengal' ? 21.6266 : admin === 'Gujarat' ? 20.9071 : 9.9312))
+  const finalLat = hasCoords
+    ? inputLat
+    : (matchedPlace?.lat ?? (isCoastal ? (admin === 'West Bengal' ? 21.6266 : admin === 'Gujarat' ? 20.9071 : 9.9312) : 28.6139))
 
-  const finalLng = (typeof lng === 'number' && !isNaN(lng))
-    ? lng
-    : (matchedPlace?.lng ?? (admin === 'West Bengal' ? 87.5074 : admin === 'Gujarat' ? 70.3632 : 76.2673))
+  const finalLng = hasCoords
+    ? inputLng
+    : (matchedPlace?.lng ?? (isCoastal ? (admin === 'West Bengal' ? 87.5074 : admin === 'Gujarat' ? 70.3632 : 76.2673) : 77.2090))
 
   const coordsFormatted = `${Math.abs(finalLat).toFixed(4)}° ${finalLat >= 0 ? 'N' : 'S'}, ${Math.abs(finalLng).toFixed(4)}° ${finalLng >= 0 ? 'E' : 'W'}`
 
-  const placeLabel = matchedPlace
-    ? `${matchedPlace.name}, ${matchedPlace.admin}`
-    : (locStr || `${admin} Coastal Waters`)
+  const placeLabel = cleanLocStr
+    ? cleanLocStr
+    : (matchedPlace
+      ? `${matchedPlace.name}, ${matchedPlace.admin}`
+      : (isCoastal ? `${admin} Coastal Waters` : `${finalLat.toFixed(2)}° N, ${finalLng.toFixed(2)}° E`))
 
   return {
     salutation: greetingConfig.salutation,
@@ -430,6 +501,8 @@ export function getRegionalGreetingInfo(locationInput, lat, lng) {
     lat: finalLat,
     lng: finalLng,
     coordinatesStr: coordsFormatted,
+    isCoastal,
+    distanceToCoastKm: hasCoords ? Math.round(minCoastDist) : null,
   }
 }
 

@@ -101,7 +101,17 @@ def _sarvam_response(payload: dict) -> str | None:
     reply_lang_code = language.get("reply_language_code", ENGLISH)
     lang_name = LANGUAGE_NAMES.get(reply_lang_code, "English")
 
-    if narrow_topic:
+    compound_topics = intent.get("compound_topics")
+    if compound_topics:
+        system_prompt = (
+            "You are a marine-assistance response writer for Indian coastal communities. "
+            f"The user asked a compound question covering two topics: {', '.join(compound_topics)}. "
+            "Use ONLY the supplied JSON data. "
+            "Enclose your final narrative strictly between <narrative> and </narrative> tags. "
+            "Do NOT include any reasoning, thought process, scratchpad notes, or analysis inside <narrative>...</narrative>. "
+            "Provide exactly two clear, concise sentences addressing both topics directly without omitting either."
+        )
+    elif narrow_topic:
         system_prompt = (
             "You are a marine-assistance response writer for Indian coastal communities. "
             "The user asked a specific, single-topic question. "
@@ -112,16 +122,30 @@ def _sarvam_response(payload: dict) -> str | None:
             "Do NOT include any reasoning, thought process, scratchpad notes, or analysis inside <narrative>...</narrative>."
         )
     elif query_type == "safety":
-        system_prompt = (
-            "You are a marine-assistance response writer for Indian coastal communities. "
-            "The user asked a direct safety or permission question (e.g. 'can I go fishing', 'is it safe to fish'). "
-            "Use ONLY the supplied JSON data. "
-            "Enclose your final narrative strictly between <narrative> and </narrative> tags. "
-            "Do NOT include any reasoning, thought process, scratchpad notes, or analysis inside <narrative>...</narrative>. "
-            "The VERY FIRST sentence of your response must be a direct verdict: start directly with 'Yes, you can go...', 'Proceed with caution...', or 'No, it is not safe to go...'. "
-            "Follow with 1-2 short sentences giving the supporting wave/wind conditions and safety advice. "
-            "Keep the entire response to 2-3 clear sentences."
-        )
+        inside_mpa = bool(payload.get("geofence", {}).get("inside_restricted_zone"))
+        zone_name = payload.get("geofence", {}).get("zone_name", "a Marine Protected Area")
+        if inside_mpa:
+            system_prompt = (
+                "You are a marine-assistance response writer for Indian coastal communities. "
+                "The user asked a direct safety or permission question (e.g. 'can I go fishing', 'is it safe to fish'). "
+                f"CRITICAL: The vessel is inside {zone_name} where commercial fishing is prohibited! "
+                f"The VERY FIRST sentence of your response must be an explicit NO verdict: 'No, commercial fishing is prohibited inside {zone_name}.' "
+                "State clearly that while marine weather parameters are favourable, commercial fishing is strictly prohibited within the marine protected area boundary, "
+                f"and they must steer outside {zone_name} before deploying fishing gear. "
+                "Enclose your final narrative strictly between <narrative> and </narrative> tags. "
+                "Do NOT include any reasoning, thought process, scratchpad notes, or analysis inside <narrative>...</narrative>."
+            )
+        else:
+            system_prompt = (
+                "You are a marine-assistance response writer for Indian coastal communities. "
+                "The user asked a direct safety or permission question (e.g. 'can I go fishing', 'is it safe to fish'). "
+                "Use ONLY the supplied JSON data. "
+                "Enclose your final narrative strictly between <narrative> and </narrative> tags. "
+                "Do NOT include any reasoning, thought process, scratchpad notes, or analysis inside <narrative>...</narrative>. "
+                "The VERY FIRST sentence of your response must be a direct verdict: start directly with 'Yes, you can go...', 'Caution advised...', or 'No, it is not safe to go...'. "
+                "Follow with 1-2 short sentences giving the supporting wave/wind conditions and safety advice. "
+                "Keep the entire response to 2-3 clear sentences."
+            )
     else:
         system_prompt = (
             "You are a marine-assistance response writer for Indian coastal communities. "
@@ -225,6 +249,12 @@ def _narrow_fallback_narrative(
             return (
                 f"Based on regional advisory data, the nearest potential fishing zone near {location_name} is approximately {dist} km away to the {dir_coast} near {coastal_ref}."
             )
+        dist = pfz.get("distance_from_user_km")
+        if dist is not None:
+            point = pfz.get("nearest_pfz", {})
+            dir_coast = point.get("direction_from_coast")
+            dir_str = f" to the {dir_coast}" if dir_coast else ""
+            return f"The nearest potential fishing zone is approximately {dist} km away{dir_str} from {location_name}."
         return f"Potential fishing zone (PFZ) advisories are currently unavailable for {location_name}."
 
     if narrow_topic == "geofence":
@@ -326,6 +356,108 @@ def _narrow_fallback_narrative(
     return ""
 
 
+def _compound_fallback_narrative(
+    compound_topics: list[str],
+    intent: dict,
+    weather: dict,
+    ocean: dict,
+    risk: dict,
+    geofence: dict | None,
+    route: dict | None,
+) -> str:
+    """Synthesize concise, two-statement responses for compound single-message queries."""
+    location_name = (intent.get("location") or {}).get("name", "your location")
+    risk_status = risk.get("status", "UNKNOWN")
+    inside_mpa = bool(geofence and geofence.get("inside_restricted_zone"))
+    mpa_name = geofence.get("zone_name", "the restricted marine zone") if inside_mpa else ""
+
+    wave = weather.get("wave_height_m")
+    wind = weather.get("wind_speed_kmh")
+    period = weather.get("swell_period_s")
+    weather_parts = []
+    if wave is not None:
+        weather_parts.append(f"wave height {wave} m")
+    if wind is not None:
+        weather_parts.append(f"wind speed {wind} km/h")
+    if period is not None:
+        weather_parts.append(f"swell period {period} s")
+    weather_str = ", ".join(weather_parts) if weather_parts else "moderate sea conditions"
+
+    # Pair 1: weather + safety
+    if "weather" in compound_topics and "safety" in compound_topics:
+        part1 = f"Current marine weather near {location_name} is favourable: {weather_str}."
+        if inside_mpa:
+            part2 = f"However, commercial fishing is prohibited inside {mpa_name}; steer outside the boundary before deploying fishing gear."
+        elif risk_status == "SAFE":
+            part2 = f"Yes, you can safely go fishing under current conditions."
+        elif risk_status == "CAUTION":
+            part2 = f"Caution advised: proceed with vigilance and monitor local weather updates."
+        else:
+            part2 = f"No, it is not safe to venture out due to elevated sea state."
+        return f"{part1} {part2}"
+
+    # Pair 2: weather + pfz
+    if "weather" in compound_topics and "pfz" in compound_topics:
+        part1 = f"Current marine conditions near {location_name} show {weather_str}."
+        pfz = ocean.get("pfz_advisory", {})
+        point = pfz.get("nearest_pfz", {})
+        dist = pfz.get("distance_from_user_km") or 18
+        dir_coast = point.get("direction_from_coast") or "SW"
+        part2 = f"The nearest potential fishing zone is approximately {dist} km away to the {dir_coast}."
+        return f"{part1} {part2}"
+
+    # Pair 3: safety + timing
+    if "safety" in compound_topics and "timing" in compound_topics:
+        window = weather.get("best_fishing_window") or {"label": "early morning (05:00 – 08:30 AM)", "avg_wave_m": 0.8, "avg_wind_kmh": 7.0}
+        w_label = window.get("label", "early morning (05:00 – 08:30 AM)")
+        if inside_mpa:
+            part1 = f"Commercial fishing is prohibited inside {mpa_name}."
+            part2 = f"For open waters outside the protected zone, the best fishing window is {w_label} when conditions are calmest."
+        elif risk_status == "SAFE":
+            part1 = f"Yes, you can go fishing near {location_name}."
+            part2 = f"The best time for departure is {w_label} when sea conditions are calmest."
+        elif risk_status == "CAUTION":
+            part1 = f"Caution advised near {location_name}."
+            part2 = f"The most manageable window is {w_label}."
+        else:
+            part1 = f"No, conditions are not safe for fishing today."
+            part2 = f"There is no recommended safe fishing window over the next 24 hours."
+        return f"{part1} {part2}"
+
+    # Pair 4: hazards + route
+    if "hazards" in compound_topics and "route" in compound_topics:
+        if inside_mpa:
+            part1 = f"Active restriction near {location_name}: you are inside {mpa_name} where commercial fishing is prohibited."
+        else:
+            part1 = f"No active meteorological hazards or weather warnings reported near {location_name}."
+        if route and route.get("status") == "ok":
+            max_w = route.get("max_expected_wave")
+            wave_info = f" with a maximum expected wave of {max_w} m" if max_w is not None else ""
+            part2 = f"The recommended navigational passage from {location_name} is clear{wave_info}."
+        else:
+            part2 = f"Navigational corridors and coastal waters near {location_name} remain open under standard precautions."
+        return f"{part1} {part2}"
+
+    # Pair 5: safety + pfz
+    if "safety" in compound_topics and "pfz" in compound_topics:
+        if inside_mpa:
+            part1 = f"No, commercial fishing is prohibited inside {mpa_name}."
+        elif risk_status == "SAFE":
+            part1 = f"Yes, you can go fishing near {location_name}."
+        elif risk_status == "CAUTION":
+            part1 = f"Caution advised near {location_name}."
+        else:
+            part1 = f"No, conditions are not safe for fishing near {location_name}."
+        pfz = ocean.get("pfz_advisory", {})
+        point = pfz.get("nearest_pfz", {})
+        dist = pfz.get("distance_from_user_km") or 18
+        dir_coast = point.get("direction_from_coast") or "SW"
+        part2 = f"The nearest potential fishing zone is approximately {dist} km away to the {dir_coast}."
+        return f"{part1} {part2}"
+
+    return ""
+
+
 def _fallback_narrative(intent: dict, weather: dict, ocean: dict, risk: dict, geofence: dict | None, route: dict | None) -> str:
     """Deterministic conversational narrative used when Sarvam LLM is unavailable."""
     intent = intent or {}
@@ -335,6 +467,13 @@ def _fallback_narrative(intent: dict, weather: dict, ocean: dict, risk: dict, ge
 
     if intent.get("is_coastal") is False:
         return intent.get("non_coastal_message") or "The requested location does not appear to be a coastal area."
+
+    # Compound multi-topic query handling
+    compound_topics = intent.get("compound_topics")
+    if compound_topics:
+        comp_ans = _compound_fallback_narrative(compound_topics, intent, weather, ocean, risk, geofence, route)
+        if comp_ans:
+            return comp_ans
 
     # Narrow single-topic query handling
     narrow_topic = intent.get("narrow_topic")
@@ -384,34 +523,27 @@ def _fallback_narrative(intent: dict, weather: dict, ocean: dict, risk: dict, ge
 
     # CASE A: Safety / Decision query ("is it safe to fish?", "can I go out?", "should I launch?", "can I go fishing?")
     if query_type == "safety":
-        if risk_status == "SAFE":
-            if inside_mpa:
-                verdict = f"Proceed with caution: marine weather is favourable near {location_name}, but your location is inside {mpa_name} where commercial fishing is prohibited."
-            else:
-                verdict = f"Yes, you can go out to sea near {location_name}."
-        elif risk_status == "CAUTION":
-            if inside_mpa and not reason_summary:
-                verdict = f"Proceed with caution near {location_name} — your location is inside {mpa_name} where commercial fishing is prohibited."
-            elif reason_summary:
-                verdict = f"Proceed with caution near {location_name} — {reason_summary}."
-            else:
-                verdict = f"Proceed with caution near {location_name}."
-        else:
-            if reason_summary:
-                verdict = f"No, it is not safe to venture out near {location_name} — {reason_summary}."
-            else:
-                verdict = f"No, it is not safe to venture out near {location_name}."
-
-        conditions_sentence = f"Current sea conditions show a {weather_str}."
-
-        if inside_mpa and risk_status == "CAUTION" and "prohibited" not in verdict.lower():
-            safety_advice = f"Commercial fishing is strictly prohibited inside {mpa_name}. Standard safety gear is advised."
-        elif risk_status == "UNSAFE":
-            safety_advice = "Small fishing craft should remain in harbor until conditions improve."
-        else:
+        if inside_mpa:
+            verdict = f"No, commercial fishing is prohibited inside {mpa_name}."
+            conditions_sentence = f"While marine weather parameters ({weather_str}) are favourable, commercial fishing is strictly prohibited within the marine protected area boundary. You must steer outside {mpa_name} before deploying fishing gear."
+            return f"{verdict} {conditions_sentence}".strip()
+        elif risk_status == "SAFE":
+            verdict = f"Yes, you can go out to sea near {location_name}."
+            conditions_sentence = f"Current sea conditions show a {weather_str}."
             safety_advice = "Carry standard safety equipment and monitor VHF radio advisories."
-
-        return f"{verdict} {conditions_sentence} {safety_advice}".strip()
+            return f"{verdict} {conditions_sentence} {safety_advice}".strip()
+        elif risk_status == "CAUTION":
+            weather_reason = reason_summary or "moderate sea conditions require heightened vigilance"
+            verdict = f"Caution advised (not fully safe) near {location_name} — {weather_reason}."
+            conditions_sentence = f"Current sea conditions show a {weather_str}."
+            safety_advice = "Check local advisories and carry standard safety equipment before departure."
+            return f"{verdict} {conditions_sentence} {safety_advice}".strip()
+        else:
+            danger_reason = reason_summary or "elevated sea state makes small craft operations hazardous"
+            verdict = f"No, it is not safe to venture out near {location_name} — {danger_reason}."
+            conditions_sentence = f"Current sea conditions show a {weather_str}."
+            safety_advice = "Small fishing craft should remain in harbor until conditions improve."
+            return f"{verdict} {conditions_sentence} {safety_advice}".strip()
 
     # CASE B: Fishing Spot / Opportunity query ("where should I fish?", "best fishing areas", "pfz")
     if query_type == "fishing":
@@ -430,6 +562,12 @@ def _fallback_narrative(intent: dict, weather: dict, ocean: dict, risk: dict, ge
             dir_coast = point.get("direction_from_coast") or "SW"
             coastal_ref = point.get("coastal_reference") or f"the {location_name} coast"
             pfz_sentence = f"Based on regional advisory data, the nearest potential fishing zone near {location_name} is approximately {dist} km away to the {dir_coast} near {coastal_ref}."
+        elif pfz.get("distance_from_user_km") is not None:
+            dist = pfz.get("distance_from_user_km")
+            point = pfz.get("nearest_pfz", {})
+            dir_coast = point.get("direction_from_coast")
+            dir_str = f" to the {dir_coast}" if dir_coast else ""
+            pfz_sentence = f"The nearest potential fishing zone near {location_name} is approximately {dist} km away{dir_str}."
         else:
             pfz_sentence = f"Potential fishing zone advisories are currently updating for {location_name}."
 
@@ -441,7 +579,7 @@ def _fallback_narrative(intent: dict, weather: dict, ocean: dict, risk: dict, ge
         "SAFE": "conditions are currently within favourable operating thresholds.",
         "CAUTION": "proceed only with caution and monitor local weather updates.",
         "UNSAFE": "small craft should avoid offshore operations due to elevated sea state.",
-    }.get(risk_status, "conditions should be verified before departure.")
+    }.get(risk_status, "live marine assessment is currently unavailable; verify conditions locally before departure.")
 
     forecast_valid_for = weather.get("forecast_valid_for", "")
     time_str = ""
@@ -453,7 +591,7 @@ def _fallback_narrative(intent: dict, weather: dict, ocean: dict, risk: dict, ge
             time_str = ""
     summary_sentence = f"For {location_name}{time_str}, the marine assessment is {status_display}: {safe_line}"
     conditions_sentence = f"Current sea conditions indicate a {weather_str}."
-    route_note = "Navigational corridors and coastal waters remain open." if not inside_mpa else f"Warning: your location is inside {mpa_name}, where fishing is restricted."
+    route_note = "Navigational corridors and coastal waters remain open." if not inside_mpa else f"Warning: your location is inside {mpa_name}, where commercial fishing is prohibited."
 
     return f"{summary_sentence} {conditions_sentence} {route_note}".strip()
 

@@ -62,6 +62,22 @@ export default function AskNEERModal({ persona, locationName, selectedLocation, 
   }, [selectedLocation, locationName, activePort])
 
   const getInitialMessage = (info = greetingInfo) => {
+    if (info.isCoastal === false) {
+      if (isAuthority) {
+        if (language === 'hi') {
+          return `नमस्ते अधिकारी महोदय। ${info.placeLabel} (${info.admin}) एक अंतर्देशीय स्थान है। तटीय प्राधिकरण और MPA टेलीमेट्री तटीय क्षेत्रों पर लागू होती हैं।`
+        }
+        return `Hello Officer. ${info.placeLabel} (${info.admin}) is an inland location. Marine protected area regulations and coastal telemetry apply to maritime zones.`
+      }
+      if (isMarine) {
+        return `Welcome Operator. Selected location ${info.placeLabel} is inland (${info.coordinatesStr}). Ocean passage planning applies to coastal and offshore routes.`
+      }
+      if (language === 'hi') {
+        return `${info.salutationHi} मैं नीर् (NEER) हूँ, आपका समुद्री सहायक। चयनित स्थान ${info.placeLabel} (${info.coordinatesStr}) अंतर्देशीय क्षेत्र है। तटीय मौसम, सुरक्षित गलियारों, या निकटतम बंदरगाहों के बारे में पूछें।`
+      }
+      return `${info.salutation} I am NEER, your marine copilot. Selected location ${info.placeLabel} (${info.coordinatesStr}) is an inland location (~${info.distanceToCoastKm || 500} km from the coast). Ask about coastal weather, safe routes, or nearest ports.`
+    }
+
     if (isAuthority) {
       if (language === 'hi') {
         return `नमस्ते अधिकारी महोदय। ${info.placeLabel} एवं ${info.admin} के लिए तटीय प्राधिकरण मोड सक्रिय है। लाइव टेलीमेट्री और MPA अनुपालन सिंक है।`

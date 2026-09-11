@@ -94,7 +94,12 @@ def _run_coroutine(coro):
 
 
 def agent_5_route(intent: dict, ocean: dict | None = None) -> dict:
-    if intent.get("query_type") != "safety":
+    is_route_relevant = (
+        intent.get("query_type") == "safety"
+        or intent.get("narrow_topic") == "route"
+        or "route" in (intent.get("compound_topics") or [])
+    )
+    if not is_route_relevant:
         return {"agent": "route", "status": "skipped", "reason": "Not a routing query."}
 
     routes = _candidate_routes(intent, ocean)

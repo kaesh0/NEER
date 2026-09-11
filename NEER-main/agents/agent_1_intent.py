@@ -80,6 +80,22 @@ COASTAL_GAZETTEER: dict[str, dict] = {
     "port blair":            {"name": "Port Blair, Andaman and Nicobar",        "latitude": 11.6233, "longitude": 92.7265, "admin1": "Andaman and Nicobar",    "country_code": "IN"},
     "andaman":               {"name": "Port Blair, Andaman and Nicobar",        "latitude": 11.6233, "longitude": 92.7265, "admin1": "Andaman and Nicobar",    "country_code": "IN"},
     "andaman and nicobar":   {"name": "Port Blair, Andaman and Nicobar",        "latitude": 11.6233, "longitude": 92.7265, "admin1": "Andaman and Nicobar",    "country_code": "IN"},
+    "surat":                 {"name": "Surat Coast, Gujarat",                   "latitude": 21.1702, "longitude": 72.8311, "admin1": "Gujarat",                "country_code": "IN"},
+    "surat coast":           {"name": "Surat Coast, Gujarat",                   "latitude": 21.1702, "longitude": 72.8311, "admin1": "Gujarat",                "country_code": "IN"},
+    "surat coast, gujarat":  {"name": "Surat Coast, Gujarat",                   "latitude": 21.1702, "longitude": 72.8311, "admin1": "Gujarat",                "country_code": "IN"},
+    "alibag":                {"name": "Alibag, Maharashtra",                     "latitude": 18.6414, "longitude": 72.8722, "admin1": "Maharashtra",            "country_code": "IN"},
+    "malvan":                {"name": "Malvan, Maharashtra",                     "latitude": 16.0617, "longitude": 73.4686, "admin1": "Maharashtra",            "country_code": "IN"},
+    "mormugao":              {"name": "Mormugao, Goa",                           "latitude": 15.4167, "longitude": 73.8000, "admin1": "Goa",                    "country_code": "IN"},
+    "bhatkal":               {"name": "Bhatkal, Karnataka",                      "latitude": 13.9772, "longitude": 74.5511, "admin1": "Karnataka",              "country_code": "IN"},
+    "ponnani":               {"name": "Ponnani, Kerala",                         "latitude": 10.7719, "longitude": 75.9252, "admin1": "Kerala",                 "country_code": "IN"},
+    "vizhinjam":             {"name": "Vizhinjam, Kerala",                       "latitude": 8.3820,  "longitude": 76.9916, "admin1": "Kerala",                 "country_code": "IN"},
+    "nagapattinam":          {"name": "Nagapattinam, Tamil Nadu",                "latitude": 10.7672, "longitude": 79.8424, "admin1": "Tamil Nadu",            "country_code": "IN"},
+    "krishnapatnam":         {"name": "Krishnapatnam, Andhra Pradesh",          "latitude": 14.2500, "longitude": 80.1167, "admin1": "Andhra Pradesh",          "country_code": "IN"},
+    "gopalpur":              {"name": "Gopalpur, Odisha",                         "latitude": 19.2600, "longitude": 84.9100, "admin1": "Odisha",                "country_code": "IN"},
+    "dhamra":                {"name": "Dhamra, Odisha",                          "latitude": 20.7950, "longitude": 86.9650, "admin1": "Odisha",                "country_code": "IN"},
+    "fraserganj":            {"name": "Fraserganj, West Bengal",                 "latitude": 21.5833, "longitude": 88.2500, "admin1": "West Bengal",           "country_code": "IN"},
+    "agatti":                {"name": "Agatti, Lakshadweep",                     "latitude": 10.8533, "longitude": 72.1931, "admin1": "Lakshadweep",            "country_code": "IN"},
+    "andrott":               {"name": "Andrott, Lakshadweep",                    "latitude": 10.8250, "longitude": 73.6667, "admin1": "Lakshadweep",            "country_code": "IN"},
     # Coastal state names → representative coastal city
     "andhra pradesh":        {"name": "Visakhapatnam, Andhra Pradesh",           "latitude": 17.6868, "longitude": 83.2185, "admin1": "Andhra Pradesh",           "country_code": "IN"},
     "andhra":                {"name": "Visakhapatnam, Andhra Pradesh",           "latitude": 17.6868, "longitude": 83.2185, "admin1": "Andhra Pradesh",           "country_code": "IN"},
@@ -183,8 +199,14 @@ Few-shot examples:
 {"query": "which route is safe near Mangalore", "output": {"location_name": "Mangalore", "persona": "fisherman", "query_type": "safety", "narrow_topic": "route", "time_window": "today", "vessel_type": "small fishing boat"}}
 {"query": "how is the weather near Mumbai today", "output": {"location_name": "Mumbai", "persona": "fisherman", "query_type": "marine_conditions", "narrow_topic": "weather", "time_window": "today", "vessel_type": "small fishing boat"}}
 {"query": "Kya me kavaratti me fishing ke liye jaa sakta hu?", "output": {"location_name": "Kavaratti", "persona": "fisherman", "query_type": "safety", "narrow_topic": null, "time_window": "today", "vessel_type": "small fishing boat"}}
+{"query": "kya me waha machli pakadne jaa skta hu", "output": {"location_name": "", "persona": "fisherman", "query_type": "safety", "narrow_topic": null, "time_window": "today", "vessel_type": "small fishing boat"}}
+{"query": "Kya aaj me machli pakadne jaa sakta hu?", "output": {"location_name": "", "persona": "fisherman", "query_type": "safety", "narrow_topic": null, "time_window": "today", "vessel_type": "small fishing boat"}}
 {"query": "can I go fishing near Mangalore today", "output": {"location_name": "Mangalore", "persona": "fisherman", "query_type": "safety", "narrow_topic": null, "time_window": "today", "vessel_type": "small fishing boat"}}
 {"query": "Kya me waha fishing ke liye jaa sakta hu?", "output": {"location_name": "", "persona": "fisherman", "query_type": "safety", "narrow_topic": null, "time_window": "today", "vessel_type": "small fishing boat"}}
+{"query": "fishing zone kitna dur hai meri location se", "output": {"location_name": "", "persona": "fisherman", "query_type": "fishing", "narrow_topic": "pfz", "time_window": "today", "vessel_type": "small fishing boat"}}
+{"query": "how far is the fishing zone from my location", "output": {"location_name": "", "persona": "fisherman", "query_type": "fishing", "narrow_topic": "pfz", "time_window": "today", "vessel_type": "small fishing boat"}}
+{"query": "nearest fishing zone", "output": {"location_name": "", "persona": "fisherman", "query_type": "fishing", "narrow_topic": "pfz", "time_window": "today", "vessel_type": "small fishing boat"}}
+{"query": "machli zone kitna dur hai", "output": {"location_name": "", "persona": "fisherman", "query_type": "fishing", "narrow_topic": "pfz", "time_window": "today", "vessel_type": "small fishing boat"}}
 {"query": "എനിക്ക് അവിടെ മീൻ പിടിക്കാൻ പോകാമോ?", "output": {"location_name": "", "persona": "fisherman", "query_type": "safety", "narrow_topic": null, "time_window": "today", "vessel_type": "small fishing boat"}}
 {"query": "நான் அங்கு மீன்பிடிக்க செல்லலாமா?", "output": {"location_name": "", "persona": "fisherman", "query_type": "safety", "narrow_topic": null, "time_window": "today", "vessel_type": "small fishing boat"}}
 {"query": "నేను అక్కడ చేపల వేటకు వెళ్ళవచ్చా?", "output": {"location_name": "", "persona": "fisherman", "query_type": "safety", "narrow_topic": null, "time_window": "today", "vessel_type": "small fishing boat"}}
@@ -192,7 +214,7 @@ Few-shot examples:
 """
 
 _VALID_PERSONAS      = {"fisherman", "authority"}
-_VALID_QUERY_TYPES   = {"safety", "fishing", "marine_conditions"}
+_VALID_QUERY_TYPES   = {"safety", "fishing", "marine_conditions", "compound"}
 _VALID_TIME_WINDOWS  = {"today", "tomorrow", "next available forecast hour"}
 _VALID_VESSELS       = {"small fishing boat", "medium trawler", "large cargo vessel"}
 NARROW_TOPICS        = {"weather", "wind_speed", "wave_height", "swell", "pfz", "geofence", "hazards", "route", "score", "sea_surface_temperature", "chlorophyll", "timing"}
@@ -206,19 +228,112 @@ INLAND_STATES = {
 }
 
 
+def detect_compound_intents(text: str) -> list[str] | None:
+    """Detect if the query contains multiple distinct intents (compound single-message question).
+
+    Supported compound pairs:
+    - weather + safety: e.g. "Aaj mausam kesa hai aur kya main fishing ke liye jaa sakta hoon?"
+    - weather + pfz: e.g. "Aaj mausam kaisa hai aur fishing zone kitna dur hai?"
+    - safety + timing: e.g. "Is it safe to fish and what is the best time to go?"
+    - hazards + route: e.g. "Are there any hazards and which route is safe?"
+    """
+    if not text:
+        return None
+    t = text.lower()
+
+    has_connector = bool(re.search(
+        r"\b(and|aur|kya|aur\s*kya|tatha|evam|mariyu|matrum|koodathe|ebong|ani|va|also|plus)\b|[?,;&]",
+        t,
+    ))
+
+    # (a) Weather
+    has_weather = bool(re.search(r"\b(weather|mausam|hawa|lehar|lehrein|wind|winds|waves?|sea\s*conditions?|conditions?\s*there|weather\s*there|how\s*is\s*the\s*weather)\b", t))
+
+    # (b) Safety / Permission
+    has_safety = bool(re.search(
+        r"\b(can\s+i\s+(?:go|fish|sail|venture)|is\s+it\s+safe|safe\s+to\s+fish|fishing\s+safe|jaa\s+sakta|jaa\s+sakte|ja\s+sakta|ja\s+sakte|jaana\s+safe|jaana\s+theek|machli\s+pakadne\s+jaa|fishing\s+ke\s+liye\s+jaa|safe\s+hai\s+kya|kya\s+fishing\s+safe)\b",
+        t,
+    ))
+
+    # (c) PFZ / Fishing zone
+    has_pfz = bool(re.search(
+        r"\b(pfz|potential\s*fishing\s*zones?|fishing\s*zones?|fishing\s*spots?|fishing\s*grounds?|machh?li\s*(?:zones?|spots?)|fish\s*zones?)\b",
+        t,
+    )) or (
+        bool(re.search(r"\b(fishing|fish|machh?li|pfz|zone)\b", t))
+        and bool(re.search(r"\b(distance|how\s*far|kitna\s*dur|kitni\s*dur|kahan|nearest|kaha|dur\s*hai|location|direction|where\s+to\s+fish|where\s+is\s+the\s+nearest|where\s+is\s+(?:the\s+)?zone|where\s+is)\b", t))
+    )
+
+    # (d) Timing
+    has_timing = bool(re.search(
+        r"\b(good\s*time|best\s*time|right\s*time|optimal\s*time|what\s*time|timing|timings|when\s*(?:should|can|to|would)\s*(?:i|we|be)?\s*(?:go|fish|sail)|kab\s*(?:jaana|jaayein)|shubh\s*samay|achha\s*samay|sahi\s*samay|kis\s*samay|fishing\s*window|optimal\s*departure|departure\s*time)\b",
+        t,
+    ))
+
+    # (e) Hazards
+    has_hazards = bool(re.search(
+        r"\b(hazards?|dangers?|khatra|khatre|any\s*hazards?|active\s*hazards?|cyclone|tsunami|warnings?|alerts?|chetawni)\b",
+        t,
+    ))
+
+    # (f) Route
+    has_route = bool(re.search(
+        r"\b(routes?|navigation|navigational\s*path|passage|passage\s*corridor|rasta|raste|waypoint|navigate|which\s*route)\b",
+        t,
+    ))
+
+    # Compound checks
+    if has_weather and has_safety and has_connector:
+        return ["weather", "safety"]
+    if has_weather and has_pfz and has_connector:
+        return ["weather", "pfz"]
+    if has_safety and has_timing and has_connector:
+        return ["safety", "timing"]
+    if has_hazards and has_route and has_connector:
+        return ["hazards", "route"]
+    if has_safety and has_pfz and has_connector:
+        return ["safety", "pfz"]
+
+    return None
+
+
 def detect_narrow_topic(text: str) -> str | None:
     """Detect if the query is asking narrowly about one single topic."""
     if not text:
         return None
     t = text.lower()
 
+    # Topic detectors
+    has_timing = bool(re.search(r"\b(good\s*time|best\s*time|right\s*time|optimal\s*time|what\s*time|timing|timings|when\s*(?:should|can|to|would)\s*(?:i|we|be)?\s*(?:go|fish|sail|a\s*good)|kab\s*(?:jaana|jaayein|machhli)|shubh\s*samay|achha\s*samay|sahi\s*samay|samay|time\s*for\s*fishing|fishing\s*window|optimal\s*departure|departure\s*time)\b", t))
+    has_hazard = bool(re.search(r"\b(hazards?|dangers?|khatra|khatre|any\s*hazards?|active\s*hazards?|cyclone|tsunami|warnings?|alerts?|chetawni)\b", t))
+    has_route = bool(re.search(r"\b(route|routes|navigation|navigational\s*path|passage|passage\s*corridor|rasta|raste|waypoint|navigate|navigating)\b", t))
+    has_weather = bool(re.search(r"\b(weather|mausam|sea\s*conditions?|conditions?\s*there|weather\s*there|how\s*is\s*the\s*weather)\b", t))
+    has_wind = bool(re.search(r"\b(wind\s*speeds?|windspeed|winds?|windy|hawa|hawayein|pawan)\b", t))
+    has_wave = bool(re.search(r"\b(wave\s*heights?|waves?|lehar|lehro|lehron|lehrein|tarang|tarangein)\b", t))
+    has_swell = bool(re.search(r"\b(swell\s*periods?|swell\s*heights?|swell\s*surge|kallakkadal|swell)\b", t))
+    has_pfz = bool(re.search(
+        r"\b(pfz|potential\s*fishing\s*zones?|fishing\s*zones?|fishing\s*spots?|fishing\s*grounds?|machh?li\s*(?:zones?|spots?|areas?|grounds?)|fish\s*zones?|fish\s*spots?)\b",
+        t,
+    )) or (
+        bool(re.search(r"\b(fishing|fish|machh?li|pfz|zone)\b", t))
+        and bool(re.search(r"\b(distance|how\s*far|kitna\s*dur|kitni\s*dur|kahan|nearest|kaha|dur\s*hai|location|direction|where\s+to\s+fish|where\s+should\s+i\s+fish)\b", t))
+    )
+    has_geofence = bool(re.search(r"\b(geofence|restricted\s*zones?|protected\s*areas?|mpa|boundary|restricted\s*areas?)\b", t))
+    has_score = bool(re.search(r"\b(safety\s*scores?|fishing\s*scores?|opportunity\s*scores?|scores?)\b", t))
+    has_sst = bool(re.search(
+        r"\b(sst|sea\s*surface\s*temps?(?:eratures?)?|surface\s*temps?(?:eratures?)?|ocean\s*temps?(?:eratures?)?|water\s*temps?(?:eratures?)?|samudr[ia]?\s*(?:satah\s*ka\s*)?t[aa]pm[aa]n|paani\s*ka\s*t[aa]pm[aa]n|satah\s*ka\s*t[aa]pm[aa]n)\b",
+        t
+    ))
+    has_chloro = bool(re.search(r"(?:ch[l]+or|kloro)", t))
+
     # Broad open-ended question patterns (asking about whole trip/safety assessment)
+    # Don't suppress specific questions about timing, hazard, or route
     broad_indicators = [
         r"\bis it safe to fish\b",
         r"\bis it safe\b",
         r"\bcan i go\b",
         r"\bcan i fish\b",
-        r"\bshould i go\b",
+        r"(?<!when\s)(?<!what\stime\s)\bshould i go\b",
         r"\btrip assessment\b",
         r"\bmarine assessment\b",
         r"\bfull report\b",
@@ -231,34 +346,31 @@ def detect_narrow_topic(text: str) -> str | None:
         r"\bfishing\s*ke\s*liye\b",
         r"\boverall\b",
     ]
-    for pattern in broad_indicators:
-        if re.search(pattern, t):
-            return None
-
-    # Topic detectors
-    has_weather = bool(re.search(r"\b(weather|mausam|sea\s*conditions?|conditions?\s*there|weather\s*there|how\s*is\s*the\s*weather)\b", t))
-    has_wind = bool(re.search(r"\b(wind\s*speeds?|windspeed|winds?|hawa|pawan)\b", t))
-    has_wave = bool(re.search(r"\b(wave\s*heights?|waves?|lehar|lehrein|tarang)\b", t))
-    has_swell = bool(re.search(r"\b(swell\s*periods?|swell\s*heights?|swell\s*surge|kallakkadal|swell)\b", t))
-    has_pfz = bool(re.search(r"\b(pfz|potential\s*fishing\s*zones?|fishing\s*zones?|machhli\s*zones?)\b", t))
-    has_geofence = bool(re.search(r"\b(geofence|restricted\s*zones?|protected\s*areas?|mpa|boundary|restricted\s*areas?)\b", t))
-    has_score = bool(re.search(r"\b(safety\s*scores?|fishing\s*scores?|opportunity\s*scores?|scores?)\b", t))
-    has_sst = bool(re.search(
-        r"\b(sst|sea\s*surface\s*temps?(?:eratures?)?|surface\s*temps?(?:eratures?)?|ocean\s*temps?(?:eratures?)?|water\s*temps?(?:eratures?)?|samudr[ia]?\s*(?:satah\s*ka\s*)?t[aa]pm[aa]n|paani\s*ka\s*t[aa]pm[aa]n|satah\s*ka\s*t[aa]pm[aa]n)\b",
-        t
-    ))
-    has_chloro = bool(re.search(r"(?:ch[l]+or|kloro)", t))
-    has_hazard = bool(re.search(r"\b(hazards?|dangers?|khatra|khatre|any\s*hazards?|active\s*hazards?)\b", t))
-    has_route = bool(re.search(r"\b(route|routes|navigation|navigational\s*path|passage\s*corridor|rasta|waypoint)\b", t))
-    has_timing = bool(re.search(r"\b(good\s*time|best\s*time|right\s*time|optimal\s*time|what\s*time|timing|timings|when\s*(?:should|can|to|would)\s*(?:i|we|be)?\s*(?:go|fish|sail|a\s*good)|kab\s*(?:jaana|jaayein|machhli)|shubh\s*samay|achha\s*samay|samay|time\s*for\s*fishing)\b", t))
+    if not (has_timing or has_route or has_hazard):
+        for pattern in broad_indicators:
+            if re.search(pattern, t):
+                return None
 
     # Disambiguate swell vs wave if user asked specifically about swell
     if has_swell and not re.search(r"\bwave\s*heights?\b", t):
         has_wave = False
 
+    # Disambiguate route vs pfz (e.g. 'safe passage to fishing grounds')
+    if has_route and has_pfz and re.search(r"\b(passage|route|navigation|waypoint|navigate)\b", t):
+        has_pfz = False
+
+    # Disambiguate hazard vs wave/wind (e.g. 'high wave warning', 'cyclone warning')
+    if has_hazard and re.search(r"\b(cyclone|tsunami|warnings?|alerts?|chetawni|khatra|khatre|danger|hazard)\b", t):
+        has_wave = False
+        has_wind = False
+
     matched = []
     if has_timing:
         matched.append("timing")
+    if has_hazard:
+        matched.append("hazards")
+    if has_route:
+        matched.append("route")
     if has_wind:
         matched.append("wind_speed")
     if has_wave:
@@ -269,16 +381,12 @@ def detect_narrow_topic(text: str) -> str | None:
         matched.append("pfz")
     if has_geofence:
         matched.append("geofence")
-    if has_route:
-        matched.append("route")
     if has_score:
         matched.append("score")
     if has_sst:
         matched.append("sea_surface_temperature")
     if has_chloro:
         matched.append("chlorophyll")
-    if has_hazard and not matched:
-        matched.append("hazards")
     if has_weather and not matched:
         matched.append("weather")
 
@@ -427,24 +535,33 @@ def _regex_extract_intent(searchable_text: str) -> dict:
         "launch my boat", "launch boat", "leave harbor", "leave port",
         "is it okay", "is it good", "is it safe",
         "jaana", "ja sakte", "ja sakta", "jaa sakta", "jaa sakte",
+        "ja skta", "ja skte", "jaa skta", "jaa skte",
         "jaa sakta hu", "jaa sakte hain", "ja sakta hu", "ja sakte hain",
+        "jaa skta hu", "jaa skte hain", "ja skta hu", "ja skte hain",
         "jaana chahiye", "jaana theek", "fishing ke liye ja",
+        "kar sakta", "kar sakte", "kar sakti", "kar skta", "kar skte", "kar skti",
+        "machli pakad", "machhli pakad", "nikal sakte", "nikal skta", "nikal sakta",
+        "jaau", "jaun", "chalein", "chalu",
         "safe hai", "theek hai", "kaisa rahega",
-        # Malayalam permission & safety phrases
+        "जा सकते", "जा सकता", "जा सकती", "जाना चाहिए", "जाना ठीक", "मछली पकड़",
+        # Malayalam permission & safety phrases (script and Manglish)
         "പോകാമോ", "പോകാൻ പറ്റുമോ", "പോകാനാവുമോ", "മീൻ പിടിക്കാൻ പോകാമോ", "മീൻപിടിക്കാൻ പോകാമോ",
-        "മീൻ പിടിക്കാൻ", "മീൻപിടിക്കാൻ", "സുരക്ഷിതമാണോ",
-        # Tamil permission & safety phrases
+        "മീൻ പിടിക്കാൻ", "മീൻപിടിക്കാൻ", "സുരക്ഷിതമാണോ", "pokamo", "pokan pattumo", "pokumo",
+        # Tamil permission & safety phrases (script and Tanglish)
         "போகலாமா", "செல்லலாமா", "மீன்பிடிக்க செல்லலாமா", "மீன்பிடிக்க போகலாமா", "பாதுகாப்பானதா",
-        # Telugu permission & safety phrases
+        "pogalama", "chellalama", "sellalama", "polama",
+        # Telugu permission & safety phrases (script and Roman)
         "వెళ్ళవచ్చా", "వెళ్లవచ్చా", "చేపల వేటకు వెళ్ళవచ్చా", "చేపల వేటకు వెళ్లవచ్చా", "సురక్షితమేనా",
-        # Bengali permission & safety phrases
-        "যেতে পারি", "মাছ ধরতে যেতে পারি", "নিরাপদ কি",
+        "vellavacha", "vellavachaa",
+        # Bengali permission & safety phrases (script and Roman)
+        "যেতে পারি", "মাছ ধরতে যেতে পারি", "নিরাপদ কি", "jete pari",
     )
     fishing_markers = (
         "where to fish", "where should i fish", "where can i fish",
         "fishing spot", "fishing spots", "fishing zone", "fishing zones",
         "pfz", "potential fishing zone", "catch fish", "find fish",
-        "machhli kahan", "machli zone", "machli kahan",
+        "machhli kahan", "machli zone", "machhli zone", "machli kahan",
+        "kitna dur", "kitni dur", "how far", "distance to", "nearest pfz", "nearest fishing",
     )
     # Check safety_markers with higher priority than fishing_markers
     if any(w in searchable_text for w in safety_markers):
@@ -468,8 +585,12 @@ def _regex_extract_intent(searchable_text: str) -> dict:
     )
     persona = "authority" if any(m in searchable_text for m in _AUTHORITY_MARKERS) else "fisherman"
     narrow_topic = detect_narrow_topic(searchable_text)
-    if narrow_topic == "timing":
+    if narrow_topic in ("timing", "pfz") and query_type != "safety":
         query_type = "fishing"
+    elif narrow_topic in ("hazards", "route") and query_type != "fishing":
+        query_type = "safety"
+    elif narrow_topic in ("wind_speed", "wave_height", "swell", "weather") and query_type != "safety":
+        query_type = "marine_conditions"
     return {"persona": persona, "query_type": query_type, "narrow_topic": narrow_topic, "time_window": time_window, "vessel_type": vessel}
 
 
@@ -502,30 +623,28 @@ def _geocode_with_candidates(candidates: list[str]) -> tuple[dict | None, str | 
     for candidate in candidates:
         candidate_key = candidate.lower().strip()
         candidate_prefix = candidate_key.split(",")[0].strip()
+        cleaned_prefix = re.sub(r"\b(coast|port|harbour|harbor|sector|beach|island|bay|waters)\b", "", candidate_prefix, flags=re.IGNORECASE).strip()
+        first_word = candidate_prefix.split()[0].strip() if candidate_prefix.split() else ""
 
-        if candidate_key in COASTAL_GAZETTEER:
-            hit = dict(COASTAL_GAZETTEER[candidate_key])
-            hit["source"] = "Indian Coastal Directory"
-            hit["geocoded_from"] = candidate
-            return hit, None
+        # Collect lookup variants in priority order
+        lookup_variants = []
+        for v in (candidate_key, candidate_prefix, cleaned_prefix, first_word):
+            if v and len(v) >= 3 and v not in lookup_variants:
+                lookup_variants.append(v)
 
-        if candidate_prefix in COASTAL_GAZETTEER:
-            hit = dict(COASTAL_GAZETTEER[candidate_prefix])
-            hit["source"] = "Indian Coastal Directory"
-            hit["geocoded_from"] = candidate
-            return hit, None
+        for variant in lookup_variants:
+            if variant in COASTAL_GAZETTEER:
+                hit = dict(COASTAL_GAZETTEER[variant])
+                hit["source"] = "Indian Coastal Directory"
+                hit["geocoded_from"] = candidate
+                return hit, None
 
-        if candidate_key in INLAND_GAZETTEER:
-            hit = dict(INLAND_GAZETTEER[candidate_key])
-            hit["source"] = "Indian Inland Directory"
-            hit["geocoded_from"] = candidate
-            return hit, None
-
-        if candidate_prefix in INLAND_GAZETTEER:
-            hit = dict(INLAND_GAZETTEER[candidate_prefix])
-            hit["source"] = "Indian Inland Directory"
-            hit["geocoded_from"] = candidate
-            return hit, None
+        for variant in lookup_variants:
+            if variant in INLAND_GAZETTEER:
+                hit = dict(INLAND_GAZETTEER[variant])
+                hit["source"] = "Indian Inland Directory"
+                hit["geocoded_from"] = candidate
+                return hit, None
 
         for st in INLAND_STATES:
             if candidate_key == st or candidate_key.endswith(f" {st}") or candidate_key.endswith(f", {st}"):
@@ -543,85 +662,96 @@ def _geocode_with_candidates(candidates: list[str]) -> tuple[dict | None, str | 
                 hit["geocoded_from"] = candidate
                 return hit, None
 
-        try:
-            payload = get_json(url, {"name": candidate, "count": 20, "language": "en", "format": "json"})
-        except (URLError, TimeoutError, ValueError, KeyError):
-            continue
+        search_names = [candidate]
+        if candidate_prefix != candidate and len(candidate_prefix) >= 3:
+            search_names.append(candidate_prefix)
+        if cleaned_prefix and cleaned_prefix not in search_names and len(cleaned_prefix) >= 3:
+            search_names.append(cleaned_prefix)
 
-        for result in payload.get("results", []):
-            if result.get("country_code") != "IN":
+        for s_name in search_names:
+            try:
+                payload = get_json(url, {"name": s_name, "count": 20, "language": "en", "format": "json"})
+            except (URLError, TimeoutError, ValueError, KeyError):
                 continue
-            admin = result.get("admin1", "")
-            lat, lon = result["latitude"], result["longitude"]
-            name = result.get("name", candidate.title())
-            hit = {
-                "name": f"{name}, {admin}" if admin else name,
-                "latitude": lat,
-                "longitude": lon,
-                "admin1": admin,
-                "admin2": result.get("admin2"),
-                "country_code": result.get("country_code"),
-                "source": "Open-Meteo Geocoding API",
-                "geocoded_from": candidate,
-            }
-            if _has_marine_data(lat, lon):
-                return hit, None
-            if best is None:
-                best = hit  # inland fallback — kept as last resort
+
+            for result in payload.get("results", []):
+                if result.get("country_code") != "IN":
+                    continue
+                admin = result.get("admin1", "")
+                lat, lon = result["latitude"], result["longitude"]
+                name = result.get("name", candidate.title())
+                hit = {
+                    "name": f"{name}, {admin}" if admin else name,
+                    "latitude": lat,
+                    "longitude": lon,
+                    "admin1": admin,
+                    "admin2": result.get("admin2"),
+                    "country_code": result.get("country_code"),
+                    "source": "Open-Meteo Geocoding API",
+                    "geocoded_from": candidate,
+                }
+                if _has_marine_data(lat, lon):
+                    return hit, None
+                if best is None:
+                    best = hit  # inland fallback - kept as last resort
 
     if best:
         return best, None
     return None, "I could not resolve the Indian coastal location. Please try a more specific place name or enter coordinates (e.g. 10.5, 72.6 for Lakshadweep)."
 
 
-def _regex_location_candidates(agent_query: str, original_query: str) -> list[str]:
-    """Regex-based candidate extraction — used when LLM provides no location_name."""
-    _STOP_WORDS = {
-        "a", "about", "after", "all", "am", "an", "and", "any", "are", "around", "as", "at",
-        "be", "been", "before", "being", "between", "both", "but", "by",
-        "can", "check", "could", "did", "do", "does", "during",
-        "each", "few", "for", "from", "further", "give", "go", "going",
-        "had", "has", "have", "he", "her", "here", "him", "his", "how",
-        "i", "if", "in", "into", "is", "it", "its", "just",
-        "may", "me", "might", "more", "most", "must", "my",
-        "no", "nor", "not", "now", "of", "off", "on", "once", "only", "or", "other", "our", "out", "over", "own",
-        "please", "same", "shall", "she", "should", "show", "so", "some", "such",
-        "tell", "than", "that", "the", "their", "them", "then", "there", "these", "they", "this",
-        "those", "through", "to", "too", "under", "until", "up", "us", "very",
-        "was", "we", "were", "what", "when", "where", "which", "while", "who", "whom", "why",
-        "will", "with", "would", "you", "your",
-        # Marine / activity intent words (NOT port/harbor/island/coast — they form place names)
-        "alert", "advisory", "boat", "cargo", "condition", "conditions", "current", "currents",
-        "danger", "dangerous", "fish", "fishing", "forecast", "height", "high",
-        "marine", "ocean", "report", "risk", "safe", "safety", "seas", "ship", "speed",
-        "status", "suitability", "suitable", "swell", "tide", "tides", "trawler",
-        "vessel", "waters", "wave", "waves", "weather", "wind", "winds",
-        # Temporal
-        "aaj", "afternoon", "day", "days", "evening", "hour", "hours", "kal", "kl",
-        "month", "morning", "night", "now", "subah", "dopahar", "shaam", "raat",
-        "today", "tomorrow", "tonight", "week", "yesterday",
-        # Hindi / Hinglish conversational & location pronouns
-        "apne", "baare", "baat", "batao", "bataiye", "batana", "bhi", "bhai", "chahiye",
-        "dekho", "dekhna", "gaye", "gaya", "hoga", "hogi", "honge", "hai", "hain", "ho", "hua", "hui",
-        "hoon", "hu", "hum",
-        "ja", "jaa", "jaana", "jaane", "jana", "jane", "jaaye", "jaate", "jaata",
-        "ka", "ke", "ki", "ko", "kar", "kare", "karein", "karna", "karne", "kr", "kya", "kyu", "kyun",
-        "kaisa", "kaise", "kaisi", "kitna", "kitne", "kitni", "le", "liye",
-        "machhli", "machli", "main", "mein", "mera", "meri", "mere",
-        "paas", "pass", "pakad", "pakada", "pakadna", "pakadne", "pani", "paani", "par",
-        "raha", "rahe", "rahi", "rahega", "rahegi", "rahenge",
-        "saath", "sakta", "sakte", "sakti", "sakenge", "sakunga", "samundar", "samundari",
-        "se", "sir", "tha", "the", "thi",
-        "waha", "wahan", "vahan", "vaha", "wahin", "vahin", "there", "that place", "same place", "jagah",
-        # Regional pronouns and particles
-        "enikku", "njan", "avide", "naan", "angu", "ange", "nenu", "akkada", "ami", "sekhane",
-        "എനിക്ക്", "അവിടെ", "ഞാൻ", "പോകാമോ",
-        "நான்", "அங்கு", "அங்கே", "போகலாமா",
-        "నేను", "అక్కడ", "వెళ్ళవచ్చా",
-        "আমি", "সেখানে", "যেতে",
-        "मैं", "वहाँ", "वहा", "हूँ", "हूं",
-    }
+_STOP_WORDS = {
+    "a", "about", "after", "all", "am", "an", "and", "any", "are", "around", "as", "at",
+    "be", "been", "before", "being", "between", "both", "but", "by",
+    "can", "check", "could", "did", "do", "does", "during",
+    "each", "few", "for", "from", "further", "give", "go", "going",
+    "had", "has", "have", "he", "her", "here", "him", "his", "how",
+    "i", "if", "in", "into", "is", "it", "its", "just",
+    "may", "me", "might", "more", "most", "must", "my",
+    "no", "nor", "not", "now", "of", "off", "on", "once", "only", "or", "other", "our", "out", "over", "own",
+    "please", "same", "shall", "she", "should", "show", "so", "some", "such",
+    "tell", "than", "that", "the", "their", "them", "then", "there", "these", "they", "this",
+    "those", "through", "to", "too", "under", "until", "up", "us", "very",
+    "was", "we", "were", "what", "when", "where", "which", "while", "who", "whom", "why",
+    "will", "with", "would", "you", "your",
+    # Marine / activity intent words (NOT port/harbor/island/coast - they form place names)
+    "alert", "advisory", "boat", "cargo", "condition", "conditions", "current", "currents",
+    "danger", "dangerous", "fish", "fishing", "forecast", "height", "high",
+    "marine", "ocean", "report", "risk", "safe", "safety", "seas", "ship", "speed",
+    "status", "suitability", "suitable", "swell", "tide", "tides", "trawler",
+    "vessel", "waters", "wave", "waves", "weather", "wind", "winds",
+    "zone", "zones", "spot", "spots", "area", "areas", "ground", "grounds", "location", "distance", "nearest",
+    # Temporal
+    "aaj", "afternoon", "day", "days", "evening", "hour", "hours", "kal", "kl",
+    "month", "morning", "night", "now", "subah", "dopahar", "shaam", "raat",
+    "today", "tomorrow", "tonight", "week", "yesterday",
+    # Hindi / Hinglish conversational & location pronouns
+    "apne", "baare", "baat", "batao", "bataiye", "batana", "bhi", "bhai", "chahiye",
+    "dekho", "dekhna", "gaye", "gaya", "hoga", "hogi", "honge", "hai", "hain", "ho", "hua", "hui",
+    "hoon", "hu", "hum",
+    "ja", "jaa", "jaana", "jaane", "jana", "jane", "jaaye", "jaate", "jaata",
+    "ka", "ke", "ki", "ko", "kar", "kare", "karein", "karna", "karne", "kr", "kya", "kyu", "kyun", "aur",
+    "kaisa", "kaise", "kaisi", "kesa", "kitna", "kitne", "kitni", "le", "liye",
+    "dur", "duri", "door", "doori",
+    "mausam", "hawa", "lehar", "samay", "khatra", "rasta", "taapman",
+    "machhli", "machli", "main", "mein", "mera", "meri", "mere",
+    "paas", "pass", "pakad", "pakada", "pakadna", "pakadne", "pani", "paani", "par",
+    "raha", "rahe", "rahi", "rahega", "rahegi", "rahenge",
+    "saath", "sakta", "sakte", "sakti", "skta", "skte", "skti", "sakenge", "sakunga", "samundar", "samundari",
+    "se", "sir", "tha", "the", "thi",
+    "waha", "wahan", "vahan", "vaha", "wahin", "vahin", "there", "that place", "same place", "jagah",
+    # Regional pronouns and particles
+    "enikku", "njan", "avide", "naan", "angu", "ange", "nenu", "akkada", "ami", "sekhane",
+    "എനിക്ക്", "അവിടെ", "ഞാൻ", "പോകാമോ",
+    "நான்", "அங்கு", "அங்கே", "போகலாமா",
+    "నేను", "అక్కడ", "వెళ్ళవచ్చా",
+    "আমি", "সেখানে", "যেতে",
+    "মैং", "वहाँ", "वहा", "हूँ", "हूं",
+}
 
+
+def _regex_location_candidates(agent_query: str, original_query: str) -> list[str]:
+    """Regex-based candidate extraction - used when LLM provides no location_name."""
     def _extract(text: str) -> list[str]:
         if not text:
             return []
@@ -717,6 +847,89 @@ def _reverse_geocode_coastal(lat: float, lon: float) -> str:
         return f"Off {place} Coast (~{rounded_km} km), {admin}" if admin else f"Off {place} Coast (~{rounded_km} km)"
 
 
+def _resolve_coordinates(lat: float, lon: float, fallback_name: str | None = None) -> dict:
+    """Resolve coordinates into either a coastal or inland location record."""
+    # Check if peninsular inland or northern India (coasts end ~24.5° N)
+    is_inland = (lat > 24.5) or _is_peninsular_inland(lat, lon)
+
+    # Calculate distance to closest coastal gazetteer entry
+    min_coastal_dist = float("inf")
+    R = 6371.0
+    for entry in COASTAL_GAZETTEER.values():
+        c_lat = entry.get("latitude")
+        c_lon = entry.get("longitude")
+        if c_lat is None or c_lon is None:
+            continue
+        d_lat = math.radians(c_lat - lat)
+        d_lon = math.radians(c_lon - lon)
+        a = math.sin(d_lat / 2.0) ** 2 + math.cos(math.radians(lat)) * math.cos(math.radians(c_lat)) * math.sin(d_lon / 2.0) ** 2
+        dist = R * 2.0 * math.atan2(math.sqrt(max(0.0, a)), math.sqrt(max(0.0, 1.0 - a)))
+        if dist < min_coastal_dist:
+            min_coastal_dist = dist
+
+    # If >50km from any known coastal gazetteer point, classify as inland
+    if min_coastal_dist > 50.0:
+        is_inland = True
+
+    if is_inland:
+        if fallback_name and fallback_name.strip():
+            clean_fb = fallback_name.strip()
+            admin = None
+            if "," in clean_fb:
+                admin = clean_fb.split(",")[1].strip()
+            else:
+                for st in INLAND_STATES:
+                    if st in clean_fb.lower():
+                        admin = st.title()
+                        break
+            return {
+                "name": clean_fb,
+                "latitude": lat,
+                "longitude": lon,
+                "admin1": admin,
+                "source": "Indian Inland Directory",
+            }
+
+        # Find closest entry in INLAND_GAZETTEER
+        best_inland = None
+        min_inland_dist = float("inf")
+        for entry in INLAND_GAZETTEER.values():
+            i_lat = entry.get("latitude")
+            i_lon = entry.get("longitude")
+            if i_lat is None or i_lon is None:
+                continue
+            d_lat = math.radians(i_lat - lat)
+            d_lon = math.radians(i_lon - lon)
+            a = math.sin(d_lat / 2.0) ** 2 + math.cos(math.radians(lat)) * math.cos(math.radians(i_lat)) * math.sin(d_lon / 2.0) ** 2
+            dist = R * 2.0 * math.atan2(math.sqrt(max(0.0, a)), math.sqrt(max(0.0, 1.0 - a)))
+            if dist < min_inland_dist:
+                min_inland_dist = dist
+                best_inland = entry
+
+        if best_inland and min_inland_dist <= 80.0:
+            return {
+                "name": best_inland["name"],
+                "latitude": lat,
+                "longitude": lon,
+                "admin1": best_inland.get("admin1"),
+                "source": "Indian Inland Directory",
+            }
+        return {
+            "name": f"{lat:.4f}° N, {lon:.4f}° E",
+            "latitude": lat,
+            "longitude": lon,
+            "admin1": None,
+            "source": "Inland coordinate resolution",
+        }
+
+    return {
+        "name": _reverse_geocode_coastal(lat, lon),
+        "latitude": lat,
+        "longitude": lon,
+        "source": "Coastal reverse geocoding",
+    }
+
+
 # ---------------------------------------------------------------------------
 # Main agent entry point
 # ---------------------------------------------------------------------------
@@ -730,20 +943,13 @@ def agent_1_intent(
     agent_query, language = prepare_for_agent_1(query)
     searchable_text = f"{agent_query.lower()}\n{query.lower()}"
 
-    # ── 1. Coordinate detection (always deterministic) ──────────────────────
+    # ── 1. Coordinate detection in query text (always deterministic) ────────
     coords = re.search(r"\b([0-3]?\d(?:\.\d+)?)\s*[, ]\s*([6-9]\d(?:\.\d+)?)\b", searchable_text)
-    if not coords and fallback_location:
-        coords = re.search(r"\b([0-3]?\d(?:\.\d+)?)\s*[, ]\s*([6-9]\d(?:\.\d+)?)\b", fallback_location)
 
     if coords and float(coords.group(1)) <= 38.0 and 65.0 <= float(coords.group(2)) <= 98.0:
         c_lat = float(coords.group(1))
         c_lon = float(coords.group(2))
-        location: dict | None = {
-            "name": _reverse_geocode_coastal(c_lat, c_lon),
-            "latitude": c_lat,
-            "longitude": c_lon,
-            "source": "Coastal reverse geocoding",
-        }
+        location: dict | None = _resolve_coordinates(c_lat, c_lon)
         clarification: str | None = None
         llm_location_name: str = ""
     else:
@@ -790,34 +996,67 @@ def agent_1_intent(
     if not narrow_topic or narrow_topic not in NARROW_TOPICS:
         narrow_topic = detect_narrow_topic(searchable_text)
 
+    if narrow_topic in ("timing", "pfz") and query_type != "safety":
+        query_type = "fishing"
+
     # Permission / Safety safeguard:
     # "Can I go [fishing]", "is it safe to go/fish", or regional permission phrases ("പോകാമോ", "போகலாமா", etc.)
     # are structurally safety/risk permission questions (CASE A) and must never be classified as
     # generic marine_conditions (CASE C) or fishing location discovery.
     _PERMISSION_SAFETY_PATTERNS = [
-        r"\bcan\s+(?:i|we)\s+(?:go|fish|sail|venture)\b",
+        # English
+        r"\b(?:can|should|may|could|am\s+i|are\s+we)\s+(?:i|we)?\s*(?:go|fish|sail|venture|leave|launch)\b",
         r"\b(?:go|going)\s+fishing\b",
-        r"\bshould\s+(?:i|we)\s+(?:go|fish|sail)\b",
-        r"\bis\s+it\s+(?:safe|okay|permitted|advisable)\b",
-        r"\bja+a?\s+sakta\b",
-        r"\bja+a?\s+sakte\b",
+        r"\b(?:allowed|permitted)\s+to\s+(?:go|fish|sail)\b",
+        r"\bis\s+it\s+(?:safe|okay|ok|permitted|advisable|good)\s+to\s+(?:go|fish|sail|venture)\b",
+        r"\bis\s+it\s+(?:safe|okay|ok|permitted|advisable)\b",
+        r"\bpermission\s+to\s+(?:go|fish|sail)\b",
+        # Hindi / Hinglish (covers both formal 'sakta'/'sakte'/'sakti' and colloquial 'skta'/'skte'/'skti')
+        r"\b(?:kar|karein|karne|ja+a?|ja|nikal)?\s*s[a]?kt[aeiou]\b",
+        r"\bmach[h]?li\s+pakad(?:ne)?\s+(?:ja+a?|nikal|s[a]?kt|chahiye|theek|safe)\b",
+        r"\b(?:kya\s+)?(?:me|mai|hum|main)?\s*(?:aaj\s*)?(?:mach[h]?li\s*pakad(?:ne)?\s*)?(?:ja+a?|nikal)\s*s[a]?kt[aeiou]\b",
+        r"\b(?:fishing|machh?li)\s*(?:kar|karein|karne|pakad(?:ne)?|ke\s+liye)?\s*(?:ja+a?|ja|nikal)?\s*s[a]?kt[aeiou]\b",
+        r"\bja+a?na\s+(?:chahiye|theek|safe|sahi|uchit)\b",
+        r"\b(?:jaau|jaun|niklu|nikle|chalein|chalu)\b",
+        r"\b(जा\s*सकते|जा\s*सकता|जा\s*सकती|जा\s*सकूं|जाना\s*चाहिए|जाना\s*ठीक|मछली\s*पकड़(?:ने)?)\b",
+        # Malayalam permission & safety phrases (script & Manglish)
         r"\bപോകാമോ\b",
         r"\bപോകാൻ\s*പറ്റുമോ\b",
         r"\bപോകാനാവുമോ\b",
         r"\bസുരക്ഷിതമാണോ\b",
+        r"\bമീൻ\s*പിടിക്കാൻ\b",
+        r"\b(?:meen\s*pidi(?:kkan|kkaan|kan|kaan)?)\b",
+        r"\b(?:pokamo|pokaan\s*pattumo|pokumo|pokan\s*patumo|pokan\s*pattumo)\b",
+        # Tamil permission & safety phrases (script & Tanglish)
         r"\bபோகலாமா\b",
         r"\bசெல்லலாமா\b",
+        r"\bமீன்பிடிக்க\b",
         r"\bபாதுகாப்பானதா\b",
+        r"\b(?:meen\s*pidi(?:kka|ka|kalam)?)\b",
+        r"\b(?:pogalama|chellalama|sellalama|pogalaama|polama)\b",
+        # Telugu permission & safety phrases (script & Roman)
         r"\bవెళ్ళవచ్చా\b",
         r"\bవెళ్లవచ్చా\b",
+        r"\bచేపల\s*వేటకు\b",
         r"\bసురక్షితమేనా\b",
+        r"\b(?:chepala\s*veta(?:ku)?|vetaku)\b",
+        r"\b(?:vellavacha|vellavachaa|vellacha)\b",
+        # Bengali permission & safety phrases (script & Roman)
         r"\bযেতে\s*পারি\b",
+        r"\bমাছ\s*ধরতে\b",
         r"\bনিরাপদ\s*কি\b",
+        r"\b(?:mach\s*dhorte|maach\s*dhorte)\b",
+        r"\b(?:jete\s*pari|jaoa\s*jabe)\b",
     ]
-    is_timing = bool(re.search(r"\b(what\s+time|when|best\s+time|which\s+time|timing|kab|kis\s+samay|eppol|eppozhum|eppo)\b", searchable_text, re.IGNORECASE))
-    if not is_timing and any(re.search(pat, searchable_text, re.IGNORECASE) for pat in _PERMISSION_SAFETY_PATTERNS):
-        query_type = "safety"
+    compound_topics = detect_compound_intents(searchable_text)
+    if compound_topics:
+        query_type = "compound"
         narrow_topic = None
+    else:
+        is_timing = bool(re.search(r"\b(what\s+time|when|best\s+time|which\s+time|timing|kab|kis\s+samay|eppol|eppozhum|eppo)\b", searchable_text, re.IGNORECASE))
+        if not is_timing and any(re.search(pat, searchable_text, re.IGNORECASE) for pat in _PERMISSION_SAFETY_PATTERNS):
+            query_type = "safety"
+            narrow_topic = None
 
     # ── 3. Geocoding (deterministic) ────────────────────────────────────────
     if location is None:
@@ -846,11 +1085,11 @@ def agent_1_intent(
 
         # Gather candidate place names ONLY from the current query
         raw_candidates = []
-        if llm_location_name and llm_location_name.strip().lower() not in _LOCATION_PRONOUN_WORDS:
+        if llm_location_name and llm_location_name.strip().lower() not in _LOCATION_PRONOUN_WORDS and llm_location_name.strip().lower() not in _STOP_WORDS:
             raw_candidates.append(llm_location_name.strip())
         for c in _regex_location_candidates(agent_query, query):
             c_strip = c.strip()
-            if c_strip and c_strip.lower() not in _LOCATION_PRONOUN_WORDS and c_strip not in raw_candidates:
+            if c_strip and c_strip.lower() not in _LOCATION_PRONOUN_WORDS and c_strip.lower() not in _STOP_WORDS and c_strip not in raw_candidates:
                 raw_candidates.append(c_strip)
 
         # (a) Explicit location in current query wins always
@@ -872,11 +1111,26 @@ def agent_1_intent(
                     location = loc
                     clarification = None
 
-        # (c) Otherwise fall back to fallback_location (UI static default, e.g. Kochi)
+        # (c) Otherwise fall back to fallback_location (UI static default, e.g. Kochi or Noida)
         if location is None and fallback_location and fallback_location.strip():
-            fb_loc, _ = _geocode_with_candidates([fallback_location.strip()])
+            fb_str = fallback_location.strip()
+            fb_name = re.sub(r"\s*\([0-9.,\s+-]+\)\s*$", "", fb_str).strip()
+            fb_coords_match = re.search(r"\b([0-3]?\d(?:\.\d+)?)\s*[, ]\s*([6-9]\d(?:\.\d+)?)\b", fb_str)
+
+            fb_loc = None
+            if fb_name:
+                fb_loc, _ = _geocode_with_candidates([fb_name])
+
             if fb_loc:
+                if fb_coords_match:
+                    fb_loc["latitude"] = float(fb_coords_match.group(1))
+                    fb_loc["longitude"] = float(fb_coords_match.group(2))
                 location = fb_loc
+                clarification = None
+            elif fb_coords_match:
+                fb_lat = float(fb_coords_match.group(1))
+                fb_lon = float(fb_coords_match.group(2))
+                location = _resolve_coordinates(fb_lat, fb_lon, fallback_name=fb_name)
                 clarification = None
 
         if location is None:
@@ -893,6 +1147,7 @@ def agent_1_intent(
         "persona": persona,
         "query_type": query_type,
         "narrow_topic": narrow_topic,
+        "compound_topics": compound_topics,
         "location": location,
         "is_coastal": is_coastal,
         "non_coastal_message": non_coastal_msg,

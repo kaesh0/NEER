@@ -174,7 +174,7 @@ class TestIntentAndMultiTurn(unittest.TestCase):
         narrative_caution = res_caution["decisionOutput"]["narrative"]
         first_sent_caution = narrative_caution.split(".")[0]
         self.assertTrue(
-            any(k in first_sent_caution for k in ["Yes,", "Proceed with caution", "not safe", "No,"]),
+            any(k in first_sent_caution for k in ["Yes,", "Proceed with caution", "Caution advised", "not safe", "No,"]),
             f"Expected verdict in first sentence, got: {first_sent_caution}"
         )
 

@@ -298,7 +298,7 @@ def _meta(intent: dict) -> dict:
 
 
 def _decision_type(query_type: str) -> str:
-    return {"safety": "trip_assessment", "fishing": "fishing_opportunity"}.get(query_type, "conditions_check")
+    return {"safety": "trip_assessment", "fishing": "fishing_opportunity", "compound": "trip_assessment"}.get(query_type, "conditions_check")
 
 
 def _explainability(risk: dict, zones_status: str, availability: dict, summary: str, persona: str, source_ids: list) -> dict:
@@ -345,6 +345,13 @@ def _fisherman_payload(meta: dict, intent: dict, weather: dict, ocean: dict, ris
     hazard_ids = [hazard["id"] for hazard in hazards]
     availability = _availability(weather, ocean)
     decision_status = STATUS_TO_DECISION.get(risk.get("status"), "unavailable")
+    # Bi-directional sync with narrative to ensure zero contradictions
+    if decision_status == "unavailable" and narrative and any(w in narrative.lower() for w in ("favourable", "favorable", "safe to go")):
+        if risk.get("status") != "UNSAFE":
+            decision_status = "favourable"
+    elif decision_status == "favourable" and narrative and "unavailable" in narrative.lower():
+        decision_status = "unavailable"
+
     # A trip inside a restricted marine zone can NEVER be favourable for fishing!
     if geofence and geofence.get("inside_restricted_zone"):
         if decision_status == "favourable":
@@ -389,14 +396,23 @@ def _fisherman_payload(meta: dict, intent: dict, weather: dict, ocean: dict, ris
         }
 
     actions = []
-    if decision_status == "favourable":
+    if intent.get("narrow_topic") == "pfz" and first_zone:
+        dist_km = first_zone.get("distanceKm")
+        direction = first_zone.get("direction") or "offshore"
+        actions.append(f"Proceed towards potential fishing zone {first_zone.get('id', '')} ({dist_km} km {direction}) while observing local navigational advisories.".replace("  ", " "))
+    elif decision_status == "favourable":
         actions.append("Conditions are favourable within conservative thresholds; still carry safety gear and inform shore contact.")
     elif decision_status == "unavailable":
-        actions.append("Assessment unavailable — retry once live marine data reaches this location, and follow official advisories meanwhile.")
+        if intent.get("is_coastal") is False:
+            actions.append("Select a coastal location or port (such as Kochi, Mumbai, or Chennai) to receive marine weather, wave telemetry, and fishing advisories.")
+        else:
+            actions.append("Assessment unavailable — retry once live marine data reaches this location, and follow official advisories meanwhile.")
+    elif decision_status == "caution":
+        actions.append("Caution advised — check the latest official INCOIS/IMD advisory before departure.")
+    elif decision_status == "unfavourable":
+        actions.append("Consider postponing the trip until conditions improve.")
     else:
         actions.append("Check the latest official INCOIS/IMD advisory before departure.")
-    if decision_status == "unfavourable":
-        actions.append("Consider postponing the trip until conditions improve.")
     if geofence and geofence.get("inside_restricted_zone"):
         actions.append(f"Exit {geofence.get('zone_name', 'the restricted zone')} before fishing operations.")
     if route_recommendation:
